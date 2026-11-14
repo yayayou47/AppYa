@@ -27,6 +27,13 @@
   color-scheme:dark}
 *{box-sizing:border-box}
 [hidden]{display:none!important}
+dialog.confirm{border:1px solid var(--line);border-radius:14px;padding:18px 20px;width:min(440px,calc(100vw - 32px));background:var(--surface);color:var(--ink);box-shadow:0 12px 40px rgba(0,0,0,.25)}
+dialog.confirm::backdrop{background:rgba(20,24,32,.5)}
+dialog.confirm h3{margin:0 0 10px;font-size:1.05rem}
+dl.resume{display:grid;grid-template-columns:auto 1fr;gap:6px 14px;margin:0 0 10px}
+dl.resume dt{color:var(--muted);font-size:.88rem}
+dl.resume dd{margin:0;font-weight:600;overflow-wrap:anywhere}
+dl.resume dd.montant{font-size:1.15rem}
 html{-webkit-text-size-adjust:100%;font-size:105%}  /* échelle du texte ×1,05 (×1,5 puis −30 %, demandes du 2026-11-12) : les rem suivent, les px ci-dessous sont déjà à cette échelle */
 body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--f-body);font-size:15.75px;line-height:1.45;
   padding-left:max(16.8px,env(safe-area-inset-left,0px));padding-right:max(16.8px,env(safe-area-inset-right,0px));padding-block:21px 50.4px}
@@ -592,7 +599,7 @@ tr.solde td{color:var(--muted)}
       <div class="editbar full" id="editBar" hidden><span>Modification : <b id="editWhat"></b></span><button type="button" class="btn ghost" id="editCancel">Annuler</button></div>
       <div class="field"><label class="label" for="fDate">Date</label><input type="date" id="fDate" required></div>
       <div class="field"><label class="label" for="fAmt">Montant (en milliers)</label><input type="text" inputmode="decimal" id="fAmt" placeholder="10" required autocomplete="off" aria-describedby="fAmtHint"><span class="hint" id="fAmtHint">10 = 10 000 CFA · 0,5 = 500 CFA</span></div>
-      <div class="field full"><label class="label" for="fLib">Libellé</label><input type="text" id="fLib" placeholder="vivres, salaire, carburant, vidange huile, prêt Ali, ciment maison…" required autocomplete="off"></div>
+      <div class="field full"><label class="label" for="fLib">Libellé</label><input type="text" id="fLib" placeholder="vivres, salaire, carburant, vidange huile, prêt Ali, ciment maison…" required autocomplete="off" aria-describedby="fLibHint"><span class="hint" id="fLibHint" aria-live="polite"></span></div>
       <div class="field"><label class="label" for="fNat">Nature</label><select id="fNat"></select></div>
       <div class="field"><label class="label" for="fCpt" id="fCptLab">Payé avec</label><select id="fCpt"></select></div>
       <div class="field" id="wCat"><label class="label" for="fCat">Poste</label><select id="fCat"></select></div>
@@ -703,6 +710,12 @@ tr.solde td{color:var(--muted)}
 
   <footer><span id="footTxt">AppYa · suivi financier, véhicule et maison · version locale, les données restent sur cet ordinateur.</span><span id="footFile"></span></footer>
 </main>
+<dialog id="dlgOp" class="confirm" aria-labelledby="dlgTitre">
+  <h3 id="dlgTitre">Vérifier avant d'enregistrer</h3>
+  <dl id="dlgResume" class="resume"></dl>
+  <p class="hint" id="dlgNote"></p>
+  <div class="row"><button class="btn" id="dlgOk" type="button">Confirmer</button><button class="btn ghost" id="dlgNon" type="button">Modifier</button></div>
+</dialog>
 
 <script src="mode.js"></script>
 <script src="moteur.js"></script>
@@ -1518,7 +1531,7 @@ function majChamps(){
   $('fCptLab').textContent={revenu:'Reçu sur',remboursement:'Reçu sur',virement:'Depuis le compte'}[n]||'Payé avec';
 }
 function deviner(){
-  const lib=$('fLib').value;if(!lib.trim())return;const g=guessOp(lib);
+  const lib=$('fLib').value;if(!lib.trim()){$('fLibHint').textContent='';return}const g=guessOp(lib);
   if(!touched.nat)$('fNat').value=g.nature;
   if(!touched.cpt)$('fCpt').value=g.compte;
   if(!touched.vers&&g.vers)$('fVers').value=g.vers;
@@ -1528,13 +1541,22 @@ function deviner(){
   if(!touched.catv&&g.cat_vehicule)$('fCatV').value=g.cat_vehicule;
   if(!touched.catm&&g.cat_maison)$('fCatM').value=g.cat_maison;
   majChamps();
+  // ce que la reconnaissance a réglé (champs non modifiés à la main), affiché sous le libellé
+  const n=$('fNat').value,bits=[];
+  if(!touched.nat)bits.push(NAT[n].l.toLowerCase());
+  if(n==='depense'&&!touched.cat)bits.push('poste '+((CAT[$('fCat').value]||{}).label||''));
+  if(n==='virement'&&!touched.vers)bits.push(`${nomCpt($('fCpt').value)} → ${nomCpt($('fVers').value)}`);
+  else if(!touched.cpt)bits.push(($('fCptLab').textContent||'').toLowerCase()+' '+nomCpt($('fCpt').value));
+  if(n==='investissement'&&!touched.bien&&BIEN[$('fBien').value])bits.push('bien '+BIEN[$('fBien').value].nom);
+  if((n==='pret'||n==='remboursement')&&!touched.pers&&$('fPers').value)bits.push($('fPers').value);
+  $('fLibHint').textContent=bits.length?'Reconnu : '+bits.join(' · ')+' (modifiable ci-dessous)':'';
 }
 $('fDate').value=today;
 fillSelects();
 const AMT_HINT='10 = 10 000 CFA · 0,5 = 500 CFA · 1750 = 1 750 000';
 function amtHint(){const v=cfa($('fAmt').value);$('fAmtHint').textContent=v>0?`= ${fmtC(v)} FCFA`:($('fAmt').value.trim()?'Montant non reconnu':AMT_HINT)}
 $('fAmt').addEventListener('input',amtHint);
-$('fLib').addEventListener('input',deviner);
+['input','change','compositionend'].forEach(t=>$('fLib').addEventListener(t,deviner));   // claviers de téléphone : la saisie prédictive n'émet pas toujours « input »
 [['fNat','nat'],['fCpt','cpt'],['fCat','cat'],['fVers','vers'],['fBien','bien'],['fPers','pers'],['fCatV','catv'],['fCatM','catm']].forEach(([i,k])=>$(i).addEventListener(i==='fPers'?'input':'change',()=>{touched[k]=true;majChamps()}));
 $('fKm').addEventListener('input',majChamps);
 const tabs=[['tOne','oneForm'],['tPaste','pasteBox'],['tPostes','posteBox'],['tCB','cbBox'],['tVid','vidPanel'],['tMai','maiPanel'],['tPar','paritesBox'],['tSav','savBox']];
@@ -1545,7 +1567,34 @@ document.querySelector('.tabs').addEventListener('keydown',ev=>{
   const j={ArrowRight:i+1,ArrowLeft:i-1,Home:0,End:tabs.length-1}[ev.key];if(j===undefined)return;
   ev.preventDefault();showTab(tabs[(j+tabs.length)%tabs.length][0],true)});
 tabs.forEach(([t])=>$(t).onclick=()=>showTab(t));showTab('tOne');
-function resetForm(){['fAmt','fLib','fRem','fPers','fEch','fKm','fQty'].forEach(i=>$(i).value='');$('fUnit').value='L';$('fVid').checked=true;touched={};$('fNat').value='depense';$('fCpt').value='especes';$('fCat').value='autre';editId=null;$('editBar').hidden=true;$('addBtn').textContent='Ajouter';majChamps();amtHint();render()}
+function resetForm(){['fAmt','fLib','fRem','fPers','fEch','fKm','fQty'].forEach(i=>$(i).value='');$('fLibHint').textContent='';$('fUnit').value='L';$('fVid').checked=true;touched={};$('fNat').value='depense';$('fCpt').value='especes';$('fCat').value='autre';editId=null;$('editBar').hidden=true;$('addBtn').textContent='Ajouter';majChamps();amtHint();render()}
+/* fenêtre de confirmation : résumé lisible de l'opération avant l'enregistrement (Échap ou « Modifier » = annuler) */
+function confirmerOp(doc,opt={}){
+  const dlg=$('dlgOp');
+  const lignes=[['Date',new Date(doc.date+'T12:00').toLocaleDateString('fr-FR',{weekday:'long',day:'numeric',month:'long',year:'numeric'})],
+    ['Montant',`${fmtC(doc.montant)} FCFA`,'montant'],['Libellé',doc.libelle],['Nature',NAT[doc.nature].l]];
+  if(doc.nature==='virement')lignes.push(['Virement',`${nomCpt(doc.compte)} → ${nomCpt(doc.vers)}`]);
+  else lignes.push([{revenu:'Reçu sur',remboursement:'Reçu sur'}[doc.nature]||'Payé avec',nomCpt(doc.compte)]);
+  if(doc.nature==='depense')lignes.push(['Poste',(CAT[doc.categorie]||{}).label||doc.categorie]);
+  if(doc.personne)lignes.push(['Personne',doc.personne]);
+  if(doc.echeance)lignes.push(['Échéance',dmy(doc.echeance)]);
+  if(doc.bien)lignes.push(['Bien',(BIEN[doc.bien]||{}).nom||doc.bien]);
+  if(doc.cat_maison)lignes.push(['Travaux',(CATS_M.find(c=>c.id===doc.cat_maison)||{}).l||doc.cat_maison]);
+  if(doc.vehicule){lignes.push(['Véhicule',((BIEN[doc.vehicule]||{}).nom||doc.vehicule)+' · '+((CATS_V.find(c=>c.id===doc.cat_vehicule)||{}).l||doc.cat_vehicule)]);
+    if(doc.km)lignes.push(['Compteur',`${nb(doc.km)} km`]);if(doc.quantite)lignes.push(['Quantité',`${String(doc.quantite).replace('.',',')} ${doc.unite}`])}
+  if(doc.remarque)lignes.push(['Remarque',doc.remarque]);
+  $('dlgTitre').textContent=opt.edition?'Enregistrer ces modifications ?':'Ajouter cette opération ?';
+  $('dlgResume').innerHTML=lignes.map(([k,v,c])=>`<dt>${k}</dt><dd${c?` class="${c}"`:''}>${esc(v)}</dd>`).join('');
+  $('dlgNote').textContent=opt.vidange?`Le repère de vidange passera à ${nb(opt.vidange)} km.`:'';
+  $('dlgNote').hidden=!opt.vidange;
+  if(typeof dlg.showModal!=='function')return Promise.resolve(confirm(lignes.map(([k,v])=>k+' : '+v).join('\n')));
+  return new Promise(res=>{
+    const fin=v=>{dlg.removeEventListener('cancel',annul);$('dlgOk').onclick=$('dlgNon').onclick=null;if(dlg.open)dlg.close();res(v)};
+    const annul=ev=>{ev.preventDefault();fin(false)};
+    dlg.addEventListener('cancel',annul);$('dlgOk').onclick=()=>fin(true);$('dlgNon').onclick=()=>fin(false);
+    dlg.showModal();$('dlgOk').focus();
+  });
+}
 /* modifier une ligne depuis un journal : le formulaire s'ouvre dans Données et réglages, puis on revient à la vue d'origine */
 let retourVue=null;
 function revenir(){if(retourVue){view=retourVue;retourVue=null;render();window.scrollTo({top:0,behavior:doux()})}}
@@ -1592,6 +1641,7 @@ $('oneForm').addEventListener('submit',async ev=>{
       vehicule:avecVeh?(nature==='investissement'?$('fBien').value:VEH().id):'',cat_maison:$('wMai').hidden?'':$('fCatM').value,cat_vehicule:$('fCatV').value,km,quantite:qte,unite:$('fUnit').value,
       remarque:$('fRem').value.trim(),cree:old?old.cree:new Date().toISOString()});
     const nouvVid=avecVeh&&!$('vidBox').hidden&&$('fVid').checked&&km>0;
+    if(!await confirmerOp(doc,{edition:!!editId,vidange:nouvVid?km+vidangeDe(VEH()).intervalle:0})){$('addMsg').textContent='Rien n\'a été enregistré : corrigez puis validez à nouveau.';$('addBtn').disabled=false;return}
     if(editId){await api.put(editId,doc);$('addMsg').textContent='Modifications enregistrées.'}
     else{await api.add(doc);$('addMsg').textContent=`Ajouté : ${NAT[nature].l.toLowerCase()}, ${fmtC(montant)} FCFA, ${libelle}`}
     const [y,m]=doc.date.split('-').map(Number);const vr=retourVue||view;if(vr==='mois')cur={y,m:m-1};else if(vr==='annee'||vr==='vehicule'||vr==='maison')cur.y=y;

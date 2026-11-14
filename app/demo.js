@@ -1,4 +1,4 @@
-/* AppYa — données de démonstration : trois années simulées (graine fixe, toujours les mêmes données).
+/* Daftar — données de démonstration : trois années simulées (graine fixe, toujours les mêmes données).
    Comptes (espèces, banque, épargne avec intérêts, mobile money), dépenses courantes, salaire et primes,
    retraits et épargne, engins (voiture, moto, groupe électrogène avec vidanges), construction d'une maison,
    événements (mariage, mission, baptême), revenus ponctuels, prêts, frais bancaires programmés, relevés de solde.

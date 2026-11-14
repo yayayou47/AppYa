@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-AppYa — suivi financier et carnet du véhicule, serveur local.
+Daftar — suivi financier et carnet du véhicule, serveur local.
 
 Un seul journal d'opérations : dépenses, revenus, virements entre comptes,
 prêts accordés et remboursements, investissements dans les biens.
@@ -39,7 +39,7 @@ from http.cookies import SimpleCookie
 from http.server import SimpleHTTPRequestHandler, ThreadingHTTPServer
 from urllib.parse import parse_qs, urlparse
 
-VERSION = "1.0.3"
+VERSION = "1.1.0"
 VERSION_NOM = "Ousnou"   # nom de la version (même valeur que VERSION_APP dans app/index.html)
 RACINE = os.path.dirname(os.path.abspath(__file__))
 APP = os.path.join(RACINE, "app")
@@ -346,18 +346,18 @@ def hote_autorise(host):
         pass
     nom = socket.gethostname().lower()
     # noms Tailscale (MagicDNS, « *.ts.net ») : le domaine appartient à Tailscale et ne pointe que vers
-    # les appareils de votre réseau privé ; un site extérieur ne peut pas s'en servir pour viser AppYa
+    # les appareils de votre réseau privé ; un site extérieur ne peut pas s'en servir pour viser Daftar
     if h.endswith(".ts.net"):
         return True
     return h in ("localhost", nom, nom + ".local")
 
 
 PAGE_CLE = """<!doctype html><html lang="fr"><head><meta charset="utf-8">
-<meta name="viewport" content="width=device-width,initial-scale=1"><title>AppYa</title>
+<meta name="viewport" content="width=device-width,initial-scale=1"><title>Daftar</title>
 <style>:root{color-scheme:light dark}body{font-family:system-ui,sans-serif;font-size:105%%;max-width:26em;margin:12vh auto;padding:0 17px;line-height:1.5}
 input,button{font:inherit;padding:10px 12px;border-radius:10px;border:1px solid #8888}input{width:100%%;box-sizing:border-box;margin:8px 0}
 button{background:#1f4e79;color:#fff;border:0;font-weight:600}.err{color:#c0533a}</style></head><body>
-<h1>AppYa</h1><p>Accès protégé. Sur l'ordinateur, tapez <code>appya etat</code> :
+<h1>Daftar</h1><p>Accès protégé. Sur l'ordinateur, tapez <code>daftar etat</code> :
 ouvrez le lien affiché, ou recopiez ici la clé (après <code>?cle=</code>).</p>%s
 <form method="get" action="/"><input name="cle" autocomplete="off" autocapitalize="none" spellcheck="false" placeholder="clé d'accès" required>
 <button type="submit">Ouvrir le carnet</button></form></body></html>"""
@@ -386,7 +386,7 @@ def sauvegarde_du_jour():
             os.remove(os.path.join(SAUVEGARDES, f))
 
 
-# Copie miroir : le dossier d'où AppYa a été installé (ex. un second disque) reçoit, dans son
+# Copie miroir : le dossier d'où Daftar a été installé (ex. un second disque) reçoit, dans son
 # donnees/, une copie à jour de carnet.json et des sauvegardes. Ce dossier se copie tel quel sur un autre
 # ordinateur : « bash installer.sh » y reprend les données. Le chemin est écrit par l'installateur dans
 # donnees/.miroir ; disque absent (non monté) = copie sautée, refaite à l'écriture suivante.
@@ -845,7 +845,7 @@ def regler(d, corps, resume=None):
 
 # ---------------------------------------------------------------- HTTP
 # ---------------------------------------------------------------- onglets ouverts sur l'ordinateur
-# Chaque onglet AppYa de l'ordinateur garde une connexion /api/onglet ouverte (flux d'événements). Le lanceur
+# Chaque onglet Daftar de l'ordinateur garde une connexion /api/onglet ouverte (flux d'événements). Le lanceur
 # « appya » demande /api/onglets/rappel : s'il y a déjà un onglet, celui-ci se signale (notification, titre)
 # au lieu qu'un nouvel onglet soit ouvert. Les téléphones ne s'inscrivent pas (client non local).
 ONGLETS = {}                      # identifiant de connexion -> {"file": queue.Queue, "notif": bool}
@@ -938,7 +938,7 @@ class Gestionnaire(SimpleHTTPRequestHandler):
             return True
         if u.path.startswith("/api/"):
             self._json(401, {"erreur": "Accès protégé : ouvrez le lien avec la clé "
-                                       "(tapez appya etat sur l'ordinateur)."})
+                                       "(tapez daftar etat sur l'ordinateur)."})
         else:
             self._page_cle()
         return False
@@ -1135,7 +1135,7 @@ def ip_locale():
 
 
 def main():
-    ap = argparse.ArgumentParser(description="AppYa — serveur local")
+    ap = argparse.ArgumentParser(description="Daftar — serveur local")
     ap.add_argument("--port", type=int, default=8780)
     ap.add_argument("--reseau", action="store_true", help="accessible depuis les autres appareils du même réseau")
     ap.add_argument("--sans-navigateur", action="store_true")
@@ -1151,11 +1151,11 @@ def main():
             webbrowser.open(url)
         return
 
-    # AppYa ne lit que le format 5 : les conversions des anciens formats (v1 à v4) et la reprise de l'ancien
+    # Daftar ne lit que le format 5 : les conversions des anciens formats (v1 à v4) et la reprise de l'ancien
     # Carnet du véhicule ont été retirées le 2026-11-14, une fois toutes les données converties.
     d = lire()
     if d.get("version") != 5 or not isinstance(d.get("operations"), list):
-        sys.exit("Format de données non reconnu (version %s) dans %s : AppYa %s ne lit que le format 5."
+        sys.exit("Format de données non reconnu (version %s) dans %s : Daftar %s ne lit que le format 5."
                  % (d.get("version"), FICHIER, VERSION_NOM + " " + VERSION))
 
     with VERROU:
@@ -1179,7 +1179,7 @@ def main():
     url = "http://localhost:%d" % port
 
     print("")
-    print("  AppYa %s %s" % (VERSION_NOM, VERSION))
+    print("  Daftar %s %s" % (VERSION_NOM, VERSION))
     print("  Ouvert sur        : %s" % url)
     if a.reseau:
         ip = ip_locale()
@@ -1188,7 +1188,7 @@ def main():
         print("  (clé d'accès dans %s ; les autres appareils ne voient rien sans elle)" % FICHIER_CLE)
     print("  Données           : %s" % FICHIER)
     print("  Copie miroir      : %s" % (os.path.join(dossier_miroir(), "carnet.json") if dossier_miroir() else "aucune"))
-    print("  Pour arrêter      : Ctrl+C (ou : appya arreter)")
+    print("  Pour arrêter      : Ctrl+C (ou : daftar arreter)")
     print("")
 
     # mémorise l'adresse réelle pour le lanceur (utile si le port 8780 était pris)
@@ -1209,7 +1209,7 @@ def main():
     try:
         serveur.serve_forever()
     except KeyboardInterrupt:
-        print("\nArrêt d'AppYa.")
+        print("\nArrêt de Daftar.")
     finally:
         serveur.server_close()
 

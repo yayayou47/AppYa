@@ -1,20 +1,22 @@
 #!/bin/bash
-# Installation d'AppYa (suivi financier, véhicule et maison) sur Ubuntu (sans sudo).
+# Installation de Daftar (suivi financier, véhicule et maison) sur Ubuntu (sans sudo).
 # Lancez-le avec « bash » : cela marche aussi depuis un disque externe (NTFS, exFAT, clé USB).
 #
-#   bash installer.sh                 installe dans ~/AppYa (démarrage automatique)
+#   bash installer.sh                 installe dans ~/Daftar (démarrage automatique)
 #   bash installer.sh --ici           garde le carnet et ses données dans CE dossier (ex. disque externe)
 #   bash installer.sh --reseau        accessible aussi depuis le téléphone (même Wi-Fi, avec clé)
 #   bash installer.sh --sans-service  pas de démarrage automatique
 #
 # Si un carnet existe déjà à l'emplacement choisi, seul le programme est mis à jour : vos données sont conservées.
 # Sinon (nouvel ordinateur), les données et sauvegardes de donnees/ de CE dossier sont reprises.
-# Ensuite, AppYa recopie ses données dans donnees/ de CE dossier à chaque modification (copie miroir) :
+# Ensuite, Daftar recopie ses données dans donnees/ de CE dossier à chaque modification (copie miroir) :
 # ce dossier, copié tel quel sur un autre ordinateur, s'y installe avec les données à jour.
 set -e
 
 SRC="$(cd "$(dirname "$0")" && pwd)"
-DEST="${APPYA_DEST:-$HOME/AppYa}"
+# dossier d'installation : ~/Daftar ; une installation faite avant le changement de nom (~/AppYa) reste où elle est
+if [ -f "$HOME/AppYa/serveur.py" ]; then DEST_DEF="$HOME/AppYa"; else DEST_DEF="$HOME/Daftar"; fi
+DEST="${DAFTAR_DEST:-${APPYA_DEST:-$DEST_DEF}}"
 RESEAU=0; SERVICE=1; ICI=0; NOUVEAU=0
 for a in "$@"; do
   case "$a" in
@@ -31,7 +33,7 @@ vert() { printf '\033[32m%s\033[0m\n' "$*"; }
 info() { printf '  %s\n' "$*"; }
 
 echo ""
-echo "  Installation d'AppYa"
+echo "  Installation de Daftar"
 echo "  -------------------"
 
 # 1. Python
@@ -71,10 +73,10 @@ PY
     fi
   else
     # nouvel ordinateur : on reprend les données (et les sauvegardes) du dossier copié ;
-    # sans carnet.json, AppYa démarre avec un carnet vide
+    # sans carnet.json, Daftar démarre avec un carnet vide
     NOUVEAU=1
     if [ ! -f "$SRC/donnees/carnet.json" ]; then
-      info "Aucune donnée dans $SRC/donnees : AppYa démarre avec un carnet vide."
+      info "Aucune donnée dans $SRC/donnees : Daftar démarre avec un carnet vide."
     else
     cp "$SRC/donnees/carnet.json" "$DEST/donnees/carnet.json"
     if [ -d "$SRC/donnees/sauvegardes" ]; then
@@ -125,7 +127,8 @@ pkill -f "$DEST/serveur.py" 2>/dev/null || true
 BIN="$HOME/.local/bin"; mkdir -p "$BIN"
 sed "s|__DIR__|$DEST|" "$DEST/appya" > "$BIN/appya"
 chmod +x "$BIN/appya"
-info "Commande : appya  ($BIN)"
+ln -sf "$BIN/appya" "$BIN/daftar"
+info "Commande : daftar  (ou appya, $BIN)"
 
 # 4. Service utilisateur (démarrage automatique à l'ouverture de session)
 UNITDIR="$HOME/.config/systemd/user"; UNIT="$UNITDIR/appya.service"
@@ -133,7 +136,7 @@ if [ "$SERVICE" = 1 ] && command -v systemctl >/dev/null && systemctl --user sho
   mkdir -p "$UNITDIR"
   cat > "$UNIT" <<EOF
 [Unit]
-Description=AppYa (serveur local)
+Description=Daftar (serveur local)
 After=network.target
 
 ConditionPathExists=$DEST/serveur.py
@@ -164,7 +167,7 @@ cat > "$DESKTOP_FILE" <<EOF
 [Desktop Entry]
 Type=Application
 Version=1.0
-Name=AppYa
+Name=Daftar
 GenericName=Suivi financier, véhicule et maison
 Comment=Dépenses, revenus, comptes, prêts, biens, véhicule et maison
 Exec="$BIN/appya" ouvrir
@@ -189,7 +192,7 @@ Exec="$BIN/appya" sauvegarder
 EOF
 chmod +x "$DESKTOP_FILE"
 command -v update-desktop-database >/dev/null && update-desktop-database "$APPS" >/dev/null 2>&1 || true
-info "Menu des applications : « AppYa »"
+info "Menu des applications : « Daftar »"
 
 BUREAU="$(xdg-user-dir DESKTOP 2>/dev/null || echo "$HOME/Desktop")"
 if [ -d "$BUREAU" ]; then
@@ -214,4 +217,4 @@ if [ "$RESEAU" = 1 ]; then info "Depuis le téléphone (ouvrir une fois, contien
 echo ""
 # le navigateur n'est ouvert qu'à la première installation : une mise à jour n'ajoute pas d'onglet
 if [ "$NOUVEAU" = 1 ] && [ -n "$DISPLAY$WAYLAND_DISPLAY" ]; then "$BIN/appya" ouvrir >/dev/null 2>&1 || true
-else info "AppYa : cliquez sur son icône (ou tapez  appya ) ; un onglet déjà ouvert se recharge avec F5."; fi
+else info "Daftar : cliquez sur son icône (ou tapez  daftar ) ; un onglet déjà ouvert se recharge avec F5."; fi

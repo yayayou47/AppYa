@@ -1,12 +1,12 @@
 #!/bin/bash
-# Désinstallation d'AppYa.
+# Désinstallation de Daftar.
 #   bash desinstaller.sh          retire le service, la commande et les lanceurs ; GARDE vos données
-#   bash desinstaller.sh --tout   supprime aussi le dossier installé (~/AppYa), après une copie finale
+#   bash desinstaller.sh --tout   supprime aussi le dossier installé (~/Daftar, ou ~/AppYa pour une installation ancienne), après une copie finale
 #
 # Avant de retirer quoi que ce soit, les données sont recopiées une dernière fois dans le dossier miroir
-# (le dossier d'où AppYa a été installé, ex. un second disque) : ce dossier peut
+# (le dossier d'où Daftar a été installé, ex. un second disque) : ce dossier peut
 # ensuite être copié sur un autre ordinateur et installé avec « bash installer.sh ».
-# Lancé depuis le dossier d'origine ou depuis ~/AppYa, il agit toujours sur l'installation
+# Lancé depuis le dossier d'origine ou depuis le dossier installé, il agit toujours sur l'installation
 # réelle, et ne supprime jamais le dossier d'origine.
 
 ICI="$(cd "$(dirname "$0")" && pwd)"
@@ -17,7 +17,7 @@ DEST="${APPYA_DEST:-}"; TROUVE=1
 [ -z "$DEST" ] && [ -f "$HOME/.local/bin/appya" ] && DEST="$(sed -n 's/^DIR="\(.*\)"$/\1/p' "$HOME/.local/bin/appya" | head -n1)"
 [ -z "$DEST" ] && { DEST="$ICI"; TROUVE=0; }
 DEST="$(cd "$DEST" 2>/dev/null && pwd || echo "$DEST")"
-echo "Installation d'AppYa : $DEST"
+echo "Installation de Daftar : $DEST"
 
 # 1. dernière copie vers le dossier miroir (si le disque est branché)
 MIROIR="$(head -n1 "$DEST/donnees/.miroir" 2>/dev/null)"
@@ -40,7 +40,7 @@ if command -v systemctl >/dev/null && systemctl --user show-environment >/dev/nu
   systemctl --user daemon-reload
 fi
 pkill -f "$DEST/serveur.py" 2>/dev/null
-rm -f "$HOME/.local/bin/appya" "$HOME/.local/share/applications/appya.desktop"
+rm -f "$HOME/.local/bin/appya" "$HOME/.local/bin/daftar" "$HOME/.local/share/applications/appya.desktop"
 BUREAU="$(xdg-user-dir DESKTOP 2>/dev/null || echo "$HOME/Desktop")"
 rm -f "$BUREAU/appya.desktop" "$DEST/donnees/.adresse"
 echo "Service, commande et lanceurs retirés."
@@ -55,7 +55,7 @@ if [ "$1" = "--tout" ]; then
     echo "Refus : $DEST est le dossier d'origine. Rien n'est supprimé."; exit 1
   fi
   if [ ! -f "$DEST/serveur.py" ]; then
-    echo "Refus : $DEST ne ressemble pas à une installation d'AppYa. Rien n'est supprimé."; exit 1
+    echo "Refus : $DEST ne ressemble pas à une installation de Daftar. Rien n'est supprimé."; exit 1
   fi
   DOCS="$(xdg-user-dir DOCUMENTS 2>/dev/null || echo "$HOME")"
   if [ -f "$DEST/donnees/carnet.json" ]; then

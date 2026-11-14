@@ -1,4 +1,4 @@
-/* AppYa — moteur local (version autonome : téléphone ou navigateur seul, sans ordinateur).
+/* Daftar — moteur local (version autonome : téléphone ou navigateur seul, sans ordinateur).
    Portage fidèle des règles de serveur.py : validation des opérations (nettoyer), réglages (postes, budgets,
    comptes, biens, parités), reclassement, repère de vidange automatique, carnet vide de départ.
    TOUTE MODIFICATION DES RÈGLES DANS serveur.py DOIT ÊTRE REPORTÉE ICI (et inversement). */
@@ -385,7 +385,7 @@
   /* contrôle d'un fichier importé (« Importer mes données ») : même format que donnees/carnet.json */
   function verifierImport(d) {
     if (!d || typeof d !== 'object' || d.version !== 5 || !Array.isArray(d.operations) || !d.parametres)
-      erreur("Ce fichier n'est pas une sauvegarde AppYa (format 5).");
+      erreur("Ce fichier n'est pas une sauvegarde Daftar (format 5).");
     const prm = d.parametres;
     if (!Array.isArray(prm.postes) || !Array.isArray(prm.comptes)) erreur('Sauvegarde incomplète : postes ou comptes absents.');
     prm.biens = prm.biens || []; prm.budgets = prm.budgets || {}; d.supprimees = d.supprimees || [];

@@ -1,19 +1,19 @@
-# AppYa
+# Daftar
 
 Suivi financier personnel, carnet du véhicule et carnet de la maison, en français et en francs CFA.
 Dépenses, revenus, comptes (espèces, banque, mobile money), prêts aux proches, biens et patrimoine,
 statistiques, export Excel. Fonctionne hors ligne. **Aucune donnée n'est incluse** : chacun commence
 avec un carnet vide, et ses données restent chez lui.
 
-**Démo** (trois années de données simulées, rien à installer) : https://yayayou47.github.io/AppYa/?demo
+**Démo** (trois années de données simulées, rien à installer) : https://yayayou47.github.io/Daftar/?demo
 
 ## Trois façons de l'utiliser
 
 | Version | Où trouver | Où sont les données |
 |---|---|---|
-| **Lien web** (le plus simple) | https://yayayou47.github.io/AppYa/ : ouvrir dans Chrome, puis ⋮ › *Installer l'application* | dans l'appareil |
-| **Android (APK)** | page [Releases](https://github.com/yayayou47/AppYa/releases) : `AppYa-X.Y.Z.apk` | dans le téléphone |
-| **Ordinateur Ubuntu** | page [Releases](https://github.com/yayayou47/AppYa/releases) : `AppYa-ubuntu-X.Y.Z.zip`, décompresser puis `bash installer.sh` | `~/AppYa/donnees/carnet.json`, sauvegarde chaque jour |
+| **Lien web** (le plus simple) | https://yayayou47.github.io/Daftar/ : ouvrir dans Chrome, puis ⋮ › *Installer l'application* | dans l'appareil |
+| **Android (APK)** | page [Releases](https://github.com/yayayou47/Daftar/releases) : `Daftar-X.Y.Z.apk` | dans le téléphone |
+| **Ordinateur Ubuntu** | page [Releases](https://github.com/yayayou47/Daftar/releases) : `Daftar-ubuntu-X.Y.Z.zip`, décompresser puis `bash installer.sh` | `~/Daftar/donnees/carnet.json`, sauvegarde chaque jour |
 
 Sur le téléphone, les données n'existent que dans l'appareil : utilisez régulièrement
 **Données et réglages › Sauvegarde › Exporter mes données** et gardez le fichier en lieu sûr.
@@ -38,5 +38,5 @@ utilise tesseract.js 5.1.1, téléchargé à la demande.
 
 ## Licence
 
-Code d'AppYa sous licence MIT (fichier `LICENSE`) : chacun peut l'utiliser, le modifier et le
+Code de Daftar sous licence MIT (fichier `LICENSE`) : chacun peut l'utiliser, le modifier et le
 redistribuer, en gardant la mention de licence ; il est fourni sans garantie.

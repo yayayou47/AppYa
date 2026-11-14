@@ -4,7 +4,7 @@
 #   bash outils/recuperer-version.sh v1.0.0
 set -e
 cd "$(dirname "$0")/.."
-TAG="${1:-$(gh release view -R yayayou47/AppYa --json tagName --jq .tagName)}"
+TAG="${1:-$(gh release view -R yayayou47/Daftar --json tagName --jq .tagName)}"
 mkdir -p "versions/$TAG"
-gh release download "$TAG" -R yayayou47/AppYa -D "versions/$TAG" --clobber
+gh release download "$TAG" -R yayayou47/Daftar -D "versions/$TAG" --clobber
 ls -la "versions/$TAG"

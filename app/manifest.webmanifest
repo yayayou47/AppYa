@@ -1,6 +1,6 @@
 {
-  "name": "AppYa — suivi financier, véhicule et maison",
-  "short_name": "AppYa",
+  "name": "Daftar — suivi financier, véhicule et maison",
+  "short_name": "Daftar",
   "description": "Dépenses, revenus, comptes, carnet du véhicule et de la maison ; fonctionne hors ligne ; les données restent dans l'appareil.",
   "lang": "fr",
   "start_url": "./",

@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="theme-color" content="#1f4e79">
-<title>AppYa</title>
+<title>Daftar</title>
 <link rel="icon" href="icone.svg" type="image/svg+xml">
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="apple-touch-icon" href="icone-192.png">
@@ -478,7 +478,7 @@ tr.solde td{color:var(--muted)}
 
 <main class="wrap" id="contenu">
   <header>
-    <h1 class="titre"><img src="icone-192.png" alt="" class="logo" width="36" height="36">AppYa</h1>
+    <h1 class="titre"><img src="icone-192.png" alt="" class="logo" width="36" height="36">Daftar</h1>
     <div class="ctl">
       <button id="syncBtn" class="btn ghost syncpill" type="button" hidden aria-live="polite"></button>
       <select id="devise" class="devsel" aria-label="Devise d'affichage" title="Devise d'affichage"></select>
@@ -499,12 +499,12 @@ tr.solde td{color:var(--muted)}
       <div class="row" style="margin-top:6px"><a class="btn" id="demoQuitter" href="./">Quitter la démo</a><button class="btn ghost" type="button" id="demoRecreer">Recréer les données de démo</button></div></div>
   </div>
   <section class="panel accueil" id="accueil" hidden aria-labelledby="accTitre">
-    <h2 id="accTitre">Bienvenue dans AppYa</h2>
-    <p>AppYa suit vos <b>dépenses et revenus</b> (espèces, banque, mobile money), vos <b>prêts</b>, vos <b>engins</b> (voiture, moto, groupe électrogène : carburant, vidanges) et la <b>construction d'une maison</b>. Vos données restent chez vous.</p>
+    <h2 id="accTitre">Bienvenue dans Daftar</h2>
+    <p>Daftar suit vos <b>dépenses et revenus</b> (espèces, banque, mobile money), vos <b>prêts</b>, vos <b>engins</b> (voiture, moto, groupe électrogène : carburant, vidanges) et la <b>construction d'une maison</b>. Vos données restent chez vous.</p>
     <ol class="accetapes">
       <li><b>Vos comptes</b> : banque, épargne, mobile money… (Données et réglages › Comptes et biens). L'argent liquide est déjà là.</li>
       <li><b>Vos engins et votre maison</b>, si vous en avez : rubrique Engins › « + Ajouter un engin » ; une maison se déclare dans Comptes et biens (rôle « Maison »).</li>
-      <li><b>Votre première opération</b> : « 10 vivres », « 400 salaire banque »… les montants se tapent en milliers ; AppYa reconnaît la nature, le poste et le compte.</li>
+      <li><b>Votre première opération</b> : « 10 vivres », « 400 salaire banque »… les montants se tapent en milliers ; Daftar reconnaît la nature, le poste et le compte.</li>
     </ol>
     <div class="row"><a class="btn" href="?demo" id="accDemo">Voir la démo (3 ans de données simulées)</a><button class="btn ghost" type="button" id="accComptes">Créer mes comptes</button><button class="btn ghost" type="button" id="accSaisir">Saisir une opération</button><button class="btn ghost" type="button" id="accFermer">Fermer</button></div>
   </section>
@@ -513,7 +513,7 @@ tr.solde td{color:var(--muted)}
       <div class="row" style="margin-top:6px"><button class="btn" type="button" id="progVoir">Vérifier et confirmer</button></div></div>
   </div>
   <div class="alerte onglet-bandeau" id="ongletBandeau" hidden role="status">
-    <div><b>AppYa était déjà ouvert ici.</b> Pour que l'icône AppYa vous ramène directement à cet onglet, autorisez ses notifications.
+    <div><b>Daftar était déjà ouvert ici.</b> Pour que l'icône Daftar vous ramène directement à cet onglet, autorisez ses notifications.
       <div class="row" style="margin-top:6px"><button class="btn" type="button" id="ongletAutoriser">Autoriser</button>
       <button class="btn ghost" type="button" id="ongletFermer">Plus tard</button></div></div>
   </div>
@@ -801,7 +801,7 @@ tr.solde td{color:var(--muted)}
     <div class="hint" id="savTexte"></div>
     <div class="row"><button class="btn" type="button" id="savExport">Exporter mes données</button><span id="savMsg" class="muted" role="status"></span></div>
     <div class="phead"><h3 class="sub">Retour en arrière</h3><span class="hint">Les 20 derniers changements de réglages</span></div>
-    <details class="aide"><summary>Comment ça marche ?</summary><div class="hint">Avant chaque changement de réglages (postes, comptes, biens, événements, types de revenus, opérations programmées, parités), AppYa garde l'état d'avant. « Rétablir » y revient, y compris le classement des lignes déplacées ; un retour se défait comme un autre changement. Les opérations du journal ne sont pas concernées : une opération supprimée se rétablit avec « Annuler » juste après.</div></details>
+    <details class="aide"><summary>Comment ça marche ?</summary><div class="hint">Avant chaque changement de réglages (postes, comptes, biens, événements, types de revenus, opérations programmées, parités), Daftar garde l'état d'avant. « Rétablir » y revient, y compris le classement des lignes déplacées ; un retour se défait comme un autre changement. Les opérations du journal ne sont pas concernées : une opération supprimée se rétablit avec « Annuler » juste après.</div></details>
     <div id="histList" class="evlist"></div>
     <div class="row"><button class="btn ghost" type="button" id="origineBtn">Revenir aux réglages d'origine</button><span id="histMsg" class="muted" role="status"></span></div>
     <div id="savImportBox" hidden style="display:flex;flex-direction:column;gap:8px">
@@ -828,7 +828,7 @@ tr.solde td{color:var(--muted)}
     <span class="hint">Touchez une ligne pour la modifier.</span>
   </section>
 
-  <footer><span><b id="footVer"></b></span><span id="footTxt">AppYa · suivi financier, engins et maison · version locale, les données restent sur cet ordinateur.</span><span id="footFile"></span></footer>
+  <footer><span><b id="footVer"></b></span><span id="footTxt">Daftar · suivi financier, engins et maison · version locale, les données restent sur cet ordinateur.</span><span id="footFile"></span></footer>
 </main>
 <dialog id="dlgProg" class="confirm large" aria-labelledby="dlgProgTitre">
   <h3 id="dlgProgTitre">Opérations programmées à confirmer</h3>
@@ -900,7 +900,7 @@ function setProgrammees(l){PROGS=(Array.isArray(l)?l:[]).map(x=>({...x,ignorees:
 const PERIODES={1:'chaque mois',2:'tous les 2 mois',3:'chaque trimestre',6:'chaque semestre',12:'chaque année'};
 const TYPES_EVT={mariage:'Mariage',bapteme:'Baptême',circoncision:'Circoncision',funerailles:'Funérailles',fete:'Fête','voyage-tourisme':'Voyage (tourisme)','voyage-mission':'Voyage (mission)','voyage-vacances':'Voyage (vacances)',sante:'Santé',projet:'Projet',autre:'Autre'};
 /* Nature d'une opération : s = sens sur le compte (+1 entrée, −1 sortie, 0 virement) */
-const VERSION_APP='Ousnou 1.0.3';   // nom et numéro de version (même valeur que VERSION / VERSION_NOM dans serveur.py)
+const VERSION_APP='Ousnou 1.1.0';   // nom et numéro de version (même valeur que VERSION / VERSION_NOM dans serveur.py)
 const NAT={depense:{l:'Dépense',s:-1},revenu:{l:'Revenu',s:1},virement:{l:'Virement',s:0},pret:{l:'Prêt accordé',s:-1},remboursement:{l:'Remboursement reçu',s:1},investissement:{l:'Investissement',s:-1}};
 const TYPES_CPT={especes:'Espèces',courant:'Compte courant',epargne:'Épargne',carte:'Carte prépayée',mobile:'Mobile money'};
 const MOTS_REVENU=['salaire','salary','prime','revenu','interet','honoraire','indemnite','bourse','vacation','perdiem','per diem','prodes','frais de mission','consultance','jury','soutenance','seminaire','atelier'];
@@ -966,7 +966,7 @@ async function reqServeur(method,url,body){
   return j;
 }
 /* ================= téléphone : stockage local et synchronisation ================= */
-/* Sur l'ordinateur (localhost), AppYa parle directement au serveur, comme avant. Ailleurs (téléphone, en https via
+/* Sur l'ordinateur (localhost), Daftar parle directement au serveur, comme avant. Ailleurs (téléphone, en https via
    Tailscale), les données vivent dans le téléphone (IndexedDB) : chaque saisie est enregistrée localement et placée
    dans une file d'attente, puis envoyée à l'ordinateur par /api/sync, qui renvoie tout ce qui a changé depuis la
    dernière révision reçue. Les réglages (postes, comptes, biens, parités) se modifient en direct sur l'ordinateur. */
@@ -1271,7 +1271,7 @@ function render(){
   $('statsBox').hidden=!isS;$('saisie').hidden=!isD;if(!isS)cacherTip();
   ['vehDash','vehStats','vehRecap','vehVid','vehJournal'].forEach(i=>$(i).hidden=!isV);
   ['maiDash','maiStats','maiRecap','maiPersp','maiJournal'].forEach(i=>$(i).hidden=!isH);
-  document.title=(isD?'Données et réglages':isH?'House':isV?'Engins · '+(vehAll?'toutes les années':cur.y):isP?'Patrimoine':(isS?'Statistiques · ':'')+$('perLabel').textContent.replace(/^./,c=>c.toUpperCase()))+' · AppYa';
+  document.title=(isD?'Données et réglages':isH?'House':isV?'Engins · '+(vehAll?'toutes les années':cur.y):isP?'Patrimoine':(isS?'Statistiques · ':'')+$('perLabel').textContent.replace(/^./,c=>c.toUpperCase()))+' · Daftar';
   if(isV){renderVehicule();return}
   if(isH){renderMaison();return}
   if(isD){openVidange();openProjet();return}
@@ -2644,8 +2644,8 @@ async function exporter(choix){
     const parts=choix==='tout'?[feuillesFinancier(X),feuillesVehicule(X),feuillesMaison(X)]:[EXPORTS[choix].f(X)];
     parts.forEach(p=>p.feuilles.forEach(([n,ws])=>X.utils.book_append_sheet(wb,ws,n)));
     const buf=X.write(wb,{bookType:'xlsx',type:'array'}),nom=choix==='tout'?`tout_${today}`:`${parts[0].nom}_${today}`;
-    await enregistrerFichier(`AppYa_${nom}.xlsx`,new Blob([buf],{type:'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'}));
-    status(`Export « ${EXPORTS[choix].l} » prêt : AppYa_${nom}.xlsx (${wb.SheetNames.length} feuilles, montants en francs CFA).`);
+    await enregistrerFichier(`Daftar_${nom}.xlsx`,new Blob([buf],{type:'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'}));
+    status(`Export « ${EXPORTS[choix].l} » prêt : Daftar_${nom}.xlsx (${wb.SheetNames.length} feuilles, montants en francs CFA).`);
   }catch(e){status(e&&e.message==='load'?"Le module d'export (xlsx.full.min.js) est introuvable dans le dossier app.":"L'export a échoué : "+(e&&e.message||'erreur inconnue'),true)}
   finally{btn.disabled=false;btn.removeAttribute('aria-busy');btn.innerHTML=lab}
 }
@@ -2681,7 +2681,7 @@ const ecartJ=(a,b)=>Math.abs(nbJ(a,b)-1);
 function devinerCompteReleve(texte){const T=normTxt(texte);
   const c=COMPTES.filter(c=>c.id!=='especes').find(c=>[c.nom,...c.mots].some(m=>{const k=normTxt(m);return k.length>2&&T.includes(k)}));
   return (c||COMPTES.find(c=>c.type==='courant')||COMPTES[0]).id}
-/* vocabulaire des banques → mots compris par la reconnaissance d'AppYa */
+/* vocabulaire des banques → mots compris par la reconnaissance de Daftar */
 function libelleLisible(lib){return String(lib).replace(/\bRET ?DAB\b|\bRETDAB\b/i,'retrait DAB').replace(/\bFACTURATIO ?PACKAGE\b/i,'facturation package')
   .replace(/\bVIRT? RECU\b/i,'virement reçu').replace(/\bVIR ?EXT ?MO\b/i,'virement').replace(/\bPHCIE\b/i,'pharmacie').replace(/\bPMT\b/i,'paiement carte').replace(/\s+/g,' ').trim()}
 function proposition(g,cid){
@@ -2728,7 +2728,7 @@ function renderReleve(){
   const avant=R.r.lignes.filter(l=>l.date<R.depuis).length;
   let h=`<p class="hint">${R.r.source==='ocr'?'Lu par OCR (vérifiez bien les montants) · ':''}Relevé du ${dmy(R.r.du)} au ${dmy(R.r.au)} · ${R.r.lignes.length} lignes${avant?` (dont ${avant} avant le ${dmy(R.depuis)}, non comparées)`:''} · compte ${esc(nomCpt(R.cpt))}.</p>`;
   if(R.solde){const s=etatCompte(CPT[R.cpt]),att=soldeAu(CPT[R.cpt],R.solde.date);
-    h+=`<div class="relrow"><input type="checkbox" data-s ${R.solde.choix?'checked':''} aria-label="Noter le solde"><span>Noter le solde du relevé : <b>${fmtC(R.solde.solde)} FCFA</b> au ${dmy(R.solde.date)}</span><span class="rinfo">Solde calculé par AppYa à cette date : ${fmtC(att)} FCFA${att!==R.solde.solde?` · écart ${sgnM(R.solde.solde-att)} (lignes manquantes ou en trop)`:' · identique'}</span></div>`}
+    h+=`<div class="relrow"><input type="checkbox" data-s ${R.solde.choix?'checked':''} aria-label="Noter le solde"><span>Noter le solde du relevé : <b>${fmtC(R.solde.solde)} FCFA</b> au ${dmy(R.solde.date)}</span><span class="rinfo">Solde calculé par Daftar à cette date : ${fmtC(att)} FCFA${att!==R.solde.solde?` · écart ${sgnM(R.solde.solde-att)} (lignes manquantes ou en trop)`:' · identique'}</span></div>`}
   h+=`<h4 class="relsec">➕ À ajouter au carnet (${R.ajout.length})</h4>`+(R.ajout.length?R.ajout.map((x,i)=>`<div class="relrow"><input type="checkbox" data-c="${i}" ${x.choix?'checked':''} aria-label="Ajouter"><span>${dmy(x.g.date)}</span>${mt(x.g)}
     <input class="rlib" data-a="${i}" data-k="libelle" value="${esc(x.p.libelle)}" aria-label="Libellé"><select data-a="${i}" data-k="nature" aria-label="Nature">${optsNat(x.p.nature)}</select>${detailProp(x.p,i)}
     <span class="rinfo">Relevé : ${esc(x.g.libelle)}${x.g.parts.length>1?` · ${x.g.parts.map(fmtC).join(' + ')} (montant + frais)`:''}${x.p.prog?' · rattachée à l\'opération programmée':''}</span></div>`).join(''):'<p class="hint">Aucune.</p>');
@@ -2930,7 +2930,7 @@ $('savFichier').onchange=async ev=>{
 };
 
 /* ================= un seul onglet sur l'ordinateur =================
-   Chaque onglet de l'ordinateur tient ouvert /api/onglet. Quand on clique sur l'icône AppYa alors qu'un onglet
+   Chaque onglet de l'ordinateur tient ouvert /api/onglet. Quand on clique sur l'icône Daftar alors qu'un onglet
    existe déjà, le lanceur n'en ouvre pas d'autre : il demande un « rappel », et l'onglet se signale
    (notification dont le clic ramène à l'onglet, sinon titre clignotant). Le téléphone n'est pas concerné. */
 if(!MODE_SYNC&&!MODE_AUTONOME&&'EventSource' in window&&/^(localhost|127\.0\.0\.1|\[::1\])$/.test(location.hostname)){
@@ -2939,11 +2939,11 @@ if(!MODE_SYNC&&!MODE_AUTONOME&&'EventSource' in window&&/^(localhost|127\.0\.0\.
   let flux=null,clign=null,titre='';
   const brancher=()=>{if(flux)flux.close();flux=new EventSource(`/api/onglet?id=${ID_ONGLET}&notif=${permis()}`);flux.addEventListener('rappel',rappel)};
   function rappel(){
-    if(permis()==='granted'){try{const n=new Notification('AppYa est déjà ouvert',{body:'Cliquez ici pour revenir à cet onglet.',icon:'icone-192.png',tag:'appya-rappel'});
+    if(permis()==='granted'){try{const n=new Notification('Daftar est déjà ouvert',{body:'Cliquez ici pour revenir à cet onglet.',icon:'icone-192.png',tag:'appya-rappel'});
       n.onclick=()=>{window.focus();n.close()}}catch(e){}}
     else if(permis()==='default')$('ongletBandeau').hidden=false;
     if(!document.hidden||clign)return;   // titre clignotant jusqu'au retour sur l'onglet
-    titre=document.title;let k=0;clign=setInterval(()=>{document.title=(k++%2)?titre:'● AppYa est ouvert ici'},900);
+    titre=document.title;let k=0;clign=setInterval(()=>{document.title=(k++%2)?titre:'● Daftar est ouvert ici'},900);
   }
   document.addEventListener('visibilitychange',()=>{if(!document.hidden&&clign){clearInterval(clign);clign=null;document.title=titre}});
   $('ongletAutoriser').onclick=async()=>{try{await Notification.requestPermission()}catch(e){}$('ongletBandeau').hidden=true;brancher()};
@@ -2961,10 +2961,10 @@ if(MODE_SYNC||MODE_AUTONOME){
 if(MODE_SYNC){
   setInterval(()=>synchroniser(),120000);addEventListener('online',()=>synchroniser());majSync();
 }
-$('footVer').textContent='AppYa '+VERSION_APP;
+$('footVer').textContent='Daftar '+VERSION_APP;
 req('GET','/api/info').then(i=>{$('footFile').innerHTML=MODE_AUTONOME?`Données : <b>${esc(i.fichier)}</b> · copies de sécurité : <b>${esc(i.sauvegardes)}</b>`:`Fichier de données : <code>${esc(i.fichier)}</code> · sauvegarde automatique chaque jour dans <code>${esc(i.sauvegardes)}</code>`}).catch(()=>{});
 if(!MODE_DEMO)$('footFile').insertAdjacentHTML('afterend',' <a href="?demo" style="color:var(--accent)">Voir la démo</a>');
-if(MODE_DEMO)$('footTxt').textContent='AppYa · version de démonstration · données simulées, rangées à part de vos données.';
+if(MODE_DEMO)$('footTxt').textContent='Daftar · version de démonstration · données simulées, rangées à part de vos données.';
 /* démo : le bouton « précédent » (navigateur, téléphone) ne fait pas sortir de la démo ; seul « Quitter la démo » en sort */
 if(MODE_DEMO&&window.history&&history.pushState){
   let sortie=false;
@@ -2977,7 +2977,7 @@ if(MODE_DEMO&&window.history&&history.pushState){
   });
   $('demoQuitter').addEventListener('click',ev=>{ev.preventDefault();sortie=true;history.back()});
 }
-else if(MODE_AUTONOME)$('footTxt').textContent='AppYa · suivi financier, engins et maison · version autonome : vos données restent dans cet appareil.';
+else if(MODE_AUTONOME)$('footTxt').textContent='Daftar · suivi financier, engins et maison · version autonome : vos données restent dans cet appareil.';
 if(window.matchMedia){const mq=matchMedia('(prefers-color-scheme: dark)');const f=()=>render();mq.addEventListener?mq.addEventListener('change',f):mq.addListener(f)}
 document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='visible'&&ready&&!editId){if(MODE_SYNC)synchroniser();else charger(true)}});
 </script>

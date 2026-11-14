@@ -1,4 +1,4 @@
-/* AppYa — lecture des relevés bancaires.
+/* Daftar — lecture des relevés bancaires.
    PDF avec texte : pdf.js (fichiers pdf.min.js et pdf.worker.min.js, dans l'application, hors ligne).
    PDF scanné ou photo : reconnaissance de caractères (OCR) tesseract.js, en français, téléchargée à la demande
    (connexion nécessaire la première fois seulement). Tout se passe dans l'appareil : le relevé n'est envoyé nulle part.

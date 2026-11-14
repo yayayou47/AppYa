@@ -1,6 +1,6 @@
 # Publication d'une version : à chaque tag « vX.Y.Z », construit
-#   - AppYa-ubuntu-X.Y.Z.zip  (version ordinateur, carnet vide : bash installer.sh)
-#   - AppYa-X.Y.Z.apk         (Android, version autonome, signée)
+#   - Daftar-ubuntu-X.Y.Z.zip  (version ordinateur, carnet vide : bash installer.sh)
+#   - Daftar-X.Y.Z.apk         (Android, version autonome, signée)
 # et les attache à la page « Releases ». Lancement manuel possible (APK de test, sans publication).
 name: Publier une version (APK et Ubuntu)
 on:
@@ -33,9 +33,9 @@ jobs:
           echo "NOMVER=$(sed -n 's/^VERSION_NOM = "\(.*\)".*/\1/p' serveur.py)" >> "$GITHUB_ENV"
       - name: Version ordinateur (zip Ubuntu)
         run: |
-          mkdir -p dist/AppYa/donnees
-          cp -r app serveur.py appya installer.sh desinstaller.sh LISEZMOI.txt dist/AppYa/
-          (cd dist && zip -qr "AppYa-ubuntu-$VERSION.zip" AppYa && rm -rf AppYa)
+          mkdir -p dist/Daftar/donnees
+          cp -r app serveur.py appya installer.sh desinstaller.sh LISEZMOI.txt dist/Daftar/
+          (cd dist && zip -qr "Daftar-ubuntu-$VERSION.zip" Daftar && rm -rf Daftar)
       - name: Version autonome et projet Android
         run: |
           bash outils/construire-web.sh www
@@ -54,31 +54,31 @@ jobs:
         run: |
           if [ -z "$ANDROID_KEYSTORE" ]; then
             echo "::warning::Secret ANDROID_KEYSTORE absent : APK non signé (test seulement, non installable)."
-            cp android/app/build/outputs/apk/release/app-release-unsigned.apk "dist/AppYa-$VERSION-non-signe.apk"; exit 0
+            cp android/app/build/outputs/apk/release/app-release-unsigned.apk "dist/Daftar-$VERSION-non-signe.apk"; exit 0
           fi
           echo "$ANDROID_KEYSTORE" | base64 -d > "$RUNNER_TEMP/appya.jks"
           BT="$(ls -d "$ANDROID_HOME"/build-tools/* | sort -V | tail -n1)"
           "$BT/zipalign" -p -f 4 android/app/build/outputs/apk/release/app-release-unsigned.apk "$RUNNER_TEMP/aligne.apk"
           "$BT/apksigner" sign --ks "$RUNNER_TEMP/appya.jks" --ks-key-alias appya \
             --ks-pass env:ANDROID_KEYSTORE_PASSWORD --key-pass env:ANDROID_KEYSTORE_PASSWORD --v4-signing-enabled false \
-            --out "dist/AppYa-$VERSION.apk" "$RUNNER_TEMP/aligne.apk"
-          "$BT/apksigner" verify --print-certs "dist/AppYa-$VERSION.apk" | head -n 3
+            --out "dist/Daftar-$VERSION.apk" "$RUNNER_TEMP/aligne.apk"
+          "$BT/apksigner" verify --print-certs "dist/Daftar-$VERSION.apk" | head -n 3
           rm -f "$RUNNER_TEMP/appya.jks"
       - uses: actions/upload-artifact@v5
         with:
-          name: AppYa-${{ env.VERSION }}
+          name: Daftar-${{ env.VERSION }}
           path: dist/
       - name: Page « Releases »
         if: github.ref_type == 'tag'
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
-          ls dist/AppYa-"$VERSION".apk >/dev/null || { echo "::error::APK signé absent : secrets ANDROID_KEYSTORE* à définir."; exit 1; }
+          ls dist/Daftar-"$VERSION".apk >/dev/null || { echo "::error::APK signé absent : secrets ANDROID_KEYSTORE* à définir."; exit 1; }
           cat > notes.md <<NOTES
-          **AppYa $NOMVER $VERSION** : suivi financier, véhicule et maison. Aucune donnée n'est incluse : chaque personne commence avec un carnet vide.
+          **Daftar $NOMVER $VERSION** : suivi financier, véhicule et maison. Aucune donnée n'est incluse : chaque personne commence avec un carnet vide.
 
-          - **Android** : \`AppYa-$VERSION.apk\` (autoriser l'installation depuis cette source la première fois). Les données restent dans le téléphone : pensez à *Données et réglages › Sauvegarde*.
-          - **Ordinateur Ubuntu** : \`AppYa-ubuntu-$VERSION.zip\`, décompresser puis \`bash installer.sh\`.
-          - **Lien web** (sans installation) : https://yayayou47.github.io/AppYa/
+          - **Android** : \`Daftar-$VERSION.apk\` (autoriser l'installation depuis cette source la première fois). Les données restent dans le téléphone : pensez à *Données et réglages › Sauvegarde*.
+          - **Ordinateur Ubuntu** : \`Daftar-ubuntu-$VERSION.zip\`, décompresser puis \`bash installer.sh\`.
+          - **Lien web** (sans installation) : https://yayayou47.github.io/Daftar/
           NOTES
-          gh release create "$GITHUB_REF_NAME" dist/* --title "AppYa $NOMVER $VERSION" --notes-file notes.md
+          gh release create "$GITHUB_REF_NAME" dist/* --title "Daftar $NOMVER $VERSION" --notes-file notes.md

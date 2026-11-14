@@ -1,9 +1,9 @@
-APPYA OUSNOU 1.0.3 — SUIVI FINANCIER, ENGINS ET MAISON — VERSION UBUNTU
+DAFTAR OUSNOU 1.1.0 — SUIVI FINANCIER, ENGINS ET MAISON — VERSION UBUNTU
 ======================================================================
 
 Une application qui tourne dans votre navigateur, sur votre ordinateur
 (http://localhost:8780), sans internet. Vos données restent chez vous,
-dans un simple fichier JSON. AppYa réunit l'ancien Suivi financier et
+dans un simple fichier JSON. Daftar réunit l'ancien Suivi financier et
 l'ancien Carnet du véhicule en une seule application.
 
 Prérequis : Ubuntu 20.04 ou plus récent (Python 3 est déjà installé).
@@ -22,11 +22,11 @@ externe NTFS ou exFAT, Ubuntu refuse d'exécuter les fichiers directement
 (« Permission non accordée »). Avec « bash », ce droit n'est pas nécessaire.
 
 L'installation :
-  - copie le carnet dans ~/AppYa ;
+  - copie le carnet dans ~/Daftar ;
   - le fait démarrer automatiquement à chaque ouverture de session ;
-  - ajoute « AppYa » au menu des applications et une icône
+  - ajoute « Daftar » au menu des applications et une icône
     sur le bureau (clic droit > « Autoriser le lancement » la première fois) ;
-  - installe la commande  appya ;
+  - installe la commande  daftar ;
   - ouvre le carnet dans le navigateur ;
   - désigne le dossier d'où vous l'avez lancée comme COPIE MIROIR de vos
     données : voir les parties 7 et 8.
@@ -102,7 +102,7 @@ Le 30 ou le 31 devient le dernier jour des mois plus courts.
 
 Relevé bancaire : Données et réglages › Relevé bancaire. Choisir le PDF
 (ou une photo) du relevé, vérifier le compte et la date « Comparer à partir
-du » (début du suivi par défaut), puis « Analyser ». AppYa range chaque ligne :
+du » (début du suivi par défaut), puis « Analyser ». Daftar range chaque ligne :
   ✓ déjà notée (même montant, date à ±5 jours) ;
   ✎ à corriger (montant proche à ±15 % : par exemple salaire 400 000 noté,
     400 091 versé) ;
@@ -134,11 +134,11 @@ voiture, moto, bus, camion, groupe électrogène, autre. Un groupe électrogène
 se suit en HEURES de marche (compteur, vidange tous les 250 h par défaut,
 consommation en L/h) ; les autres engins en kilomètres.
 
-Premier lancement : avec un carnet vide, une page d'accueil présente AppYa,
+Premier lancement : avec un carnet vide, une page d'accueil présente Daftar,
 les trois premières étapes (comptes, engins et maison, première opération)
 et un lien vers la DÉMO.
 Démo : adresse terminée par « ?demo » (lien « Voir la démo » en bas de page,
-ou https://yayayou47.github.io/AppYa/?demo). Trois années de données
+ou https://yayayou47.github.io/Daftar/?demo). Trois années de données
 simulées (comptes, salaire, dépenses, voiture, moto, groupe électrogène,
 construction d'une villa, mariage, mission, baptême, prêts, frais bancaires).
 Elles sont rangées à part : vos propres données ne sont ni lues ni modifiées.
@@ -168,9 +168,9 @@ masquées.
 
 2 bis. SUR LE TÉLÉPHONE (HORS LIGNE, SYNCHRONISÉ)
 -------------------------------------------------
-Deux façons d'avoir AppYa sur le téléphone :
+Deux façons d'avoir Daftar sur le téléphone :
   - VERSION AUTONOME (le plus simple, sans ordinateur) : ouvrez le lien web
-    du projet (https://yayayou47.github.io/AppYa/) dans Chrome, ou installez
+    du projet (https://yayayou47.github.io/Daftar/) dans Chrome, ou installez
     l'APK (page « Releases » du dépôt GitHub). Les données restent dans le
     téléphone ; sauvegardez-les avec Données et réglages › Sauvegarde.
   - VERSION SYNCHRONISÉE avec cet ordinateur (ce qui suit) : le téléphone et
@@ -181,7 +181,7 @@ Deux façons d'avoir AppYa sur le téléphone :
     « tailscale status » donne le nom de l'ordinateur en …ts.net. Ouvrez
     https://<nom-de-l-ordinateur>.ts.net dans Chrome sur le téléphone,
 puis menu ⋮ › « Installer l'application » (ou « Ajouter à l'écran
-d'accueil »). AppYa s'ouvre alors comme une application, même sans réseau.
+d'accueil »). Daftar s'ouvre alors comme une application, même sans réseau.
 
   - Les saisies (une opération, coller une liste, modifier, supprimer) se
     font hors ligne : elles sont gardées dans le téléphone et envoyées à
@@ -199,16 +199,16 @@ d'accueil »). AppYa s'ouvre alors comme une application, même sans réseau.
     se modifient quand le téléphone est relié à l'ordinateur.
   - L'adresse sécurisée est relayée par Tailscale (« tailscale serve ») ;
     pour la couper : tailscale serve --https=443 off
-  - Hors ligne, AppYa affiche la dernière version ouverte en ligne. Après
-    une mise à jour sur l'ordinateur, ouvrir une fois AppYa sur le téléphone
+  - Hors ligne, Daftar affiche la dernière version ouverte en ligne. Après
+    une mise à jour sur l'ordinateur, ouvrir une fois Daftar sur le téléphone
     avec l'ordinateur joignable : la nouvelle version est gardée pour la
     suite. Si l'ordinateur ne répond pas, la page s'ouvre en 3 à 4 secondes.
 
 Où sont les données du téléphone ? Dans Chrome, sur le téléphone même, dans
-l'espace privé du site AppYa (base IndexedDB « appya ») : les lignes, les
+l'espace privé du site Daftar (base IndexedDB « appya ») : les lignes, les
 réglages et la file des saisies non encore envoyées. L'application installée
 et l'onglet Chrome partagent cet espace. La copie de référence reste celle de
-l'ordinateur (~/AppYa/donnees/carnet.json, sauvegardée chaque jour). Ne pas
+l'ordinateur (~/Daftar/donnees/carnet.json, sauvegardée chaque jour). Ne pas
 effacer les données du site dans Chrome (ni désinstaller Chrome) tant que le
 bouton n'affiche pas « ✓ À jour » : les saisies en attente seraient perdues.
 
@@ -303,7 +303,7 @@ vérifiez nature, compte et poste dans l'aperçu avant d'importer.
     avec km et litres, récapitulatif mensuel avec consommation et coût par km,
     vidanges) ou Carnet de la maison (travaux, récapitulatif par année et par
     catégorie, fiche du projet). Montants en francs CFA ; le fichier
-    AppYa_<rubrique>_<date>.xlsx s'ouvre avec LibreOffice Calc.
+    Daftar_<rubrique>_<date>.xlsx s'ouvre avec LibreOffice Calc.
   - Onglet « Comptes et biens » : ajouter ou renommer un compte (couleur, mots-clés,
     taux d'intérêt), ajouter un bien (date et prix d'achat, mots-clés
     d'investissement, poste de ses frais d'usage).
@@ -327,62 +327,64 @@ Aides et dons · Enfants, école · Santé · Voiture · Téléphone, internet �
 Transport · Repas, boissons · Perso · Autre.
 
 
-6. LA COMMANDE appya
-------------------------------
-    appya                 ouvre le carnet ; s'il est déjà ouvert dans un
-                          onglet, aucun onglet n'est ajouté (voir plus bas)
-    appya nouvel-onglet   ouvre quand même un nouvel onglet
-    appya etat            tourne-t-il ? à quelle adresse ?
-    appya arreter | demarrer | redemarrer
-    appya reseau oui|non  accès depuis le téléphone (même Wi-Fi)
-    appya reseau nouvelle-cle   change la clé d'accès du téléphone
-    appya sauvegarder     copie datée de carnet.json dans Documents
-    appya journal         messages du serveur (en cas de problème)
-    appya dossier         ouvre ~/AppYa
+6. LA COMMANDE daftar
 
-Un seul onglet : l'icône AppYa (comme « appya ») n'ouvre un onglet que s'il
+(« appya » fonctionne aussi, comme avant le changement de nom.)
+------------------------------
+    daftar                 ouvre le carnet ; s'il est déjà ouvert dans un
+                          onglet, aucun onglet n'est ajouté (voir plus bas)
+    daftar nouvel-onglet   ouvre quand même un nouvel onglet
+    daftar etat            tourne-t-il ? à quelle adresse ?
+    daftar arreter | demarrer | redemarrer
+    daftar reseau oui|non  accès depuis le téléphone (même Wi-Fi)
+    daftar reseau nouvelle-cle   change la clé d'accès du téléphone
+    daftar sauvegarder     copie datée de carnet.json dans Documents
+    daftar journal         messages du serveur (en cas de problème)
+    daftar dossier         ouvre ~/Daftar
+
+Un seul onglet : l'icône Daftar (comme « daftar ») n'ouvre un onglet que s'il
 n'y en a aucun. Sinon, l'onglet déjà ouvert se signale : son titre clignote
-(« ● AppYa est ouvert ici ») et, si vous avez autorisé ses notifications
+(« ● Daftar est ouvert ici ») et, si vous avez autorisé ses notifications
 (bouton « Autoriser » proposé la première fois), une notification apparaît :
 un clic dessus vous ramène à l'onglet. Pour un second onglet volontaire :
 clic droit sur l'icône › « Ouvrir dans un nouvel onglet », ou
-appya nouvel-onglet.
+daftar nouvel-onglet.
 
-Accès depuis le téléphone : il est protégé par une clé. « appya
+Accès depuis le téléphone : il est protégé par une clé. « daftar
 etat » affiche un lien du type  http://192.168.1.20:8780/?cle=k7m2…  ;
 ouvrez-le une fois sur le téléphone, qui s'en souvient ensuite (un an).
 Les autres appareils du Wi-Fi ne voient rien sans ce lien : ne le partagez
-pas. Si vous l'avez donné par erreur, tapez  appya reseau nouvelle-cle
+pas. Si vous l'avez donné par erreur, tapez  daftar reseau nouvelle-cle
 (chaque téléphone devra rouvrir le nouveau lien). Sur cet ordinateur, aucune
 clé n'est demandée.
 
 
 7. VOS DONNÉES
 --------------
-    ~/AppYa/donnees/carnet.json       opérations, postes, budgets, comptes et biens
-    ~/AppYa/donnees/sauvegardes/      une copie automatique par jour (60 gardées)
+    ~/Daftar/donnees/carnet.json       opérations, postes, budgets, comptes et biens
+    ~/Daftar/donnees/sauvegardes/      une copie automatique par jour (60 gardées)
 
-Copie miroir dans le dossier d'où AppYa a été installé (par exemple un
+Copie miroir dans le dossier d'où Daftar a été installé (par exemple un
 second disque) :
     <dossier d'installation>/donnees/carnet.json     recopié à chaque modification
     <dossier d'installation>/donnees/sauvegardes/    les mêmes sauvegardes
-Si ce disque n'est pas monté, la copie est sautée sans gêner AppYa et
-refaite à la modification suivante (ou au prochain démarrage). « appya etat »
-et le journal du serveur (« appya journal ») indiquent la copie miroir.
+Si ce disque n'est pas monté, la copie est sautée sans gêner Daftar et
+refaite à la modification suivante (ou au prochain démarrage). « daftar etat »
+et le journal du serveur (« daftar journal ») indiquent la copie miroir.
 Si ce dossier est sur le même disque physique que ~, il ne protège pas
 d'une panne du disque : gardez aussi une copie ailleurs (clé USB…) :
-    appya sauvegarder /media/$USER/MA_CLE
+    daftar sauvegarder /media/$USER/MA_CLE
 
 Restaurer une sauvegarde :
-    appya arreter
-    cp ~/AppYa/donnees/sauvegardes/carnet-AAAA-MM-JJ.json ~/AppYa/donnees/carnet.json
-    appya demarrer
+    daftar arreter
+    cp ~/Daftar/donnees/sauvegardes/carnet-AAAA-MM-JJ.json ~/Daftar/donnees/carnet.json
+    daftar demarrer
 
 Mettre à jour : décompressez la nouvelle version et relancez
 « bash installer.sh » ; vos données ne sont jamais écrasées.
-Une mise à jour n'ouvre pas de nouvel onglet : rechargez l'onglet AppYa
+Une mise à jour n'ouvre pas de nouvel onglet : rechargez l'onglet Daftar
 déjà ouvert (F5).
-AppYa ne lit que le format de données actuel (version 5) : les
+Daftar ne lit que le format de données actuel (version 5) : les
 conversions des anciens formats et la reprise des anciennes applications
 (Suivi financier, Carnet du véhicule) ont été retirées le 14/11/2026, une
 fois toutes les données converties.
@@ -390,20 +392,20 @@ fois toutes les données converties.
 
 Désinstaller :
     bash desinstaller.sh          garde vos données
-    bash desinstaller.sh --tout   supprime aussi ~/AppYa (copie finale dans Documents)
-Il se lance indifféremment depuis ~/AppYa ou depuis le dossier d'installation :
+    bash desinstaller.sh --tout   supprime aussi ~/Daftar (copie finale dans Documents)
+Il se lance indifféremment depuis ~/Daftar ou depuis le dossier d'installation :
 il agit toujours sur l'installation réelle. Avant tout retrait, il recopie
 une dernière fois les données dans la copie miroir (disque branché). Il
 ne supprime jamais le dossier d'origine.
 
-Contenu : serveur.py (AppYa Ousnou 1.0.3, Python, bibliothèque standard), app/index.html,
+Contenu : serveur.py (Daftar Ousnou 1.1.0, Python, bibliothèque standard), app/index.html,
 app/moteur.js et app/mode.js (version autonome), app/releve.js et
 app/pdf.min.js + app/pdf.worker.min.js (pdf.js 3.11.174, Mozilla, licence
 Apache 2.0 : app/LICENCE-pdfjs.txt ; lecture des relevés), app/sw.js et
 app/manifest.webmanifest (téléphone), app/xlsx.full.min.js
-(SheetJS 0.18.5, licence Apache 2.0), appya, installer.sh, desinstaller.sh,
+(SheetJS 0.18.5, licence Apache 2.0), appya (la commande daftar), installer.sh, desinstaller.sh,
 donnees/ (copie miroir de vos données, voir la partie 7).
-Code d'AppYa sous licence MIT (fichier LICENSE).
+Code de Daftar sous licence MIT (fichier LICENSE).
 
 
 8. CHANGER D'ORDINATEUR
@@ -412,22 +414,22 @@ Le dossier d'installation contient tout : le programme et, dans
 donnees/, la copie miroir à jour de vos données et de leurs sauvegardes.
 
 Sur l'ancien ordinateur :
-  1. Sur le téléphone, ouvrez AppYa avec l'ordinateur joignable et attendez
+  1. Sur le téléphone, ouvrez Daftar avec l'ordinateur joignable et attendez
      « ✓ À jour » : les saisies du téléphone arrivent sur l'ordinateur.
-  2. Vérifiez la copie miroir :  appya etat  (ou la date de
+  2. Vérifiez la copie miroir :  daftar etat  (ou la date de
      <dossier d'installation>/donnees/carnet.json).
-  3. Copiez le dossier AppYa entier (clé USB, disque externe…).
+  3. Copiez le dossier Daftar entier (clé USB, disque externe…).
   4. Facultatif :  bash desinstaller.sh  (vos données restent en place).
 
 Sur le nouvel ordinateur (Ubuntu) :
-  5. Posez le dossier AppYa là où vous voulez garder la copie miroir (par
+  5. Posez le dossier Daftar là où vous voulez garder la copie miroir (par
      exemple sur un second disque), puis dans un terminal :
-         cd <dossier AppYa>
+         cd <dossier Daftar>
          bash installer.sh
-     Comme ~/AppYa n'existe pas encore, l'installation y reprend
+     Comme ~/Daftar n'existe pas encore, l'installation y reprend
      donnees/carnet.json et donnees/sauvegardes/ du dossier copié. Ce dossier
      devient la copie miroir du nouvel ordinateur.
-     Si ~/AppYa existe déjà, ses données sont CONSERVÉES ; l'installation
+     Si ~/Daftar existe déjà, ses données sont CONSERVÉES ; l'installation
      compare les deux carnets et, si celui du dossier copié est plus récent,
      affiche la commande pour l'adopter.
   6. Téléphone : installez Tailscale sur le nouvel ordinateur et connectez-le
@@ -443,17 +445,17 @@ Sur le nouvel ordinateur (Ubuntu) :
 
 9. VERSION AUTONOME, APK ET SAUVEGARDES
 ---------------------------------------
-Le code d'AppYa est publié sur https://github.com/yayayou47/AppYa (sans
+Le code de Daftar est publié sur https://github.com/yayayou47/Daftar (sans
 aucune donnée). Trois versions, construites à partir du même code :
-  - Ordinateur (Ubuntu) : fichier AppYa-ubuntu-<version>.zip de la page
+  - Ordinateur (Ubuntu) : fichier Daftar-ubuntu-<version>.zip de la page
     « Releases » ; décompressez puis  bash installer.sh  (carnet vide).
-  - Lien web : https://yayayou47.github.io/AppYa/  à ouvrir dans Chrome, puis
+  - Lien web : https://yayayou47.github.io/Daftar/  à ouvrir dans Chrome, puis
     ⋮ › « Installer l'application ». Mise à jour automatique.
-  - Android : fichier AppYa-<version>.apk de la page « Releases » (autoriser
+  - Android : fichier Daftar-<version>.apk de la page « Releases » (autoriser
     l'installation d'applications de cette source la première fois).
 Dans les deux versions téléphone, les données restent dans l'appareil.
 Données et réglages › Sauvegarde : « Exporter mes données » crée un fichier
 appya-AAAA-MM-JJ.json à garder en lieu sûr ; « Importer » le recharge (sur le
 même appareil ou un autre). Ce fichier a le format de donnees/carnet.json :
 pour passer du téléphone à l'ordinateur, copiez-le en donnees/carnet.json du
-dossier AppYa AVANT de lancer  bash installer.sh  sur un nouvel ordinateur.
+dossier Daftar AVANT de lancer  bash installer.sh  sur un nouvel ordinateur.

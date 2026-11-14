@@ -1,17 +1,17 @@
-/* AppYa — service hors ligne (téléphone).
-   La page et ses fichiers sont gardés en cache : AppYa s'ouvre sans réseau. Stratégie « réseau d'abord » :
+/* Daftar — service hors ligne (téléphone).
+   La page et ses fichiers sont gardés en cache : Daftar s'ouvre sans réseau. Stratégie « réseau d'abord » :
    connecté, on prend toujours la dernière version (et on met le cache à jour) ; hors ligne, on sert le cache.
    Les appels /api/ ne passent jamais par le cache : les données sont gérées par la page (stockage local + synchronisation).
 
-   v3 (2026-11-14) : chemins relatifs (servi aussi sous /AppYa/ sur GitHub Pages) ; mode.js et moteur.js en cache.
+   v3 (2026-11-14) : chemins relatifs (servi aussi sous /Daftar/ sur GitHub Pages) ; mode.js et moteur.js en cache.
    v2 (2026-11-14) : la page est rangée sous une seule clé, '/index.html', à l'écriture comme à la lecture.
    En v1, l'installation rangeait aussi '/', et la lecture hors ligne de '/' retombait sur cette copie
    figée au jour de l'installation : hors ligne, le téléphone montrait une vieille version (sans les icônes).
    Si l'ordinateur ne répond pas (éteint, Tailscale coupé), on n'attend pas plus de DELAI ms avant de
    servir le cache (la page) ; les icônes et le tableur sont servis du cache sans attendre. La réponse du réseau, si elle arrive plus tard, met quand même le cache à jour. */
-const CACHE = 'appya-v5';
+const CACHE = 'appya-v6';
 const DELAI = 3000;
-// chemins relatifs au dossier du service : '/' sur l'ordinateur, '/AppYa/' sur GitHub Pages
+// chemins relatifs au dossier du service : '/' sur l'ordinateur, '/Daftar/' sur GitHub Pages
 const BASE = new URL('./', self.location).pathname;
 const FICHIERS = ['index.html', 'mode.js', 'moteur.js', 'releve.js', 'demo.js', 'pdf.min.js', 'pdf.worker.min.js', 'xlsx.full.min.js', 'icone.svg', 'manifest.webmanifest', 'icone-192.png', 'icone-512.png', 'icone-512-masque.png'].map(f => BASE + f);
 

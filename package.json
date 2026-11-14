@@ -1,8 +1,8 @@
 {
   "name": "appya",
-  "version": "1.0.3",
+  "version": "1.1.0",
   "private": true,
-  "description": "AppYa : suivi financier, véhicule et maison (version Android construite avec Capacitor)",
+  "description": "Daftar : suivi financier, véhicule et maison (version Android construite avec Capacitor)",
   "scripts": {
     "web": "bash outils/construire-web.sh www"
   },

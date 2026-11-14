@@ -114,6 +114,7 @@
       if (!ids(d, 'evenements').has(doc.evenement)) erreur('Événement inconnu : ' + doc.evenement);
       out.evenement = doc.evenement;
     }
+    if (doc.prog && ids(d, 'programmees').has(doc.prog) && RE_DATE.test(String(doc.prog_date || ''))) { out.prog = doc.prog; out.prog_date = doc.prog_date; }
     if (nature === 'investissement' && idsMaisons(d).includes(out.bien))
       out.cat_maison = CAT_MAISON.includes(doc.cat_maison) ? doc.cat_maison : devinerCatMaison(libelle);
     if ((nature === 'depense' || nature === 'investissement') && doc.vehicule) {
@@ -194,6 +195,35 @@
     }
     const manquants = [...new Set(d.operations.map(o => o.evenement).filter(Boolean))].filter(e => !vus.has(e));
     if (manquants.length) erreur('Impossible de supprimer un événement qui a des opérations : ' + manquants.sort().join(', '));
+    return out;
+  }
+  const PERIODES_PROG = [1, 2, 3, 6, 12];
+  function nettoyerProgrammees(liste, d) {
+    const out = [], vus = new Set();
+    const cs = Object.fromEntries(((d.parametres || {}).comptes || []).map(c => [c.id, c]));
+    if (!Object.keys(cs).length) cs.especes = {};
+    for (const x of liste || []) {
+      const pid = String(x.id || '').trim(), lib = texte(x.libelle, 200);
+      if (!RE_ID.test(pid)) erreur("Identifiant d'opération programmée invalide : " + pid);
+      if (!lib || vus.has(pid)) erreur('Chaque opération programmée doit avoir un libellé unique.');
+      vus.add(pid);
+      const nature = ['depense', 'revenu'].includes(x.nature) ? x.nature : 'depense';
+      const mode = x.mode === 'interets' ? 'interets' : 'fixe';
+      const compte = x.compte in cs ? x.compte : null;
+      if (!compte) erreur(lib + ' : compte inconnu.');
+      if (mode === 'interets' && [undefined, null, ''].includes(cs[compte].taux))
+        erreur(`${lib} : le compte ${cs[compte].nom || compte} n'a pas de taux d'intérêt (Comptes et biens).`);
+      const periode = parseInt(x.periode || 1, 10), jour = parseInt(x.jour || 1, 10);
+      if (!PERIODES_PROG.includes(periode) || !(jour >= 1 && jour <= 31)) erreur(lib + ' : périodicité ou jour invalide.');
+      const debut = String(x.debut || ''), fin = String(x.fin || '');
+      if (!RE_DATE.test(debut) || (fin && !RE_DATE.test(fin))) erreur(lib + ' : date de début (obligatoire) ou de fin invalide.');
+      const p = {id: pid, libelle: lib, nature, mode, compte, periode, jour, debut, fin, actif: x.actif !== false,
+                 montant: montantPositif(x.montant || 0, 'Montant de ' + lib, mode === 'interets'),
+                 ignorees: [...new Set((x.ignorees || []).map(String).filter(v => RE_DATE.test(v)))].sort().slice(-60)};
+      if (nature === 'depense') p.categorie = idsPostes(d).has(x.categorie) ? x.categorie : 'autre';
+      else p.cat_revenu = idsRevenus(d).has(x.cat_revenu) ? x.cat_revenu : (mode === 'interets' ? 'interets' : 'autre');
+      out.push(p);
+    }
     return out;
   }
   function nettoyerComptes(liste, d) {
@@ -304,6 +334,7 @@
         if (x.nature === 'revenu' && x.cat_revenu && !rids.has(x.cat_revenu)) { x.cat_revenu = 'autre'; marquer(d, x); n++; }
     }
     if ('evenements' in corps) prm.evenements = nettoyerEvenements(corps.evenements, d);
+    if ('programmees' in corps) prm.programmees = nettoyerProgrammees(corps.programmees, d);
     if ('comptes' in corps) prm.comptes = nettoyerComptes(corps.comptes, d);
     if ('biens' in corps) prm.biens = nettoyerBiens(corps.biens, d);
     if ('devises' in corps) prm.devises = nettoyerDevises(corps.devises);

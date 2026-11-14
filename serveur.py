@@ -114,6 +114,12 @@ TYPES_EVENEMENT = ("mariage", "bapteme", "circoncision", "funerailles", "fete", 
                    "voyage-vacances", "sante", "projet", "autre")
 
 
+# Opérations programmées (frais fixes, abonnements, intérêts) : rien n'est enregistré seul ; la page propose chaque
+# échéance passée à confirmer. Une opération confirmée porte prog (id) et prog_date (échéance) ; une échéance
+# ignorée est notée dans « ignorees ». mode « interets » : montant = solde du compte × taux du compte.
+PERIODES_PROG = (1, 2, 3, 6, 12)
+
+
 def ids_revenus(d):
     return {x["id"] for x in d.get("parametres", {}).get("revenus", [])} or {x["id"] for x in REVENUS_DEFAUT}
 
@@ -476,6 +482,8 @@ def nettoyer(doc, d):
         if doc["evenement"] not in ids_de(d, "evenements"):
             raise ValueError("Événement inconnu : %s" % doc["evenement"])
         out["evenement"] = doc["evenement"]
+    if doc.get("prog") and doc["prog"] in ids_de(d, "programmees") and RE_DATE.match(str(doc.get("prog_date") or "")):
+        out["prog"], out["prog_date"] = doc["prog"], doc["prog_date"]
     if nature == "investissement" and out.get("bien") in ids_maisons(d):
         out["cat_maison"] = doc.get("cat_maison") if doc.get("cat_maison") in CAT_MAISON else deviner_cat_maison(libelle)
     if nature in ("depense", "investissement") and doc.get("vehicule"):
@@ -580,6 +588,44 @@ def nettoyer_evenements(liste, d):
     manquants = {o.get("evenement") for o in d.get("operations", []) if o.get("evenement")} - vus
     if manquants:
         raise ValueError("Impossible de supprimer un événement qui a des opérations : %s" % ", ".join(sorted(manquants)))
+    return out
+
+
+def nettoyer_programmees(liste, d):
+    out, vus = [], set()
+    comptes = {c["id"]: c for c in d.get("parametres", {}).get("comptes", [])} or {"especes": {}}
+    for x in liste or []:
+        pid, lib = str(x.get("id", "")).strip(), texte(x.get("libelle"), 200)
+        if not RE_ID.match(pid):
+            raise ValueError("Identifiant d'opération programmée invalide : %r" % pid)
+        if not lib or pid in vus:
+            raise ValueError("Chaque opération programmée doit avoir un libellé unique.")
+        vus.add(pid)
+        nature = x.get("nature") if x.get("nature") in ("depense", "revenu") else "depense"
+        mode = "interets" if x.get("mode") == "interets" else "fixe"
+        compte = x.get("compte") if x.get("compte") in comptes else None
+        if not compte:
+            raise ValueError("%s : compte inconnu." % lib)
+        if mode == "interets" and comptes[compte].get("taux") in (None, ""):
+            raise ValueError("%s : le compte %s n'a pas de taux d'intérêt (Comptes et biens)." % (lib, comptes[compte].get("nom", compte)))
+        try:
+            periode, jour = int(x.get("periode") or 1), int(x.get("jour") or 1)
+        except (TypeError, ValueError):
+            raise ValueError("%s : périodicité ou jour invalide." % lib)
+        if periode not in PERIODES_PROG or not 1 <= jour <= 31:
+            raise ValueError("%s : périodicité ou jour invalide." % lib)
+        debut, fin = str(x.get("debut") or ""), str(x.get("fin") or "")
+        if not RE_DATE.match(debut) or (fin and not RE_DATE.match(fin)):
+            raise ValueError("%s : date de début (obligatoire) ou de fin invalide." % lib)
+        p = {"id": pid, "libelle": lib, "nature": nature, "mode": mode, "compte": compte, "periode": periode, "jour": jour,
+             "debut": debut, "fin": fin, "actif": x.get("actif") is not False,
+             "montant": montant_positif(x.get("montant") or 0, "Montant de %s" % lib, zero=(mode == "interets")),
+             "ignorees": sorted({str(v) for v in (x.get("ignorees") or []) if RE_DATE.match(str(v))})[-60:]}
+        if nature == "depense":
+            p["categorie"] = x.get("categorie") if x.get("categorie") in ids_postes(d) else "autre"
+        else:
+            p["cat_revenu"] = x.get("cat_revenu") if x.get("cat_revenu") in ids_revenus(d) else ("interets" if mode == "interets" else "autre")
+        out.append(p)
     return out
 
 
@@ -977,6 +1023,8 @@ class Gestionnaire(SimpleHTTPRequestHandler):
                             n += 1
                 if "evenements" in corps:
                     prm["evenements"] = nettoyer_evenements(corps.get("evenements"), d)
+                if "programmees" in corps:
+                    prm["programmees"] = nettoyer_programmees(corps.get("programmees"), d)
                 if "comptes" in corps:
                     prm["comptes"] = nettoyer_comptes(corps.get("comptes"), d)
                 if "biens" in corps:

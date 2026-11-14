@@ -86,6 +86,14 @@ Courant et exceptionnel : Données et réglages › Événements et revenus.
     (nature, poste, compte, type de revenu, événement), puis un résumé à
     confirmer avant l'enregistrement.
 
+Opérations programmées : Données et réglages › Programmées. Frais de tenue
+de compte, abonnements (« Facturation package fonctionnaire », Coris, 3 578,
+le 30 de chaque mois), intérêts d'un compte épargne (solde × taux du compte).
+Chaque échéance passée s'annonce par un bandeau « … à confirmer » : on coche,
+on corrige la date ou le montant d'après le relevé, puis « Enregistrer » ;
+« Ignorer » écarte une échéance non prélevée. Rien n'est enregistré seul.
+Le 30 ou le 31 devient le dernier jour des mois plus courts.
+
 Montants masqués : dans la vue Patrimoine seulement, le patrimoine net, les
 soldes des comptes, la valeur des biens et les prêts s'affichent « ••••• »
 à chaque ouverture (et quand l'application passe en arrière-plan). Le bouton

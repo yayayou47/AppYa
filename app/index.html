@@ -28,6 +28,10 @@
 *{box-sizing:border-box}
 [hidden]{display:none!important}
 dialog.confirm{border:1px solid var(--line);border-radius:14px;padding:18px 20px;width:min(440px,calc(100vw - 32px));background:var(--surface);color:var(--ink);box-shadow:0 12px 40px rgba(0,0,0,.25)}
+dialog.confirm.large{width:min(640px,calc(100vw - 32px))}
+.pgrow{display:grid;grid-template-columns:auto 1fr;gap:4px 10px;align-items:center;padding:8px;border:1px solid var(--line);border-radius:10px}
+.pgrow .pgl{font-weight:600}.pgrow .pgf{display:flex;flex-wrap:wrap;gap:6px;grid-column:2}
+.pgrow .pgf input{width:auto;flex:1 1 8em;min-width:0}
 dialog.confirm::backdrop{background:rgba(20,24,32,.5)}
 dialog.confirm h3{margin:0 0 10px;font-size:1.05rem}
 dl.resume{display:grid;grid-template-columns:auto 1fr;gap:6px 14px;margin:0 0 10px}
@@ -437,6 +441,7 @@ tr.solde td{color:var(--muted)}
     <symbol id="i-annee" viewBox="0 0 24 24"><rect x="3.5" y="5" width="17" height="15.5" rx="2"/><path d="M3.5 10h17M8 3v4M16 3v4M9.2 10v10.5M14.8 10v10.5M3.5 15.2h17"/></symbol>
     <symbol id="i-patrimoine" viewBox="0 0 24 24"><ellipse cx="12" cy="6.5" rx="7" ry="2.5"/><path d="M5 6.5v4c0 1.4 3.1 2.5 7 2.5s7-1.1 7-2.5v-4"/><path d="M5 10.5v4c0 1.4 3.1 2.5 7 2.5s7-1.1 7-2.5v-4"/><path d="M5 14.5v3c0 1.4 3.1 2.5 7 2.5s7-1.1 7-2.5v-3"/></symbol>
     <symbol id="i-stats" viewBox="0 0 24 24"><path d="M4 20h16"/><path d="M7.5 20v-6M12 20V7.5M16.5 20v-9.5"/></symbol>
+    <symbol id="i-cycle" viewBox="0 0 24 24"><path d="M20 11a8 8 0 0 0-14.5-4.6M4 13a8 8 0 0 0 14.5 4.6"/><path d="M5 3v4h4M19 21v-4h-4"/></symbol>
     <symbol id="i-etoile" viewBox="0 0 24 24"><path d="M12 3.5l2.6 5.3 5.8.8-4.2 4.1 1 5.8-5.2-2.7-5.2 2.7 1-5.8-4.2-4.1 5.8-.8z"/></symbol>
     <symbol id="i-sauve" viewBox="0 0 24 24"><path d="M12 3v11M7.5 9.5 12 14l4.5-4.5"/><path d="M4 15v3.5A2.5 2.5 0 0 0 6.5 21h11a2.5 2.5 0 0 0 2.5-2.5V15"/></symbol>
     <symbol id="i-excel" viewBox="0 0 24 24"><rect x="2" y="3" width="14" height="18" rx="2.2" fill="#1d6f42" stroke="none"/><path d="M5.6 8.2l6.8 7.6M12.4 8.2l-6.8 7.6" stroke="#fff" stroke-width="2.2"/><path d="M14 12h7.5M18.5 8.7 21.8 12l-3.3 3.3"/></symbol>
@@ -461,6 +466,10 @@ tr.solde td{color:var(--muted)}
       </div>
     </div>
   </header>
+  <div class="alerte prog-bandeau" id="progBandeau" hidden role="status">
+    <div><b id="progN"></b> <span class="hint" id="progDet"></span>
+      <div class="row" style="margin-top:6px"><button class="btn" type="button" id="progVoir">Vérifier et confirmer</button></div></div>
+  </div>
   <div class="alerte onglet-bandeau" id="ongletBandeau" hidden role="status">
     <div><b>AppYa était déjà ouvert ici.</b> Pour que l'icône AppYa vous ramène directement à cet onglet, autorisez ses notifications.
       <div class="row" style="margin-top:6px"><button class="btn" type="button" id="ongletAutoriser">Autoriser</button>
@@ -613,6 +622,7 @@ tr.solde td{color:var(--muted)}
       <button role="tab" id="tPostes" aria-selected="false"><svg class="ic" aria-hidden="true" focusable="false"><use href="#i-tag"/></svg><span>Postes et libellés</span></button>
       <button role="tab" id="tCB" aria-selected="false"><svg class="ic" aria-hidden="true" focusable="false"><use href="#i-banque"/></svg><span>Comptes et biens</span></button>
       <button role="tab" id="tEvt" aria-selected="false"><svg class="ic" aria-hidden="true" focusable="false"><use href="#i-etoile"/></svg><span>Événements et revenus</span></button>
+      <button role="tab" id="tProg" aria-selected="false"><svg class="ic" aria-hidden="true" focusable="false"><use href="#i-cycle"/></svg><span>Programmées</span></button>
       <button role="tab" id="tVid" aria-selected="false"><svg class="ic" aria-hidden="true" focusable="false"><use href="#i-huile"/></svg><span>Repères vidange</span></button>
       <button role="tab" id="tMai" aria-selected="false"><svg class="ic" aria-hidden="true" focusable="false"><use href="#i-chantier"/></svg><span>Projet maison</span></button>
       <button role="tab" id="tPar" aria-selected="false"><svg class="ic" aria-hidden="true" focusable="false"><use href="#i-change"/></svg><span>Parités</span></button>
@@ -706,6 +716,12 @@ tr.solde td{color:var(--muted)}
         <div class="row full"><button class="btn" type="submit">Enregistrer le projet</button><span id="pjMsg" class="muted"></span></div>
       </form>
     </div>
+    <div id="progBox" hidden style="display:flex;flex-direction:column;gap:12px">
+    <div class="phead"><h3 class="sub">Opérations programmées</h3><span class="hint">Frais de tenue de compte, abonnements, intérêts</span></div>
+    <div class="hint">Chaque échéance passée est <b>proposée à confirmer</b> (bandeau en haut de l'écran), jamais enregistrée seule. Le jour 30 ou 31 devient le dernier jour des mois plus courts. « Intérêts du compte » propose le solde du compte à l'échéance × son taux (réglé dans Comptes et biens) ; vous corrigez avec le montant du relevé.</div>
+    <div id="progList" class="evlist"></div>
+    <div class="row"><button class="btn ghost" type="button" id="progAdd">+ Frais ou abonnement</button><button class="btn ghost" type="button" id="progAddInt">+ Intérêts d'un compte</button><button class="btn" type="button" id="progSave">Enregistrer</button><span id="progMsg" class="muted" role="status"></span></div>
+    </div>
     <div id="evtBox" hidden style="display:flex;flex-direction:column;gap:12px">
     <div class="phead"><h3 class="sub">Événements</h3><span class="hint">Mariage, baptême, circoncision, voyage, projet…</span></div>
     <div class="hint">Une dépense ou un revenu rattaché à un événement est <b>exceptionnel</b> : il sort des dépenses courantes, des postes et des statistiques journalières, et apparaît dans la section « Exceptionnel » des vues Mois et Année, avec le total de l'événement. Les soldes des comptes, eux, comptent tout. Les mots-clés rattachent automatiquement une saisie (« tenue mariage Awa » → Mariage Awa).</div>
@@ -746,6 +762,12 @@ tr.solde td{color:var(--muted)}
 
   <footer><span id="footTxt">AppYa · suivi financier, véhicule et maison · version locale, les données restent sur cet ordinateur.</span><span id="footFile"></span></footer>
 </main>
+<dialog id="dlgProg" class="confirm large" aria-labelledby="dlgProgTitre">
+  <h3 id="dlgProgTitre">Opérations programmées à confirmer</h3>
+  <p class="hint">Rien n'est enregistré sans vous : cochez, corrigez la date ou le montant si le relevé diffère, puis enregistrez. « Ignorer » écarte l'échéance pour de bon (frais non prélevés ce mois-là).</p>
+  <div id="dlgProgList" class="evlist"></div>
+  <div class="row"><button class="btn" id="dlgProgOk" type="button">Enregistrer les cochées</button><button class="btn ghost" id="dlgProgIgn" type="button">Ignorer les cochées</button><button class="btn ghost" id="dlgProgNon" type="button">Plus tard</button><span id="dlgProgMsg" class="muted" role="status"></span></div>
+</dialog>
 <dialog id="dlgOp" class="confirm" aria-labelledby="dlgTitre">
   <h3 id="dlgTitre">Vérifier avant d'enregistrer</h3>
   <dl id="dlgResume" class="resume"></dl>
@@ -790,6 +812,9 @@ function setEvenements(l){
   EVTS=(Array.isArray(l)?l:[]).map(x=>({id:x.id,nom:x.nom,type:x.type||'autre',debut:x.debut||'',fin:x.fin||'',budget:+x.budget||0,mots:Array.isArray(x.mots)?x.mots:[],note:x.note||''}));
   EVT=Object.fromEntries(EVTS.map(x=>[x.id,x]));
 }
+let PROGS=[];
+function setProgrammees(l){PROGS=(Array.isArray(l)?l:[]).map(x=>({...x,ignorees:Array.isArray(x.ignorees)?x.ignorees:[],actif:x.actif!==false,periode:+x.periode||1,jour:+x.jour||1,montant:+x.montant||0}))}
+const PERIODES={1:'chaque mois',2:'tous les 2 mois',3:'chaque trimestre',6:'chaque semestre',12:'chaque année'};
 const TYPES_EVT={mariage:'Mariage',bapteme:'Baptême',circoncision:'Circoncision',funerailles:'Funérailles',fete:'Fête','voyage-tourisme':'Voyage (tourisme)','voyage-mission':'Voyage (mission)','voyage-vacances':'Voyage (vacances)',sante:'Santé',projet:'Projet',autre:'Autre'};
 /* Nature d'une opération : s = sens sur le compte (+1 entrée, −1 sortie, 0 virement) */
 const NAT={depense:{l:'Dépense',s:-1},revenu:{l:'Revenu',s:1},virement:{l:'Virement',s:0},pret:{l:'Prêt accordé',s:-1},remboursement:{l:'Remboursement reçu',s:1},investissement:{l:'Investissement',s:-1}};
@@ -978,7 +1003,7 @@ const norm=x=>{const n=NAT[x.nature]?x.nature:'depense';return {id:x.id,date:Str
   compte:x.compte||'especes',vers:x.vers||'',personne:String(x.personne||''),echeance:x.echeance||'',bien:x.bien||'',
   categorie:n==='depense'?(CAT[x.categorie]?x.categorie:'autre'):'',remarque:String(x.remarque||''),cree:String(x.cree||''),
   vehicule:x.vehicule||'',cat_vehicule:x.cat_vehicule||'',cat_maison:x.cat_maison||'',km:+x.km||0,quantite:+x.quantite||0,unite:x.unite||'',
-  cat_revenu:n==='revenu'?String(x.cat_revenu||''):'',evenement:(n==='depense'||n==='revenu')?String(x.evenement||''):''}};
+  cat_revenu:n==='revenu'?String(x.cat_revenu||''):'',evenement:(n==='depense'||n==='revenu')?String(x.evenement||''):'',prog:x.prog||'',prog_date:x.prog_date||''}};
 const api={
   async add(doc){const x=await req('POST','/api/operations',doc);all.push(norm(x));return x},
   async addMany(docs){const xs=await req('POST','/api/operations',docs);xs.forEach(x=>all.push(norm(x)));return xs},
@@ -992,14 +1017,14 @@ async function charger(silencieux){
   try{
     const d=await req('GET','/api/donnees');
     const p=d.parametres||{};
-    setPostes(p.postes);setComptes(p.comptes);setBiens(p.biens);setRevenus(p.revenus);setEvenements(p.evenements);setDevises(p.devises);DEBUT_SUIVI=p.debut_suivi||'';
+    setPostes(p.postes);setComptes(p.comptes);setBiens(p.biens);setRevenus(p.revenus);setEvenements(p.evenements);setProgrammees(p.programmees);setDevises(p.devises);DEBUT_SUIVI=p.debut_suivi||'';
     all=(d.operations||[]).map(norm).filter(e=>e.date);
     budgets=p.budgets||{};
     if(!ready){ready=true;
       // au premier chargement, se placer sur le dernier mois saisi si le mois courant est vide
       if(!monthItems(cur.y,cur.m).length&&all.length){const last=all.map(e=>e.date).filter(d=>d<=today).sort().pop()||all[0].date;cur={y:+last.slice(0,4),m:+last.slice(5,7)-1}}}
     status('');if(editId&&!all.some(e=>e.id===editId))resetForm();
-    fillSelects();if(!dirty)openPostes();if(!cbDirty)openCB();if(!evtDirty)openEvt();renderLibs();render();
+    fillSelects();if(!dirty)openPostes();if(!cbDirty)openCB();if(!evtDirty)openEvt();if(!progDirty)openProg();renderLibs();render();
   }catch(e){if(!silencieux)status(e.message,true);if(!ready)$('list').innerHTML='<div class="empty">Impossible de lire les données.</div>'}
 }
 
@@ -1129,6 +1154,7 @@ function filtreNom(f){const t=f[0],v=f.slice(2);
 function voirJournal(f){filtre=f;query='';$('q').value='';shown=80;render();$('list').scrollIntoView({behavior:doux(),block:'start'})}
 
 function render(){
+  majBandeauProg();
   // trois rubriques : Mes finances (Mois, Année, Patrimoine, Statistiques), My Car, Données et réglages ;
   // chaque vue n'affiche que son contenu
   const isM=view==='mois',isA=view==='annee',isP=view==='patrimoine',isS=view==='stats',isV=view==='vehicule',isH=view==='maison',isD=view==='donnees',isF=!isV&&!isH&&!isD,sm=isS?statsMode:'';
@@ -1287,7 +1313,8 @@ function seuilsJour(){
 const niveauJour=(v,S)=>v<=S.bas?{cls:'bas',l:'bas'}:v<=S.haut?{cls:'moy',l:'moyen'}:{cls:'haut',l:'élevé'};
 function opTag(e){
   const cn=dotCpt(e.compte)+esc(nomCpt(e.compte));
-  const evTag=e.evenement?` · <span class="nat exc">★ ${esc((EVT[e.evenement]||{}).nom||e.evenement)}</span>`:'';
+  const progTag=e.prog?' · <span class="nat" title="opération programmée">programmée</span>':'';
+  const evTag=progTag+(e.evenement?` · <span class="nat exc">★ ${esc((EVT[e.evenement]||{}).nom||e.evenement)}</span>`:'');
   switch(e.nature){
     case 'depense':{const p=CAT[e.categorie]||CAT.autre;return `<span class="dot" aria-hidden="true" style="background:${color(p.id)}"></span>${esc(p.label)}${e.compte!=='especes'?` · ${cn}`:''}${evTag}`}
     case 'revenu':{const r=REV[catRev(e)]||{label:'',courant:true};return `<span class="nat in">Revenu</span> · ${esc(r.label)}${!r.courant&&!e.evenement?' <span class="nat exc">ponctuel</span>':''} · ${cn}${evTag}`}
@@ -1648,14 +1675,14 @@ $('fAmt').addEventListener('input',amtHint);
 ['input','change','compositionend'].forEach(t=>$('fLib').addEventListener(t,deviner));   // claviers de téléphone : la saisie prédictive n'émet pas toujours « input »
 [['fNat','nat'],['fCpt','cpt'],['fCat','cat'],['fVers','vers'],['fBien','bien'],['fPers','pers'],['fCatV','catv'],['fCatM','catm'],['fCatR','rev'],['fEvt','evt']].forEach(([i,k])=>$(i).addEventListener(i==='fPers'?'input':'change',()=>{touched[k]=true;majChamps()}));
 $('fKm').addEventListener('input',majChamps);
-const tabs=[['tOne','oneForm'],['tPaste','pasteBox'],['tPostes','posteBox'],['tCB','cbBox'],['tEvt','evtBox'],['tVid','vidPanel'],['tMai','maiPanel'],['tPar','paritesBox'],['tSav','savBox']];
+const tabs=[['tOne','oneForm'],['tPaste','pasteBox'],['tPostes','posteBox'],['tCB','cbBox'],['tEvt','evtBox'],['tProg','progBox'],['tVid','vidPanel'],['tMai','maiPanel'],['tPar','paritesBox'],['tSav','savBox']];
 function showTab(t,focus){tabs.forEach(([tt,p])=>{const on=tt===t;$(tt).setAttribute('aria-selected',on);$(tt).tabIndex=on?0:-1;$(p).hidden=!on});if(focus)$(t).focus()}
 tabs.forEach(([t,p])=>{$(t).setAttribute('aria-controls',p);$(t).type='button';$(p).setAttribute('role','tabpanel');$(p).setAttribute('aria-labelledby',t)});
 document.querySelector('.tabs').addEventListener('keydown',ev=>{
   const i=tabs.findIndex(([t])=>t===ev.target.id);if(i<0)return;
   const j={ArrowRight:i+1,ArrowLeft:i-1,Home:0,End:tabs.length-1}[ev.key];if(j===undefined)return;
   ev.preventDefault();showTab(tabs[(j+tabs.length)%tabs.length][0],true)});
-tabs.forEach(([t])=>$(t).onclick=()=>{if(t==='tEvt'&&!evtDirty)openEvt();showTab(t)});showTab('tOne');
+tabs.forEach(([t])=>$(t).onclick=()=>{if(t==='tEvt'&&!evtDirty)openEvt();if(t==='tProg'&&!progDirty)openProg();showTab(t)});showTab('tOne');
 function resetForm(){['fAmt','fLib','fRem','fPers','fEch','fKm','fQty'].forEach(i=>$(i).value='');$('fLibHint').textContent='';$('fUnit').value='L';$('fVid').checked=true;touched={};$('fNat').value='depense';$('fCpt').value='especes';$('fCat').value='autre';$('fEvt').value='';editId=null;$('editBar').hidden=true;$('addBtn').textContent='Ajouter';majChamps();amtHint();render()}
 /* fenêtre de confirmation : résumé lisible de l'opération avant l'enregistrement (Échap ou « Modifier » = annuler) */
 function confirmerOp(doc,opt={}){
@@ -1713,6 +1740,7 @@ function docOp(o){
   if(o.nature==='investissement'&&o.cat_maison)d.cat_maison=o.cat_maison;
   if(o.nature==='revenu')d.cat_revenu=o.cat_revenu||guessCatR(o.libelle);
   if((o.nature==='depense'||o.nature==='revenu')&&o.evenement)d.evenement=o.evenement;
+  if(o.prog&&o.prog_date){d.prog=o.prog;d.prog_date=o.prog_date}
   if(o.remarque)d.remarque=o.remarque;
   return d;
 }
@@ -2454,6 +2482,88 @@ async function enregistrerFichier(nom,blob){
   }
   const url=URL.createObjectURL(blob);const a=document.createElement('a');a.href=url;a.download=nom;document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),4000);
 }
+/* ================= opérations programmées : échéances à confirmer ================= */
+const finMois=(y,m)=>new Date(y,m+1,0).getDate();
+function echeances(p,jusqua){
+  const out=[];if(!p.actif||!p.debut)return out;let y=+p.debut.slice(0,4),m=+p.debut.slice(5,7)-1;
+  for(let k=0;k<400;k++){const d=iso(new Date(y,m,Math.min(p.jour,finMois(y,m))));if(d>jusqua||(p.fin&&d>p.fin))break;if(d>=p.debut)out.push(d);m+=p.periode;y+=Math.floor(m/12);m%=12}
+  return out;
+}
+function prochaineEcheance(p){const l=echeances(p,iso(new Date(new Date().getFullYear()+2,0,1)));return l.find(d=>d>today)||''}
+function soldeAu(c,date){const rel=[...(c.releves||[])].filter(r=>r.date<=date).sort((a,b)=>a.date<b.date?-1:1).pop(),d0=rel?rel.date:'';
+  return (rel?rel.solde:0)+all.filter(e=>e.date>d0&&e.date<=date).reduce((s,e)=>s+effet(e,c.id),0)}
+function montantProg(p,date){if(p.mode!=='interets')return p.montant;const c=CPT[p.compte];if(!c||c.taux==null)return 0;return Math.max(0,Math.round(soldeAu(c,date)*c.taux/100))}
+function aConfirmer(){const faites=new Set(all.filter(e=>e.prog).map(e=>e.prog+'|'+e.prog_date));
+  return PROGS.flatMap(p=>echeances(p,today).filter(d=>!faites.has(p.id+'|'+d)&&!p.ignorees.includes(d)).map(d=>({p,date:d,montant:montantProg(p,d)})))}
+function majBandeauProg(){const l=ready?aConfirmer():[];$('progBandeau').hidden=!l.length;if(!l.length)return;
+  $('progN').textContent=`${l.length} opération${l.length>1?'s':''} programmée${l.length>1?'s':''} à confirmer`;
+  const noms=[...new Set(l.map(x=>x.p.libelle))];$('progDet').textContent=noms.slice(0,3).join(' · ')+(noms.length>3?' …':'')}
+let progListe=[];
+function ouvrirProg(){
+  progListe=aConfirmer().sort((a,b)=>a.date<b.date?-1:1);if(!progListe.length)return;
+  $('dlgProgList').innerHTML=progListe.map((x,i)=>`<div class="pgrow"><input type="checkbox" checked data-i="${i}" aria-label="Retenir ${esc(x.p.libelle)} du ${dmy(x.date)}">
+    <span class="pgl">${esc(x.p.libelle)} <span class="hint">${NAT[x.p.nature].l.toLowerCase()} · ${esc(nomCpt(x.p.compte))} · échéance du ${dmy(x.date)}${x.p.mode==='interets'?' · intérêts calculés : solde × '+String(CPT[x.p.compte]?.taux).replace('.',',')+' %':''}</span></span>
+    <span class="pgf"><input type="date" value="${x.date}" data-d="${i}" aria-label="Date"><input inputmode="numeric" value="${x.montant||''}" data-m="${i}" aria-label="Montant en FCFA" placeholder="montant FCFA"></span></div>`).join('');
+  $('dlgProgMsg').textContent='';$('dlgProg').showModal();
+}
+function progCoches(){return progListe.map((x,i)=>({...x,ok:$('dlgProgList').querySelector(`[data-i="${i}"]`).checked,d:$('dlgProgList').querySelector(`[data-d="${i}"]`).value,m:Math.round(num($('dlgProgList').querySelector(`[data-m="${i}"]`).value))})).filter(x=>x.ok)}
+$('progVoir').onclick=ouvrirProg;
+$('dlgProgNon').onclick=()=>$('dlgProg').close();
+$('dlgProgOk').onclick=async()=>{
+  const l=progCoches();if(!l.length){$('dlgProgMsg').textContent='Rien de coché.';return}
+  const bad=l.find(x=>!(x.m>0)||!/^\d{4}-\d{2}-\d{2}$/.test(x.d));if(bad){$('dlgProgMsg').textContent=`Montant ou date invalide : ${bad.p.libelle} du ${dmy(bad.date)}.`;return}
+  const base=Date.now();
+  const docs=l.map((x,i)=>docOp({date:x.d,montant:x.m,libelle:x.p.libelle,nature:x.p.nature,compte:x.p.compte,categorie:x.p.categorie||'autre',cat_revenu:x.p.cat_revenu,prog:x.p.id,prog_date:x.date,cree:new Date(base+i).toISOString()}));
+  try{await api.addMany(docs);$('dlgProg').close();status(`${docs.length} opération${docs.length>1?'s':''} programmée${docs.length>1?'s':''} enregistrée${docs.length>1?'s':''}.`);render()}
+  catch(e){$('dlgProgMsg').textContent=e.message}
+};
+$('dlgProgIgn').onclick=async()=>{
+  const l=progCoches();if(!l.length){$('dlgProgMsg').textContent='Rien de coché.';return}
+  const ign={};l.forEach(x=>(ign[x.p.id]=ign[x.p.id]||[]).push(x.date));
+  try{await api.params({programmees:PROGS.map(p=>({...p,ignorees:p.ignorees.concat(ign[p.id]||[])}))});await charger();$('dlgProg').close();status(`${l.length} échéance${l.length>1?'s':''} ignorée${l.length>1?'s':''}.`)}
+  catch(e){$('dlgProgMsg').textContent=e.message}
+};
+
+/* réglage des opérations programmées */
+let progDirty=false;
+function progRow(p){
+  const cls=p.nature==='revenu'?REVENUS.map(r=>`<option value="${r.id}"${r.id===p.cat_revenu?' selected':''}>${esc(r.label)}</option>`).join(''):optsPostes(p.categorie||'autre');
+  const nx=prochaineEcheance(p);
+  return `<div class="evrow" data-id="${p.id||''}" data-ign="${esc(JSON.stringify(p.ignorees||[]))}"><input class="pLib" value="${esc(p.libelle||'')}" placeholder="Facturation package…" aria-label="Libellé" maxlength="200" style="flex:3 1 16em;font-weight:600">
+    <select class="pNat" aria-label="Nature"><option value="depense"${p.nature!=='revenu'?' selected':''}>Dépense</option><option value="revenu"${p.nature==='revenu'?' selected':''}>Revenu</option></select>
+    <select class="pMode" aria-label="Montant"><option value="fixe"${p.mode!=='interets'?' selected':''}>montant fixe</option><option value="interets"${p.mode==='interets'?' selected':''}>intérêts du compte</option></select>
+    ${p.mode==='interets'?'<span class="hint">montant calculé à chaque échéance</span>':`<input class="pMt" inputmode="numeric" value="${p.montant||''}" placeholder="montant FCFA" aria-label="Montant en FCFA" style="flex:0 1 8em">`}
+    <select class="pCpt" aria-label="Compte">${optsComptes(p.compte||'especes')}</select>
+    <select class="pCls" aria-label="${p.nature==='revenu'?'Type de revenu':'Poste'}">${cls}</select>
+    <select class="pPer" aria-label="Périodicité">${Object.entries(PERIODES).map(([k,v])=>`<option value="${k}"${+k===+(p.periode||1)?' selected':''}>${v}</option>`).join('')}</select>
+    <label class="chk">le <input class="pJour" inputmode="numeric" value="${p.jour||1}" aria-label="Jour du mois" style="width:3.5em;flex:0 0 3.5em"></label>
+    <label class="chk">à partir du <input type="date" class="pDeb" value="${p.debut||today}" aria-label="Début"></label>
+    <label class="chk">jusqu'au <input type="date" class="pFin" value="${p.fin||''}" aria-label="Fin (facultatif)"></label>
+    <label class="chk"><input type="checkbox" class="pAct"${p.actif!==false?' checked':''}> active</label>
+    <span class="hint">${nx?'prochaine : '+dmy(nx):''}</span>
+    <button type="button" class="mini danger" data-x aria-label="Supprimer">✕</button></div>`}
+function lireProg(r){return {id:r.dataset.id,libelle:r.querySelector('.pLib').value.trim(),nature:r.querySelector('.pNat').value,mode:r.querySelector('.pMode').value,
+  montant:r.querySelector('.pMt')?Math.round(num(r.querySelector('.pMt').value))||0:0,compte:r.querySelector('.pCpt').value,
+  categorie:r.querySelector('.pNat').value==='depense'?r.querySelector('.pCls').value:'',cat_revenu:r.querySelector('.pNat').value==='revenu'?r.querySelector('.pCls').value:'',
+  periode:+r.querySelector('.pPer').value,jour:parseInt(r.querySelector('.pJour').value,10)||1,debut:r.querySelector('.pDeb').value,fin:r.querySelector('.pFin').value,
+  actif:r.querySelector('.pAct').checked,ignorees:JSON.parse(r.dataset.ign||'[]')}}
+function openProg(){$('progList').innerHTML=PROGS.length?PROGS.map(progRow).join(''):'<div class="hint">Aucune opération programmée.</div>';progDirty=false}
+$('progList').addEventListener('input',()=>{progDirty=true});
+$('progList').addEventListener('change',ev=>{progDirty=true;const t=ev.target;if(!t.matches('.pNat,.pMode'))return;const r=t.closest('.evrow'),p=lireProg(r);
+  if(t.matches('.pMode')&&p.mode==='interets'){p.nature='revenu';p.cat_revenu='interets';const c=CPT[p.compte];if(c&&c.periode)p.periode=[1,2,3,6,12].includes(+c.periode)?+c.periode:p.periode}
+  if(t.matches('.pNat')){p.categorie=p.categorie||'autre';p.cat_revenu=p.cat_revenu||'autre'}
+  r.outerHTML=progRow(p)});
+$('progList').addEventListener('click',ev=>{const b=ev.target.closest('[data-x]');if(!b)return;b.closest('.evrow').remove();progDirty=true});
+function ajouterProg(p){const l=$('progList');if(!l.querySelector('.evrow'))l.innerHTML='';l.insertAdjacentHTML('beforeend',progRow(p));l.lastElementChild.querySelector('.pLib').focus();progDirty=true}
+$('progAdd').onclick=()=>ajouterProg({nature:'depense',mode:'fixe',compte:(COMPTES.find(c=>c.type==='courant')||COMPTES[0]).id,categorie:'autre',periode:1,jour:30,debut:today});
+$('progAddInt').onclick=()=>{const c=COMPTES.find(c=>c.taux!=null);if(!c){$('progMsg').textContent="Aucun compte n'a de taux d'intérêt : réglez-le d'abord dans Comptes et biens.";return}
+  ajouterProg({libelle:'Intérêts '+c.nom,nature:'revenu',mode:'interets',compte:c.id,cat_revenu:'interets',periode:[1,2,3,6,12].includes(+c.periode)?+c.periode:6,jour:30,debut:today})};
+$('progSave').onclick=async()=>{
+  const pris=new Set(PROGS.map(x=>x.id)),out=[];
+  for(const r of $('progList').querySelectorAll('.evrow')){const p=lireProg(r);if(!p.libelle)continue;p.id=p.id||nouvelId(p.libelle,pris);out.push(p)}
+  try{await api.params({programmees:out});progDirty=false;await charger();$('progMsg').textContent='Opérations programmées enregistrées.'}catch(e){$('progMsg').textContent=e.message}
+};
+
 /* ================= événements et types de revenus (Données et réglages) ================= */
 let evtDirty=false;
 const utiliseEvt=id=>all.some(e=>e.evenement===id),utiliseRev=id=>all.some(e=>e.nature==='revenu'&&catRev(e)===id);

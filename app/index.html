@@ -902,7 +902,7 @@ function setProgrammees(l){PROGS=(Array.isArray(l)?l:[]).map(x=>({...x,ignorees:
 const PERIODES={1:'chaque mois',2:'tous les 2 mois',3:'chaque trimestre',6:'chaque semestre',12:'chaque année'};
 const TYPES_EVT={mariage:'Mariage',bapteme:'Baptême',circoncision:'Circoncision',funerailles:'Funérailles',fete:'Fête','voyage-tourisme':'Voyage (tourisme)','voyage-mission':'Voyage (mission)','voyage-vacances':'Voyage (vacances)',sante:'Santé',projet:'Projet',autre:'Autre'};
 /* Nature d'une opération : s = sens sur le compte (+1 entrée, −1 sortie, 0 virement) */
-const VERSION_APP='Ousnou 1.2.1';   // nom et numéro de version (même valeur que VERSION / VERSION_NOM dans serveur.py)
+const VERSION_APP='Ousnou 1.2.2';   // nom et numéro de version (même valeur que VERSION / VERSION_NOM dans serveur.py)
 const NAT={depense:{l:'Dépense',s:-1},revenu:{l:'Revenu',s:1},virement:{l:'Virement',s:0},pret:{l:'Prêt accordé',s:-1},remboursement:{l:'Remboursement reçu',s:1},investissement:{l:'Investissement',s:-1}};
 const TYPES_CPT={especes:'Espèces',courant:'Compte courant',epargne:'Épargne',carte:'Carte prépayée',mobile:'Mobile money'};
 const MOTS_REVENU=['salaire','salary','prime','revenu','interet','honoraire','indemnite','bourse','vacation','perdiem','per diem','prodes','frais de mission','consultance','jury','soutenance','seminaire','atelier'];
@@ -989,6 +989,12 @@ async function locSauver(){await kvSet('etat',{donnees:LOC.donnees,file:LOC.file
 const maintenant=()=>new Date().toISOString();
 const nouvelIdOp=()=>'t'+Date.now().toString(36)+Math.random().toString(36).slice(2,7);
 function verifLocale(d){if(!/^\d{4}-\d{2}-\d{2}$/.test(d.date||''))throw new Error('Date invalide.');if(!(+d.montant>0))throw new Error('Le montant doit être positif.');if(!String(d.libelle||'').trim())throw new Error('Le libellé est obligatoire.')}
+function appliquerReleve(prm,ch){(prm.comptes||[]).forEach(c=>{if(c.id!==ch.compte)return;
+  c.releves=(c.releves||[]).filter(r=>r.date!==ch.date).concat(ch.solde==null?[]:[{date:ch.date,solde:ch.solde}]).sort((a,b)=>a.date<b.date?-1:1)})}
+async function releveLocal(compte,date,solde){await locPret();
+  const ch={type:'releve',id:nouvelIdOp(),maj:maintenant(),compte,date,solde,doc:{libelle:`solde de ${nomCpt(compte)} au ${dmy(date)}`}};
+  LOC.file=LOC.file.filter(x=>!(x.type==='releve'&&x.compte===compte&&x.date===date)).concat([ch]);   // le dernier solde noté à cette date remplace le précédent
+  appliquerReleve(LOC.donnees.parametres,ch);await locSauver();syncBientot()}
 function enFile(ch){LOC.file=LOC.file.filter(x=>x.id!==ch.id).concat([ch])}   // le dernier changement d'une ligne remplace le précédent
 async function locPret(){
   await locCharger();
@@ -1066,7 +1072,8 @@ async function unPassage(){
       for(const o of r.operations||[]){if(attente.has(o.id))continue;const i=idx.get(o.id);if(i===undefined){idx.set(o.id,ops.length);ops.push(o)}else ops[i]=o}
       const sup=new Set((r.supprimees||[]).filter(t=>!attente.has(t.id)).map(t=>t.id));
       if(sup.size)LOC.donnees.operations=ops.filter(o=>!sup.has(o.id));
-      Object.assign(LOC.donnees,{parametres:r.parametres,version:r.version});LOC.rev=r.rev;LOC.dernier=maintenant();LOC.etat='ok';LOC.msg='';
+      Object.assign(LOC.donnees,{parametres:r.parametres,version:r.version});
+      LOC.file.filter(c=>c.type==='releve').forEach(c=>appliquerReleve(LOC.donnees.parametres,c));   // soldes pas encore reçus par l'ordinateurLOC.rev=r.rev;LOC.dernier=maintenant();LOC.etat='ok';LOC.msg='';
       await locSauver();
       if((r.conflits||[]).length)status(`Synchronisation : ${r.conflits.length} conflit${r.conflits.length>1?'s':''} réglé${r.conflits.length>1?'s':''} — `+r.conflits.map(c=>`« ${c.libelle||c.id} » ${c.motif}`).join(' ; ')+'.');
       if(ready)await charger(true);
@@ -1103,7 +1110,12 @@ const api={
   async put(id,doc){const x=await req('PUT','/api/operations/'+encodeURIComponent(id),doc);all=all.map(e=>e.id===id?norm(x):e);return x},
   async del(id){await req('DELETE','/api/operations/'+encodeURIComponent(id));all=all.filter(e=>e.id!==id)},
   async params(body){const r=await req('PUT','/api/parametres',body);if(!MODE_SYNC)annulable('Réglages enregistrés.',annulerDernierReglage);return r},
-  async reclasser(changements){return req('POST','/api/reclasser',{changements})}
+  async reclasser(changements){return req('POST','/api/reclasser',{changements})},
+  /* noter (ou retirer, solde null) le solde d'un compte à une date. Téléphone synchronisé : file d'attente, comme
+     une saisie, donc possible hors ligne ; ailleurs : réglage direct (liste des comptes). */
+  async releve(compte,date,solde){
+    if(MODE_SYNC)return releveLocal(compte,date,solde);
+    return this.params({comptes:COMPTES.map(c=>c.id!==compte?c:{...c,releves:c.releves.filter(r=>r.date!==date).concat(solde===null?[]:[{date,solde}])})})}
 };
 function status(msg,err){const s=$('status');s.hidden=!msg;s.setAttribute('role',err?'alert':'status');if(msg){s.textContent=msg;s.className='note'+(err?' err':'')}}
 async function charger(silencieux){
@@ -1477,8 +1489,8 @@ $('comptesList').addEventListener('click',async ev=>{
     let id,date,solde=null;
     if(b.dataset.relok){id=b.dataset.relok;date=$('relD').value;solde=milliers($('relV').value);if(!date||!isFinite(solde)){$('relH').textContent='Date et solde (en milliers) requis.';return}}
     else{[id,date]=b.dataset.delrel.split('|');if(!b.classList.contains('armed')){b.classList.add('armed');b.textContent='Supprimer ?';return}}
-    const cs=COMPTES.map(c=>c.id!==id?c:{...c,releves:c.releves.filter(r=>r.date!==date).concat(solde===null?[]:[{date,solde}])});
-    b.disabled=true;try{await api.params({comptes:cs});releveOuvert=null;await charger()}catch(e){status(e.message,true);b.disabled=false}
+    b.disabled=true;try{await api.releve(id,date,solde);releveOuvert=null;await charger()}
+    catch(e){status(e.message,true);if($('relH'))$('relH').textContent=e.message;b.disabled=false}
   }
 });
 $('biensList').addEventListener('click',async ev=>{
@@ -2772,7 +2784,7 @@ $('relAppliquer').onclick=async()=>{const R=REL;if(!R)return;
   try{const base=Date.now();
     if(aj.length)await api.addMany(aj.map((x,i)=>docOp({...x.p,remarque:'relevé '+nomCpt(R.cpt),cree:new Date(base+i).toISOString()})));
     for(const x of co){const e=x.e;await api.put(e.id,docOp({...e,date:x.g.date,montant:x.g.montant,remarque:(e.remarque?e.remarque+' · ':'')+'corrigé d\'après le relevé'}))}
-    if(so){await api.params({comptes:COMPTES.map(c=>c.id!==R.cpt?c:{...c,releves:c.releves.filter(r=>r.date!==so.date).concat([{date:so.date,solde:so.solde}])})})}
+    if(so)await api.releve(R.cpt,so.date,so.solde);
     await charger();REL=comparerReleve(relLu,R.cpt,R.depuis);renderReleve();
     $('relMsg2').textContent=`Fait : ${aj.length} ajout${aj.length>1?'s':''}, ${co.length} correction${co.length>1?'s':''}${so?', solde noté':''}.`}
   catch(e){$('relMsg2').textContent=e.message}

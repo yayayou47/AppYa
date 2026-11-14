@@ -195,8 +195,11 @@ d'accueil »). Daftar s'ouvre alors comme une application, même sans réseau.
     nul…) reste dans le téléphone, signalée « refusée », à corriger.
   - Une vidange envoyée par le téléphone met le repère à jour sur
     l'ordinateur.
-  - Les réglages (postes, comptes, biens, repères, projet maison, parités)
-    se modifient quand le téléphone est relié à l'ordinateur.
+  - « Noter le solde » d'un compte (et la suppression d'un solde noté) se
+    fait aussi hors ligne : le solde est gardé dans le téléphone et envoyé à
+    l'ordinateur avec les saisies.
+  - Les autres réglages (postes, comptes, biens, repères, projet maison,
+    parités) se modifient quand le téléphone est relié à l'ordinateur.
   - L'adresse sécurisée est relayée par Tailscale (« tailscale serve ») ;
     pour la couper : tailscale serve --https=443 off
   - Hors ligne, Daftar affiche la dernière version ouverte en ligne. Après

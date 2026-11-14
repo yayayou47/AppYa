@@ -39,7 +39,7 @@ from http.cookies import SimpleCookie
 from http.server import SimpleHTTPRequestHandler, ThreadingHTTPServer
 from urllib.parse import parse_qs, urlparse
 
-VERSION = "1.2.1"
+VERSION = "1.2.2"
 VERSION_NOM = "Ousnou"   # nom de la version (même valeur que VERSION_APP dans app/index.html)
 RACINE = os.path.dirname(os.path.abspath(__file__))
 APP = os.path.join(RACINE, "app")
@@ -227,6 +227,13 @@ def synchroniser(d, corps):
         if not re.match(r"^[\w-]{1,40}$", cid) or not RE_MAJ.match(maj):
             rejets.append({"id": cid, "erreur": "Changement mal formé."})
             continue
+        if ch.get("type") == "releve":
+            # solde noté (ou retiré, solde null) sur le téléphone hors ligne : {compte, date, solde}
+            try:
+                params_modifies = appliquer_releve(d, ch) or params_modifies
+            except ValueError as e:
+                rejets.append({"id": cid, "erreur": str(e)})
+            continue
         ex = index.get(cid)
         if ch.get("type") == "del":
             if ex is None:
@@ -273,6 +280,21 @@ def synchroniser(d, corps):
             "operations": [o for o in ops if o.get("rev", 0) > depuis or o.get("id") in a_renvoyer],
             "supprimees": [t for t in d.get("supprimees", []) if t.get("rev", 0) > depuis],
             "parametres": prm, "version": d.get("version"), "conflits": conflits, "rejets": rejets}
+
+
+def appliquer_releve(d, ch):
+    """Note (ou retire, si solde est null) le solde d'un compte à une date. Validé comme dans nettoyer_comptes()."""
+    date = str(ch.get("date", ""))
+    if not RE_DATE.match(date):
+        raise ValueError("Date de relevé invalide.")
+    for c in d.get("parametres", {}).get("comptes", []):
+        if c.get("id") == ch.get("compte"):
+            rel = [r for r in c.get("releves") or [] if r.get("date") != date]
+            if ch.get("solde") is not None:
+                rel.append({"date": date, "solde": montant_positif(ch.get("solde"), "Solde du relevé de %s" % c.get("nom"), zero=True)})
+            c["releves"] = sorted(rel, key=lambda r: r["date"])
+            return True
+    raise ValueError("Compte introuvable sur l'ordinateur (supprimé ?).")
 
 
 def ids_vehicules(d):

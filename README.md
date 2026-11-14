@@ -1,0 +1,33 @@
+# AppYa
+
+Suivi financier personnel, carnet du véhicule et carnet de la maison, en français et en francs CFA.
+Dépenses, revenus, comptes (espèces, banque, mobile money), prêts aux proches, biens et patrimoine,
+statistiques, export Excel. Fonctionne hors ligne. **Aucune donnée n'est incluse** : chacun commence
+avec un carnet vide, et ses données restent chez lui.
+
+## Trois façons de l'utiliser
+
+| Version | Où trouver | Où sont les données |
+|---|---|---|
+| **Lien web** (le plus simple) | https://yayayou47.github.io/AppYa/ : ouvrir dans Chrome, puis ⋮ › *Installer l'application* | dans l'appareil |
+| **Android (APK)** | page [Releases](https://github.com/yayayou47/AppYa/releases) : `AppYa-X.Y.Z.apk` | dans le téléphone |
+| **Ordinateur Ubuntu** | page [Releases](https://github.com/yayayou47/AppYa/releases) : `AppYa-ubuntu-X.Y.Z.zip`, décompresser puis `bash installer.sh` | `~/AppYa/donnees/carnet.json`, sauvegarde chaque jour |
+
+Sur le téléphone, les données n'existent que dans l'appareil : utilisez régulièrement
+**Données et réglages › Sauvegarde › Exporter mes données** et gardez le fichier en lieu sûr.
+Ce fichier se réimporte sur un autre téléphone, ou se copie en `donnees/carnet.json` sur l'ordinateur.
+
+La version ordinateur peut aussi servir un téléphone synchronisé (via Tailscale) : voir `LISEZMOI.txt`.
+
+## Pour le développement
+
+- `app/` : la page (`index.html`), le moteur de la version autonome (`moteur.js`, mêmes règles que
+  `serveur.py`), le service hors ligne (`sw.js`), le manifeste et les icônes.
+- `serveur.py` : serveur local de la version ordinateur (Python 3.8+, bibliothèque standard).
+- `outils/construire-web.sh` : construit la version autonome (lien web et APK).
+- Chaque envoi sur `main` met à jour le lien web ; chaque tag `vX.Y.Z` publie l'APK et le zip Ubuntu
+  (`.github/workflows/`).
+
+Le dossier `donnees/` n'est jamais versionné (`.gitignore`, contrôle `outils/verifier-depot.sh`).
+
+Bibliothèque incluse : SheetJS 0.18.5 (`app/xlsx.full.min.js`, licence Apache 2.0).

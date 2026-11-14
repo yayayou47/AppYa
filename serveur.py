@@ -1,0 +1,1031 @@
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
+"""
+AppYa — suivi financier et carnet du véhicule, serveur local.
+
+Un seul journal d'opérations : dépenses, revenus, virements entre comptes,
+prêts accordés et remboursements, investissements dans les biens.
+
+Lance une petite application web sur http://localhost:8780 et enregistre
+les données dans donnees/carnet.json (sauvegarde automatique chaque jour
+dans donnees/sauvegardes/).
+
+Utilisation :
+    python3 serveur.py                  # localhost uniquement, ouvre le navigateur
+    python3 serveur.py --reseau         # accessible aussi depuis le téléphone (même Wi-Fi), avec clé d'accès
+    python3 serveur.py --port 9000      # autre port
+    python3 serveur.py --sans-navigateur
+
+Aucune dépendance : bibliothèque standard Python 3.8+.
+"""
+import argparse
+import datetime as dt
+import hmac
+import ipaddress
+import json
+import os
+import queue
+import re
+import secrets
+import shutil
+import signal
+import socket
+import sys
+import threading
+import time
+import uuid
+import webbrowser
+from http.cookies import SimpleCookie
+from http.server import SimpleHTTPRequestHandler, ThreadingHTTPServer
+from urllib.parse import parse_qs, urlparse
+
+VERSION = "3.3"
+RACINE = os.path.dirname(os.path.abspath(__file__))
+APP = os.path.join(RACINE, "app")
+DONNEES = os.path.join(RACINE, "donnees")
+FICHIER = os.path.join(DONNEES, "carnet.json")
+SAUVEGARDES = os.path.join(DONNEES, "sauvegardes")
+GARDER_SAUVEGARDES = 60
+
+APP_ID = "appya"
+
+# Postes par défaut (l'ordre compte : le premier poste dont un mot-clé apparaît dans le libellé l'emporte).
+# Modifiables depuis l'application : onglet « Postes et libellés ».
+POSTES_DEFAUT = [   # mêmes valeurs que POSTES_DEFAUT dans app/moteur.js (version autonome)
+    {"id": "foyer", "label": "Foyer, vivres", "couleur": "#2f6fa8",
+     "mots": ["riz", "huile", "savon", "sucre", "farine", "alimentaire", "vivres", "lait", "pain", "viande", "poisson",
+              "légumes", "marché", "famille"]},
+    {"id": "loyer", "label": "Loyer, logement", "couleur": "#c58b2a", "mots": ["loyer", "contribution", "logement"]},
+    {"id": "aides", "label": "Aides et dons", "couleur": "#c0533a",
+     "mots": ["aide", "aumône", "aumone", "prestation", "baptême", "mariage", "funéraire", "don"]},
+    {"id": "enfants", "label": "Enfants, école", "couleur": "#2e8a57", "mots": ["scolarité", "école", "fourniture", "enfant"]},
+    {"id": "sante", "label": "Santé", "couleur": "#d9772f",
+     "mots": ["médic", "soin", "examen", "pharmacie", "hôpital", "analyse", "clinique"]},
+    {"id": "voiture", "label": "Voiture", "couleur": "#6b7b90",
+     "mots": ["carburant", "essence", "gasoil", "assurance", "fiche technique", "amende", "vidange",
+              "lavage", "garage", "pneu", "mécan", "voiture"]},
+    {"id": "tel", "label": "Téléphone, internet", "couleur": "#2f97ad", "mots": ["crédit", "forfait", "internet", "téléphone"]},
+    {"id": "transport", "label": "Transport", "couleur": "#8a9a2e", "mots": ["transport", "taxi", "moto", "clando", "bus"]},
+    {"id": "repas", "label": "Repas, boissons", "couleur": "#9363b0",
+     "mots": ["dej", "déj", "diner", "dîner", "café", "jus", "boisson", "repas"]},
+    {"id": "perso", "label": "Perso", "couleur": "#cc5f86", "mots": ["vêtement", "chaussure", "parfum", "coiff", "cadeau"]},
+    {"id": "autre", "label": "Autre", "couleur": "#9a968c", "mots": []},
+]
+RE_ID = re.compile(r"^[a-z0-9_-]{1,40}$")
+RE_COULEUR = re.compile(r"^#[0-9a-fA-F]{6}$")
+
+
+def ids_postes(d):
+    return {x["id"] for x in d.get("parametres", {}).get("postes", [])} or {x["id"] for x in POSTES_DEFAUT}
+
+
+# ---------------------------------------------------------------- modèle : journal d'opérations
+# Chaque ligne est une opération de montant positif ; sa « nature » dit dans quel sens l'argent va.
+#   depense         sort de « compte »                       (dépense courante, classée par poste)
+#   revenu          entre sur « compte »                      (salaire, prime, intérêts…)
+#   virement        sort de « compte », entre sur « vers »   (retrait = compte → espèces ; épargne)
+#   pret            sort de « compte », ouvre une créance sur « personne »
+#   remboursement   entre sur « compte », réduit la créance de « personne »
+#   investissement  sort de « compte », s'ajoute au coût du « bien » (construction, entretien)
+NATURES = ("depense", "revenu", "virement", "pret", "remboursement", "investissement")
+TYPES_COMPTE = ("especes", "courant", "epargne", "carte", "mobile")
+TYPES_BIEN = ("actif", "passif")  # actif : prend de la valeur (terrain) ; passif : en perd (voiture)
+COMPTES_DEFAUT = [{"id": "especes", "nom": "Espèces", "type": "especes",
+                   "mots": ["espèces", "especes", "cash", "liquide"], "releves": []}]
+
+
+def ids_de(d, cle):
+    return {x["id"] for x in d.get("parametres", {}).get(cle, [])}
+
+
+# ---------------------------------------------------------------- v3 : carnet du véhicule intégré
+# Une dépense ou un investissement lié à un véhicule (un bien marqué « vehicule ») peut porter
+# km (compteur), quantite + unite (L ou u) et une catégorie véhicule. Les repères de vidange
+# sont stockés dans le bien : vidange = {intervalle, dernier, prochain} (km).
+CAT_VEHICULE = ("carburant", "entretien", "reparation", "service", "achat", "investissement", "autre")
+VIDANGE_DEFAUT = {"intervalle": 3000, "dernier": 0, "prochain": 0}
+
+
+# ---------------------------------------------------------------- v4 : carnet de la maison
+# Un bien marqué « maison » (terrain, construction) : ses investissements portent cat_maison ; le bien porte
+# projet = {budget (CFA, 0 = non fixé), echeance (AAAA-MM-JJ ou ""), note}.
+CAT_MAISON = ("terrain", "administratif", "arrosage", "eau", "maconnerie", "materiaux", "electricite", "main-oeuvre", "autre")
+MOTS_CAT_MAISON = [   # ordre significatif : le premier qui correspond l'emporte (« arrosage et trou » = arrosage)
+    ("terrain", ["achat terrain", "bornage", "lotissement"]),
+    ("administratif", ["titre foncier", "permis", "notaire", "mairie", "cadastre", "dossier", "timbre"]),
+    ("main-oeuvre", ["main d", "main-d", "ouvrier", "gardien", "manoeuvre", "manœuvre", "tâcheron", "tacheron"]),   # avant maçonnerie : « main-d'œuvre maçon »
+    ("arrosage", ["arrosage", "arroser"]),
+    ("eau", ["pompe", "forage", "puits", "citerne", "robinet", "eau"]),
+    ("maconnerie", ["fondation", "maçon", "macon", "brique", "parpaing", "béton", "beton", "dalle", "mur", "trou", "fouille"]),
+    ("materiaux", ["ciment", "sable", "gravier", "fer ", "tôle", "tole", "bois", "planche", "matériau", "materiau"]),
+    ("electricite", ["électric", "electric", "câble", "cable", "solaire", "panneau"]),
+]
+
+
+def deviner_cat_maison(libelle):
+    lib = (libelle or "").lower()
+    for cat, mots in MOTS_CAT_MAISON:
+        if any(m in lib for m in mots):
+            return cat
+    return "autre"
+
+
+def ids_maisons(d):
+    return [b["id"] for b in d.get("parametres", {}).get("biens", []) if b.get("maison")]
+
+
+# ---------------------------------------------------------------- v5 : synchronisation (téléphone hors ligne)
+# Chaque écriture reçoit un numéro de révision croissant (d["rev"]) : une opération porte rev (rang de sa
+# dernière écriture sur l'ordinateur) et maj (horodatage de sa dernière modification, fixé par l'appareil qui
+# l'a modifiée). Une suppression laisse une trace dans d["supprimees"] ({id, maj, rev}) pour ne pas
+# « ressusciter » depuis un autre appareil. Un appareil demande « tout ce qui a changé depuis la révision N » :
+# rev (ordre d'arrivée sur l'ordinateur) sert de curseur, maj (dernière modification) départage les conflits.
+def horodatage():
+    return dt.datetime.now(dt.timezone.utc).isoformat(timespec="milliseconds").replace("+00:00", "Z")
+
+
+def marquer(d, o, maj=None):
+    d["rev"] = int(d.get("rev", 0)) + 1
+    o["rev"] = d["rev"]
+    o["maj"] = maj or horodatage()
+    return o
+
+
+def marquer_parametres(d):
+    d["rev"] = int(d.get("rev", 0)) + 1
+    d.setdefault("parametres", {})["rev"] = d["rev"]
+
+
+def vidange_auto(d, o):
+    """Une vidange d'huile du véhicule, avec un kilométrage plus récent que le repère, le met à jour
+    (utilisé pour les saisies arrivant du téléphone, qui ne peut pas modifier les réglages hors ligne)."""
+    lib = (o.get("libelle") or "").lower()
+    if not (o.get("vehicule") and o.get("km") and "vidange" in lib and "boîte" not in lib and "boite" not in lib):
+        return False
+    for b in d.get("parametres", {}).get("biens", []):
+        if b.get("id") == o["vehicule"]:
+            vd = b.setdefault("vidange", dict(VIDANGE_DEFAUT))
+            if o["km"] > (vd.get("dernier") or 0):
+                vd["dernier"] = int(o["km"])
+                vd["prochain"] = int(o["km"]) + int(vd.get("intervalle") or 3000)
+                return True
+    return False
+
+
+RE_MAJ = re.compile(r"^\d{4}-\d{2}-\d{2}T[\d:.]+Z?$")
+
+
+def synchroniser(d, corps):
+    """Applique les changements d'un appareil puis renvoie tout ce qui a changé depuis sa révision.
+    Règle : la modification la plus récente (maj) l'emporte ; une ligne refusée par la validation est
+    signalée, jamais perdue (elle reste sur l'appareil)."""
+    if not isinstance(corps, dict):
+        raise ValueError("Corps de requête invalide.")
+    try:
+        depuis = int(corps.get("depuis") or 0)
+    except (TypeError, ValueError):
+        raise ValueError("Révision invalide.")
+    ops = d.setdefault("operations", [])
+    index = {o.get("id"): o for o in ops}
+    tombes = {t["id"]: t for t in d.setdefault("supprimees", [])}
+    conflits, rejets, a_renvoyer = [], [], set()
+    params_modifies = False
+    for ch in (corps.get("changements") or [])[:5000]:
+        cid, maj = str(ch.get("id", "")), str(ch.get("maj", ""))
+        if not re.match(r"^[\w-]{1,40}$", cid) or not RE_MAJ.match(maj):
+            rejets.append({"id": cid, "erreur": "Changement mal formé."})
+            continue
+        ex = index.get(cid)
+        if ch.get("type") == "del":
+            if ex is None:
+                continue
+            if ex.get("maj", "") > maj:
+                conflits.append({"id": cid, "libelle": ex.get("libelle"), "motif": "modifiée sur l'ordinateur après la suppression : conservée"})
+                a_renvoyer.add(cid)
+                continue
+            ops.remove(ex)
+            del index[cid]
+            t = marquer(d, {"id": cid}, maj)
+            d["supprimees"] = [x for x in d["supprimees"] if x["id"] != cid] + [t]
+            tombes[cid] = t
+        elif ch.get("type") == "set":
+            t = tombes.get(cid)
+            if t and t.get("maj", "") >= maj:
+                conflits.append({"id": cid, "libelle": (ch.get("doc") or {}).get("libelle"), "motif": "supprimée sur l'ordinateur : non recréée"})
+                continue
+            if ex and ex.get("maj", "") > maj:
+                conflits.append({"id": cid, "libelle": ex.get("libelle"), "motif": "modifiée plus récemment sur l'ordinateur : version de l'ordinateur gardée"})
+                a_renvoyer.add(cid)
+                continue
+            try:
+                propre = nettoyer(ch.get("doc") or {}, d)
+            except ValueError as e:
+                rejets.append({"id": cid, "erreur": str(e)})
+                continue
+            nouv = marquer(d, {"id": cid, **propre}, maj)
+            if ex is not None:
+                ops[ops.index(ex)] = nouv
+            else:
+                ops.append(nouv)
+            index[cid] = nouv
+            if t:
+                d["supprimees"] = [x for x in d["supprimees"] if x["id"] != cid]
+                tombes.pop(cid, None)
+            params_modifies = vidange_auto(d, nouv) or params_modifies
+        else:
+            rejets.append({"id": cid, "erreur": "Type de changement inconnu."})
+    if params_modifies:
+        marquer_parametres(d)
+    prm = d.get("parametres", {})
+    return {"rev": d.get("rev", 0),
+            "operations": [o for o in ops if o.get("rev", 0) > depuis or o.get("id") in a_renvoyer],
+            "supprimees": [t for t in d.get("supprimees", []) if t.get("rev", 0) > depuis],
+            "parametres": prm, "version": d.get("version"), "conflits": conflits, "rejets": rejets}
+
+
+def ids_vehicules(d):
+    return [b["id"] for b in d.get("parametres", {}).get("biens", []) if b.get("vehicule")]
+
+
+def montant_positif(v, quoi="Montant", zero=False):
+    try:
+        m = float(v)
+    except (TypeError, ValueError):
+        raise ValueError("%s invalide." % quoi)
+    if m != m or m in (float("inf"), float("-inf")) or m < 0 or (m == 0 and not zero):
+        raise ValueError("%s invalide : il doit être positif." % quoi)
+    return int(m) if m.is_integer() else round(m, 2)
+
+
+def texte(v, n):
+    return " ".join(str(v or "").split())[:n]
+
+
+RE_DATE = re.compile(r"^\d{4}-\d{2}-\d{2}$")
+VERROU = threading.Lock()
+
+
+# ---------------------------------------------------------------- accès réseau
+# En mode --reseau, les appareils autres que cet ordinateur doivent présenter la clé
+# de donnees/.cle : une fois via le lien  http://IP:PORT/?cle=…  (ou le formulaire),
+# puis par un cookie. Cet ordinateur (127.0.0.1) n'a jamais besoin de clé.
+FICHIER_CLE = os.path.join(DONNEES, ".cle")
+RE_CLE = re.compile(r"^[a-z0-9]{10,64}$")
+ALPHABET_CLE = "abcdefghjkmnpqrstuvwxyz23456789"  # sans 0/o, 1/l/i : se recopie sans erreur
+RESEAU = False
+CLE = ""
+
+
+def cle_reseau():
+    """Lit la clé d'accès réseau, ou en crée une (12 caractères, environ 59 bits)."""
+    try:
+        with open(FICHIER_CLE, "r", encoding="utf-8") as f:
+            c = f.read().strip()
+        if RE_CLE.match(c):
+            return c
+    except OSError:
+        pass
+    c = "".join(secrets.choice(ALPHABET_CLE) for _ in range(12))
+    os.makedirs(DONNEES, exist_ok=True)
+    with open(FICHIER_CLE, "w", encoding="utf-8") as f:
+        f.write(c + "\n")
+    try:
+        os.chmod(FICHIER_CLE, 0o600)
+    except OSError:  # NTFS/exFAT
+        pass
+    return c
+
+
+def hote_autorise(host):
+    """Protection contre le « DNS rebinding » : un site malveillant qui fait pointer son
+    propre nom de domaine vers 127.0.0.1 envoie Host: son-domaine. On n'accepte que
+    localhost, une adresse IP ou le nom de cette machine."""
+    if not host:
+        return True
+    h = host.strip().lower()
+    if h.startswith("["):  # IPv6 : [::1]:8780
+        h = h[1:h.find("]")] if "]" in h else h[1:]
+    elif h.count(":") == 1:
+        h = h.rsplit(":", 1)[0]
+    try:
+        ipaddress.ip_address(h)
+        return True
+    except ValueError:
+        pass
+    nom = socket.gethostname().lower()
+    # noms Tailscale (MagicDNS, « *.ts.net ») : le domaine appartient à Tailscale et ne pointe que vers
+    # les appareils de votre réseau privé ; un site extérieur ne peut pas s'en servir pour viser AppYa
+    if h.endswith(".ts.net"):
+        return True
+    return h in ("localhost", nom, nom + ".local")
+
+
+PAGE_CLE = """<!doctype html><html lang="fr"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1"><title>AppYa</title>
+<style>:root{color-scheme:light dark}body{font-family:system-ui,sans-serif;font-size:105%%;max-width:26em;margin:12vh auto;padding:0 17px;line-height:1.5}
+input,button{font:inherit;padding:10px 12px;border-radius:10px;border:1px solid #8888}input{width:100%%;box-sizing:border-box;margin:8px 0}
+button{background:#1f4e79;color:#fff;border:0;font-weight:600}.err{color:#c0533a}</style></head><body>
+<h1>AppYa</h1><p>Accès protégé. Sur l'ordinateur, tapez <code>appya etat</code> :
+ouvrez le lien affiché, ou recopiez ici la clé (après <code>?cle=</code>).</p>%s
+<form method="get" action="/"><input name="cle" autocomplete="off" autocapitalize="none" spellcheck="false" placeholder="clé d'accès" required>
+<button type="submit">Ouvrir le carnet</button></form></body></html>"""
+
+
+# ---------------------------------------------------------------- stockage
+def lire():
+    if not os.path.exists(FICHIER):
+        return {"version": 5, "rev": 1, "operations": [], "supprimees": [],
+                "parametres": {"rev": 1, "budgets": {}, "postes": json.loads(json.dumps(POSTES_DEFAUT)),
+                               "comptes": json.loads(json.dumps(COMPTES_DEFAUT)), "biens": []}}
+    with open(FICHIER, "r", encoding="utf-8") as f:
+        return json.load(f)
+
+
+def sauvegarde_du_jour():
+    """Copie carnet.json une fois par jour avant la première modification."""
+    if not os.path.exists(FICHIER):
+        return
+    os.makedirs(SAUVEGARDES, exist_ok=True)
+    cible = os.path.join(SAUVEGARDES, "carnet-%s.json" % dt.date.today().isoformat())
+    if not os.path.exists(cible):
+        shutil.copyfile(FICHIER, cible)  # pas de copie des droits : compatible exFAT/NTFS
+        anciennes = sorted(f for f in os.listdir(SAUVEGARDES) if re.match(r"^carnet-\d{4}-\d{2}-\d{2}\.json$", f))
+        for f in anciennes[:-GARDER_SAUVEGARDES]:
+            os.remove(os.path.join(SAUVEGARDES, f))
+
+
+# Copie miroir : le dossier d'où AppYa a été installé (ex. un second disque) reçoit, dans son
+# donnees/, une copie à jour de carnet.json et des sauvegardes. Ce dossier se copie tel quel sur un autre
+# ordinateur : « bash installer.sh » y reprend les données. Le chemin est écrit par l'installateur dans
+# donnees/.miroir ; disque absent (non monté) = copie sautée, refaite à l'écriture suivante.
+FICHIER_MIROIR = os.path.join(DONNEES, ".miroir")
+
+
+def dossier_miroir():
+    try:
+        with open(FICHIER_MIROIR, encoding="utf-8") as f:
+            chemin = f.readline().strip()
+    except OSError:
+        return None
+    if not chemin or not os.path.isdir(chemin) or os.path.realpath(chemin) == os.path.realpath(DONNEES):
+        return None
+    return chemin
+
+
+def copier_miroir():
+    m = dossier_miroir()
+    if not m or not os.path.exists(FICHIER):
+        return
+    try:
+        tmp = os.path.join(m, "carnet.json.tmp")
+        shutil.copyfile(FICHIER, tmp)  # copyfile : pas de droits copiés, compatible FAT/exFAT/NTFS
+        os.replace(tmp, os.path.join(m, "carnet.json"))
+        if os.path.isdir(SAUVEGARDES):
+            ms = os.path.join(m, "sauvegardes")
+            os.makedirs(ms, exist_ok=True)
+            ici = set(f for f in os.listdir(SAUVEGARDES) if f.endswith(".json"))
+            for f in sorted(ici):
+                if not os.path.exists(os.path.join(ms, f)):
+                    shutil.copyfile(os.path.join(SAUVEGARDES, f), os.path.join(ms, f))
+            for f in os.listdir(ms):   # sauvegardes quotidiennes élaguées ici : élaguées aussi là-bas
+                if re.match(r"^carnet-\d{4}-\d{2}-\d{2}\.json$", f) and f not in ici:
+                    os.remove(os.path.join(ms, f))
+    except OSError as e:
+        print("  Copie miroir impossible vers %s : %s" % (m, e), file=sys.stderr)
+
+
+def ecrire(donnees):
+    os.makedirs(DONNEES, exist_ok=True)
+    sauvegarde_du_jour()
+    tmp = FICHIER + ".tmp"
+    with open(tmp, "w", encoding="utf-8") as f:
+        json.dump(donnees, f, ensure_ascii=False, indent=1)
+    os.replace(tmp, FICHIER)  # écriture atomique
+    copier_miroir()
+
+
+def nettoyer(doc, d):
+    """Valide et normalise une opération reçue du navigateur (seul point de validation)."""
+    if not isinstance(doc, dict):
+        raise ValueError("Corps de requête invalide.")
+    date = str(doc.get("date", ""))
+    if not RE_DATE.match(date):
+        raise ValueError("Date invalide (format attendu AAAA-MM-JJ).")
+    montant = montant_positif(doc.get("montant"))
+    libelle = texte(doc.get("libelle"), 200)
+    if not libelle:
+        raise ValueError("Le libellé est obligatoire.")
+    nature = doc.get("nature") or "depense"
+    if nature not in NATURES:
+        raise ValueError("Nature d'opération inconnue : %s" % nature)
+    comptes = ids_de(d, "comptes") or {"especes"}
+    compte = doc.get("compte") or "especes"
+    if compte not in comptes:
+        raise ValueError("Compte inconnu : %s" % compte)
+    out = {"date": date, "montant": montant, "libelle": libelle, "nature": nature, "compte": compte}
+    if nature == "depense":
+        out["categorie"] = doc.get("categorie") if doc.get("categorie") in ids_postes(d) else "autre"
+    elif nature == "virement":
+        vers = doc.get("vers")
+        if vers not in comptes:
+            raise ValueError("Compte de destination du virement inconnu : %s" % vers)
+        if vers == compte:
+            raise ValueError("Un virement doit aller d'un compte à un autre.")
+        out["vers"] = vers
+    elif nature in ("pret", "remboursement"):
+        personne = texte(doc.get("personne"), 60)
+        if not personne:
+            raise ValueError("Indiquez la personne concernée par le prêt.")
+        out["personne"] = personne
+        ech = str(doc.get("echeance") or "")
+        if nature == "pret" and ech:
+            if not RE_DATE.match(ech):
+                raise ValueError("Échéance invalide (format attendu AAAA-MM-JJ).")
+            out["echeance"] = ech
+    elif nature == "investissement":
+        if doc.get("bien") not in ids_de(d, "biens"):
+            raise ValueError("Choisissez le bien concerné par l'investissement.")
+        out["bien"] = doc["bien"]
+    if nature == "investissement" and out.get("bien") in ids_maisons(d):
+        out["cat_maison"] = doc.get("cat_maison") if doc.get("cat_maison") in CAT_MAISON else deviner_cat_maison(libelle)
+    if nature in ("depense", "investissement") and doc.get("vehicule"):
+        if doc["vehicule"] not in ids_vehicules(d):
+            raise ValueError("Véhicule inconnu : %s" % doc["vehicule"])
+        out["vehicule"] = doc["vehicule"]
+        out["cat_vehicule"] = doc.get("cat_vehicule") if doc.get("cat_vehicule") in CAT_VEHICULE else "autre"
+        for champ, quoi in (("km", "Kilométrage"), ("quantite", "Quantité")):
+            if doc.get(champ) not in (None, "", 0):
+                out[champ] = montant_positif(doc.get(champ), quoi)
+        if "quantite" in out:
+            out["unite"] = doc.get("unite") if doc.get("unite") in ("L", "u") else ("L" if out["cat_vehicule"] == "carburant" else "u")
+    out["cree"] = str(doc.get("cree") or dt.datetime.now(dt.timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ"))
+    rem = texte(doc.get("remarque"), 300)
+    if rem:
+        out["remarque"] = rem
+    return out
+
+
+RE_DEVISE = re.compile(r"^[A-Z]{3}$")
+
+
+def nettoyer_devises(liste):
+    """Parités d'affichage : 1 unité de la devise = « taux » francs CFA (XAF, toujours 1)."""
+    out, vus = [], set()
+    for x in liste or []:
+        code = str(x.get("code", "")).strip().upper()
+        if not RE_DEVISE.match(code):
+            raise ValueError("Code de devise invalide : %r (3 lettres, par exemple USD)." % code)
+        if code in vus:
+            raise ValueError("Devise en double : %s" % code)
+        vus.add(code)
+        if code == "XAF":
+            taux = 1
+        else:
+            try:
+                taux = float(x.get("taux"))
+            except (TypeError, ValueError):
+                raise ValueError("Parité invalide pour %s." % code)
+            if not (0 < taux < 1e9):
+                raise ValueError("Parité invalide pour %s : elle doit être positive." % code)
+            taux = round(taux, 6)
+        dv = {"code": code, "nom": texte(x.get("nom"), 40) or code, "symbole": texte(x.get("symbole"), 6) or code, "taux": taux}
+        maj = str(x.get("maj") or "")
+        if maj:
+            if not RE_DATE.match(maj):
+                raise ValueError("Date de parité invalide pour %s." % code)
+            dv["maj"] = maj
+        out.append(dv)
+    if "XAF" not in vus:
+        out.insert(0, {"code": "XAF", "nom": "Franc CFA", "symbole": "FCFA", "taux": 1})
+    return out
+
+
+def nettoyer_mots(liste):
+    mots = []
+    for m in (liste or [])[:300]:
+        m = texte(m, 80)
+        if m and m.lower() not in [k.lower() for k in mots]:
+            mots.append(m)
+    return mots
+
+
+def nettoyer_comptes(liste, d):
+    comptes, vus, noms = [], set(), set()
+    for x in liste or []:
+        cid = str(x.get("id", "")).strip()
+        nom = texte(x.get("nom"), 60)
+        if not RE_ID.match(cid):
+            raise ValueError("Identifiant de compte invalide : %r" % cid)
+        if not nom:
+            raise ValueError("Chaque compte doit avoir un nom.")
+        if cid in vus or nom.lower() in noms:
+            raise ValueError("Deux comptes portent le même nom : %s" % nom)
+        vus.add(cid); noms.add(nom.lower())
+        typ = x.get("type") if x.get("type") in TYPES_COMPTE else "courant"
+        rel = {}
+        for r in x.get("releves") or []:
+            if not RE_DATE.match(str(r.get("date", ""))):
+                raise ValueError("Date de relevé invalide pour %s." % nom)
+            rel[r["date"]] = montant_positif(r.get("solde"), "Solde du relevé de %s" % nom, zero=True)
+        c = {"id": cid, "nom": nom, "type": typ, "mots": nettoyer_mots(x.get("mots")),
+             "releves": [{"date": k, "solde": rel[k]} for k in sorted(rel)]}
+        coul = str(x.get("couleur") or "")
+        if RE_COULEUR.match(coul):
+            c["couleur"] = coul
+        if x.get("taux") not in (None, ""):
+            c["taux"] = montant_positif(x.get("taux"), "Taux d'intérêt de %s" % nom, zero=True)
+            c["periode"] = int(montant_positif(x.get("periode") or 12, "Période des intérêts"))
+        comptes.append(c)
+    if "especes" not in vus:
+        comptes.insert(0, json.loads(json.dumps(COMPTES_DEFAUT[0])))
+    utilises = {o.get("compte") for o in d.get("operations", [])} | {o.get("vers") for o in d.get("operations", [])}
+    manquants = (utilises - {None}) - {c["id"] for c in comptes}
+    if manquants:
+        raise ValueError("Impossible de supprimer un compte qui a des opérations : %s" % ", ".join(sorted(manquants)))
+    return comptes
+
+
+def nettoyer_biens(liste, d):
+    biens, vus = [], set()
+    postes = ids_postes(d)
+    for x in liste or []:
+        bid = str(x.get("id", "")).strip()
+        nom = texte(x.get("nom"), 60)
+        if not RE_ID.match(bid):
+            raise ValueError("Identifiant de bien invalide : %r" % bid)
+        if not nom or bid in vus:
+            raise ValueError("Chaque bien doit avoir un nom unique.")
+        vus.add(bid)
+        da = str(x.get("date_achat") or "")
+        if da and not RE_DATE.match(da):
+            raise ValueError("Date d'achat invalide pour %s." % nom)
+        est = {}
+        for e in x.get("estimations") or []:
+            if not RE_DATE.match(str(e.get("date", ""))):
+                raise ValueError("Date d'estimation invalide pour %s." % nom)
+            est[e["date"]] = montant_positif(e.get("valeur"), "Valeur estimée de %s" % nom, zero=True)
+        biens.append({"id": bid, "nom": nom, "type": x.get("type") if x.get("type") in TYPES_BIEN else "actif",
+                      "date_achat": da, "prix_achat": montant_positif(x.get("prix_achat") or 0, "Prix d'achat de %s" % nom, zero=True),
+                      "poste": x.get("poste") if x.get("poste") in postes else "",
+                      "mots": nettoyer_mots(x.get("mots")),
+                      "estimations": [{"date": k, "valeur": est[k]} for k in sorted(est)]})
+        if x.get("vehicule"):
+            vg = x.get("vidange") or {}
+            def km(k, defaut=0):
+                try:
+                    return max(0, int(float(vg.get(k) or defaut)))
+                except (TypeError, ValueError):
+                    raise ValueError("Repère de vidange invalide pour %s." % nom)
+            biens[-1]["vehicule"] = True
+            biens[-1]["vidange"] = {"intervalle": km("intervalle", 3000) or 3000, "dernier": km("dernier"), "prochain": km("prochain")}
+        if x.get("maison"):
+            pj = x.get("projet") or {}
+            ech = str(pj.get("echeance") or "")
+            if ech and not RE_DATE.match(ech):
+                raise ValueError("Échéance du projet invalide pour %s." % nom)
+            biens[-1]["maison"] = True
+            biens[-1]["projet"] = {"budget": montant_positif(pj.get("budget") or 0, "Budget du projet", zero=True),
+                                   "echeance": ech, "note": texte(pj.get("note"), 300)}
+    manquants = ({o.get("bien") for o in d.get("operations", []) if o.get("nature") == "investissement"}
+                 | {o.get("vehicule") for o in d.get("operations", []) if o.get("vehicule")}) - vus
+    if manquants:
+        raise ValueError("Impossible de supprimer un bien qui a des investissements : %s" % ", ".join(sorted(manquants)))
+    return biens
+
+
+# ---------------------------------------------------------------- HTTP
+# ---------------------------------------------------------------- onglets ouverts sur l'ordinateur
+# Chaque onglet AppYa de l'ordinateur garde une connexion /api/onglet ouverte (flux d'événements). Le lanceur
+# « appya » demande /api/onglets/rappel : s'il y a déjà un onglet, celui-ci se signale (notification, titre)
+# au lieu qu'un nouvel onglet soit ouvert. Les téléphones ne s'inscrivent pas (client non local).
+ONGLETS = {}                      # identifiant de connexion -> {"file": queue.Queue, "notif": bool}
+VERROU_ONGLETS = threading.Lock()
+
+
+def etat_onglets():
+    with VERROU_ONGLETS:
+        return {"ouverts": len(ONGLETS), "notif": any(o["notif"] for o in ONGLETS.values())}
+
+
+class Gestionnaire(SimpleHTTPRequestHandler):
+    extensions_map = {**SimpleHTTPRequestHandler.extensions_map, ".webmanifest": "application/manifest+json", ".js": "text/javascript"}
+
+    def __init__(self, *a, **kw):
+        super().__init__(*a, directory=APP, **kw)
+
+    def log_message(self, fmt, *args):  # journal discret
+        if "/api/" in (self.path or ""):
+            sys.stderr.write("  %s %s\n" % (self.command, self.path))
+
+    def end_headers(self):
+        self.send_header("Cache-Control", "no-store")
+        super().end_headers()
+
+    def _json(self, code, obj):
+        corps = json.dumps(obj, ensure_ascii=False).encode("utf-8")
+        self.send_response(code)
+        self.send_header("Content-Type", "application/json; charset=utf-8")
+        self.send_header("Content-Length", str(len(corps)))
+        self.end_headers()
+        self.wfile.write(corps)
+
+    def _corps(self):
+        n = int(self.headers.get("Content-Length") or 0)
+        if n > 2_000_000:
+            raise ValueError("Requête trop volumineuse.")
+        return json.loads(self.rfile.read(n) or b"{}")
+
+    def _origine_ok(self):
+        # refuse les requêtes d'écriture venant d'un autre site ouvert dans le navigateur
+        o = self.headers.get("Origin")
+        if not o:
+            return True
+        h = urlparse(o).netloc
+        return h == self.headers.get("Host")
+
+    def _client_local(self):
+        try:
+            return ipaddress.ip_address(self.client_address[0]).is_loopback
+        except ValueError:
+            return False
+
+    def _page_cle(self, erreur=False):
+        corps = (PAGE_CLE % ('<p class="err">Clé incorrecte.</p>' if erreur else "")).encode("utf-8")
+        self.send_response(401)
+        self.send_header("Content-Type", "text/html; charset=utf-8")
+        self.send_header("Content-Length", str(len(corps)))
+        self.end_headers()
+        self.wfile.write(corps)
+
+    def _controle(self):
+        """Contrôle d'accès commun à toutes les requêtes. Retourne False si une réponse
+        de refus (ou de redirection) a déjà été envoyée."""
+        if not hote_autorise(self.headers.get("Host")):
+            self._json(403, {"erreur": "Nom d'hôte refusé."})
+            return False
+        if not RESEAU or self._client_local():
+            return True
+        u = urlparse(self.path)
+        donnee = parse_qs(u.query).get("cle", [""])[0].strip().lower()
+        if donnee:
+            if hmac.compare_digest(donnee.encode(), CLE.encode()):
+                # la clé passe dans un cookie et disparaît de la barre d'adresse
+                self.send_response(303)
+                self.send_header("Location", u.path or "/")
+                self.send_header("Set-Cookie", "cle=%s; Path=/; Max-Age=31536000; HttpOnly; SameSite=Lax" % CLE)
+                self.send_header("Content-Length", "0")
+                self.end_headers()
+            else:
+                time.sleep(1)  # freine les essais au hasard
+                self._page_cle(erreur=True)
+            return False
+        c = SimpleCookie()
+        try:
+            c.load(self.headers.get("Cookie") or "")
+        except Exception:  # noqa — cookie mal formé : traité comme absent
+            pass
+        if "cle" in c and hmac.compare_digest(c["cle"].value.encode(), CLE.encode()):
+            return True
+        if u.path.startswith("/api/"):
+            self._json(401, {"erreur": "Accès protégé : ouvrez le lien avec la clé "
+                                       "(tapez appya etat sur l'ordinateur)."})
+        else:
+            self._page_cle()
+        return False
+
+    def do_HEAD(self):
+        if self._controle():
+            super().do_HEAD()
+
+    def do_GET(self):
+        if not self._controle():
+            return
+        p = urlparse(self.path).path
+        if p == "/api/donnees":
+            with VERROU:
+                d = lire()
+            return self._json(200, d)
+        if p == "/api/info":
+            return self._json(200, {"version": VERSION, "fichier": FICHIER, "sauvegardes": SAUVEGARDES, "app": APP_ID,
+                                    "reseau": RESEAU})
+        if p == "/api/onglet" and self._client_local():
+            q = parse_qs(urlparse(self.path).query)
+            return self._flux_onglet(q.get("id", [""])[0][:40] or uuid.uuid4().hex, q.get("notif", [""])[0] == "granted")
+        if p == "/api/onglets" and self._client_local():
+            return self._json(200, etat_onglets())
+        if p.startswith("/api/"):
+            return self._json(404, {"erreur": "Adresse inconnue."})
+        return super().do_GET()
+
+    def _flux_onglet(self, cle, notif):
+        """Flux d'événements (text/event-stream) tenu ouvert tant que l'onglet est ouvert."""
+        self.send_response(200)
+        self.send_header("Content-Type", "text/event-stream; charset=utf-8")
+        self.end_headers()
+        moi = {"file": queue.Queue(), "notif": notif}
+        file = moi["file"]
+        with VERROU_ONGLETS:
+            ONGLETS[cle] = moi   # une reconnexion du même onglet remplace l'ancienne entrée
+        try:
+            self.wfile.write(b"retry: 1000\n\n")
+            self.wfile.flush()
+            while True:
+                try:
+                    evt = file.get(timeout=5)
+                    self.wfile.write(("event: %s\ndata: {}\n\n" % evt).encode())
+                except queue.Empty:
+                    self.wfile.write(b": ping\n\n")   # détecte un onglet fermé
+                self.wfile.flush()
+        except (BrokenPipeError, ConnectionResetError, OSError):
+            pass
+        finally:
+            with VERROU_ONGLETS:
+                if ONGLETS.get(cle) is moi:
+                    del ONGLETS[cle]
+            self.close_connection = True
+
+    def _ecriture(self, action):
+        if not self._origine_ok():
+            return self._json(403, {"erreur": "Origine refusée."})
+        try:
+            with VERROU:
+                d = lire()
+                res = action(d)
+                ecrire(d)
+            return self._json(200, res)
+        except KeyError:
+            return self._json(404, {"erreur": "Ligne introuvable (déjà supprimée ?)."})
+        except ValueError as e:
+            return self._json(400, {"erreur": str(e)})
+        except Exception as e:  # noqa
+            return self._json(500, {"erreur": "Erreur du serveur : %s" % e})
+
+    def do_POST(self):
+        if not self._controle():
+            return
+        p = urlparse(self.path).path
+        if p == "/api/operations":
+            try:
+                corps = self._corps()
+            except ValueError as e:
+                return self._json(400, {"erreur": str(e)})
+            lignes = corps if isinstance(corps, list) else [corps]
+
+            def ajouter(d):  # un lot est tout ou rien : la validation précède tout ajout
+                nouv = [{"id": uuid.uuid4().hex[:12], **nettoyer(doc, d)} for doc in lignes]
+                for o in nouv:
+                    marquer(d, o)
+                d["operations"].extend(nouv)
+                return nouv if isinstance(corps, list) else nouv[0]
+            return self._ecriture(ajouter)
+        if p == "/api/onglets/ferme" and self._client_local():   # envoyé par l'onglet qui se ferme
+            n = int(self.headers.get("Content-Length") or 0)
+            cle = self.rfile.read(min(n, 100)).decode("utf-8", "replace").strip()
+            with VERROU_ONGLETS:
+                ONGLETS.pop(cle, None)
+            return self._json(200, etat_onglets())
+        if p == "/api/onglets/rappel" and self._client_local():
+            if not self._origine_ok():
+                return self._json(403, {"erreur": "Origine refusée."})
+            with VERROU_ONGLETS:
+                for o in ONGLETS.values():
+                    o["file"].put("rappel")
+            return self._json(200, etat_onglets())
+        if p == "/api/sync":
+            try:
+                corps = self._corps()
+            except ValueError as e:
+                return self._json(400, {"erreur": str(e)})
+            return self._ecriture(lambda d: synchroniser(d, corps))
+        if p == "/api/reclasser":
+            # {"changements": [{"id": ..., "categorie": ...}, ...]} — dépenses seulement, appliqué en une fois
+            try:
+                corps = self._corps()
+            except ValueError as e:
+                return self._json(400, {"erreur": str(e)})
+
+            def reclasser(d):
+                ids = ids_postes(d)
+                voulu = {}
+                for c in (corps.get("changements") or []):
+                    if c.get("categorie") not in ids:
+                        raise ValueError("Poste inconnu : %s" % c.get("categorie"))
+                    voulu[str(c.get("id"))] = c["categorie"]
+                n = 0
+                for x in d["operations"]:
+                    if x.get("id") in voulu and x.get("nature") == "depense" and x.get("categorie") != voulu[x["id"]]:
+                        x["categorie"] = voulu[x["id"]]
+                        marquer(d, x)
+                        n += 1
+                return {"modifiees": n}
+            return self._ecriture(reclasser)
+        return self._json(404, {"erreur": "Adresse inconnue."})
+
+    def do_PUT(self):
+        if not self._controle():
+            return
+        p = urlparse(self.path).path
+        try:
+            corps = self._corps()
+        except ValueError as e:
+            return self._json(400, {"erreur": str(e)})
+        m = re.match(r"^/api/operations/([\w-]+)$", p)
+        if m:
+            ident = m.group(1)
+
+            def remplacer(d):
+                for i, x in enumerate(d["operations"]):
+                    if x.get("id") == ident:
+                        d["operations"][i] = marquer(d, {"id": ident, **nettoyer(corps, d)})
+                        return d["operations"][i]
+                raise KeyError(ident)
+            return self._ecriture(remplacer)
+        if p == "/api/parametres":
+            def regler(d):
+                prm = d.setdefault("parametres", {})
+                if "postes" in corps:
+                    postes, vus, noms = [], set(), set()
+                    for x in corps.get("postes") or []:
+                        pid = str(x.get("id", "")).strip()
+                        label = str(x.get("label", "")).strip()[:60]
+                        if not RE_ID.match(pid):
+                            raise ValueError("Identifiant de poste invalide : %r" % pid)
+                        if not label:
+                            raise ValueError("Chaque poste doit avoir un nom.")
+                        if pid in vus or label.lower() in noms:
+                            raise ValueError("Deux postes portent le même nom : %s" % label)
+                        vus.add(pid); noms.add(label.lower())
+                        coul = str(x.get("couleur", "#9a968c"))
+                        postes.append({"id": pid, "label": label,
+                                       "couleur": coul if RE_COULEUR.match(coul) else "#9a968c",
+                                       "mots": nettoyer_mots(x.get("mots")) if pid != "autre" else []})
+                    if "autre" not in vus:
+                        postes.append(dict(POSTES_DEFAUT[-1]))
+                    else:  # « Autre » reste toujours en dernier
+                        postes = [x for x in postes if x["id"] != "autre"] + [x for x in postes if x["id"] == "autre"]
+                    prm["postes"] = postes
+                ids = ids_postes(d)
+                # déplacement des lignes des postes supprimés : {"ancien": "nouveau"}
+                deplacer = {str(k): str(v) for k, v in (corps.get("deplacer") or {}).items()}
+                n = 0
+                for x in d["operations"]:
+                    if x.get("nature") != "depense":
+                        continue
+                    c = x.get("categorie")
+                    cible = deplacer.get(c, c)
+                    if cible not in ids:
+                        cible = "autre"
+                    if cible != c:
+                        x["categorie"] = cible
+                        marquer(d, x)
+                        n += 1
+                if "budgets" in corps:
+                    budgets = {}
+                    for k, v in (corps.get("budgets") or {}).items():
+                        if k not in ids:
+                            continue
+                        try:
+                            v = int(round(float(v)))
+                        except (TypeError, ValueError):
+                            raise ValueError("Budget invalide pour %s." % k)
+                        if v > 0:
+                            budgets[k] = v
+                    prm["budgets"] = budgets
+                else:
+                    prm["budgets"] = {k: v for k, v in (prm.get("budgets") or {}).items() if k in ids}
+                if "comptes" in corps:
+                    prm["comptes"] = nettoyer_comptes(corps.get("comptes"), d)
+                if "biens" in corps:
+                    prm["biens"] = nettoyer_biens(corps.get("biens"), d)
+                if "devises" in corps:
+                    prm["devises"] = nettoyer_devises(corps.get("devises"))
+                for b in prm.get("biens", []):  # un poste supprimé ne reste pas lié à un bien
+                    if b.get("poste") and b["poste"] not in ids:
+                        b["poste"] = ""
+                marquer_parametres(d)
+                return {"parametres": prm, "deplacees": n}
+            return self._ecriture(regler)
+        return self._json(404, {"erreur": "Adresse inconnue."})
+
+    def do_DELETE(self):
+        if not self._controle():
+            return
+        p = urlparse(self.path).path
+        m = re.match(r"^/api/operations/([\w-]+)$", p)
+        if not m:
+            return self._json(404, {"erreur": "Adresse inconnue."})
+        ident = m.group(1)
+
+        def supprimer(d):
+            avant = len(d["operations"])
+            d["operations"] = [x for x in d["operations"] if x.get("id") != ident]
+            if len(d["operations"]) == avant:
+                raise KeyError(ident)
+            d["supprimees"] = [t for t in d.setdefault("supprimees", []) if t["id"] != ident] + [marquer(d, {"id": ident})]
+            return {"supprime": ident}
+        return self._ecriture(supprimer)
+
+
+# ---------------------------------------------------------------- démarrage
+def deja_lance(port):
+    import urllib.request
+    try:
+        with urllib.request.urlopen("http://127.0.0.1:%d/api/info" % port, timeout=1) as r:
+            return json.load(r).get("app") == APP_ID
+    except Exception:
+        return False
+
+
+def ip_locale():
+    s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+    try:
+        s.connect(("10.255.255.255", 1))
+        return s.getsockname()[0]
+    except Exception:
+        return None
+    finally:
+        s.close()
+
+
+def main():
+    ap = argparse.ArgumentParser(description="AppYa — serveur local")
+    ap.add_argument("--port", type=int, default=8780)
+    ap.add_argument("--reseau", action="store_true", help="accessible depuis les autres appareils du même réseau")
+    ap.add_argument("--sans-navigateur", action="store_true")
+    a = ap.parse_args()
+
+    if sys.version_info < (3, 8):
+        sys.exit("Python 3.8 ou plus récent est nécessaire.")
+
+    if deja_lance(a.port):
+        url = "http://localhost:%d" % a.port
+        print("Le carnet tourne déjà : %s" % url)
+        if not a.sans_navigateur:
+            webbrowser.open(url)
+        return
+
+    # AppYa ne lit que le format 5 : les conversions des anciens formats (v1 à v4) et la reprise de l'ancien
+    # Carnet du véhicule ont été retirées le 2026-11-14, une fois toutes les données converties.
+    d = lire()
+    if d.get("version") != 5 or not isinstance(d.get("operations"), list):
+        sys.exit("Format de données non reconnu (version %s) dans %s : AppYa %s ne lit que le format 5."
+                 % (d.get("version"), FICHIER, VERSION))
+
+    with VERROU:
+        copier_miroir()   # au démarrage : rattrape les écritures faites pendant que le disque miroir était absent
+
+    global RESEAU, CLE
+    if a.reseau:
+        RESEAU, CLE = True, cle_reseau()  # créée avant l'ouverture du port : les scripts la lisent ensuite
+
+    hote = "0.0.0.0" if a.reseau else "127.0.0.1"
+    serveur = None
+    for port in range(a.port, a.port + 10):
+        try:
+            serveur = ThreadingHTTPServer((hote, port), Gestionnaire)
+            break
+        except OSError:
+            continue
+    if not serveur:
+        sys.exit("Aucun port libre entre %d et %d." % (a.port, a.port + 9))
+    port = serveur.server_address[1]
+    url = "http://localhost:%d" % port
+
+    print("")
+    print("  AppYa %s" % VERSION)
+    print("  Ouvert sur        : %s" % url)
+    if a.reseau:
+        ip = ip_locale()
+        if ip:
+            print("  Depuis le téléphone (même Wi-Fi) : http://%s:%d/?cle=%s" % (ip, port, CLE))
+        print("  (clé d'accès dans %s ; les autres appareils ne voient rien sans elle)" % FICHIER_CLE)
+    print("  Données           : %s" % FICHIER)
+    print("  Copie miroir      : %s" % (os.path.join(dossier_miroir(), "carnet.json") if dossier_miroir() else "aucune"))
+    print("  Pour arrêter      : Ctrl+C (ou : appya arreter)")
+    print("")
+
+    # mémorise l'adresse réelle pour le lanceur (utile si le port 8780 était pris)
+    try:
+        os.makedirs(DONNEES, exist_ok=True)
+        with open(os.path.join(DONNEES, ".adresse"), "w") as f:
+            f.write(url + "\n")
+    except OSError:
+        pass
+
+    # arrêt propre quand systemd envoie SIGTERM
+    def _arret(*_):
+        raise KeyboardInterrupt
+    signal.signal(signal.SIGTERM, _arret)
+
+    if not a.sans_navigateur:
+        threading.Timer(0.8, lambda: webbrowser.open(url)).start()
+    try:
+        serveur.serve_forever()
+    except KeyboardInterrupt:
+        print("\nArrêt d'AppYa.")
+    finally:
+        serveur.server_close()
+
+
+if __name__ == "__main__":
+    main()

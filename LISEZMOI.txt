@@ -1,0 +1,367 @@
+APPYA — SUIVI FINANCIER, VÉHICULE ET MAISON — VERSION UBUNTU
+==============================================================
+
+Une application qui tourne dans votre navigateur, sur votre ordinateur
+(http://localhost:8780), sans internet. Vos données restent chez vous,
+dans un simple fichier JSON. AppYa réunit l'ancien Suivi financier et
+l'ancien Carnet du véhicule en une seule application.
+
+Prérequis : Ubuntu 20.04 ou plus récent (Python 3 est déjà installé).
+Aucun droit administrateur (sudo) n'est nécessaire.
+
+
+1. INSTALLER
+------------
+Dans un terminal (Ctrl+Alt+T), placez-vous dans le dossier décompressé,
+où qu'il soit (Téléchargements, disque externe, clé USB…), puis :
+
+    bash installer.sh
+
+Utilisez « bash installer.sh » et non « ./installer.sh » : sur un disque
+externe NTFS ou exFAT, Ubuntu refuse d'exécuter les fichiers directement
+(« Permission non accordée »). Avec « bash », ce droit n'est pas nécessaire.
+
+L'installation :
+  - copie le carnet dans ~/AppYa ;
+  - le fait démarrer automatiquement à chaque ouverture de session ;
+  - ajoute « AppYa » au menu des applications et une icône
+    sur le bureau (clic droit > « Autoriser le lancement » la première fois) ;
+  - installe la commande  appya ;
+  - ouvre le carnet dans le navigateur ;
+  - désigne le dossier d'où vous l'avez lancée comme COPIE MIROIR de vos
+    données : voir les parties 7 et 8.
+
+Variantes :
+    bash installer.sh --ici            garder le carnet et ses données dans ce dossier
+    bash installer.sh --reseau         accessible aussi depuis le téléphone (même Wi-Fi)
+    bash installer.sh --sans-service   pas de démarrage automatique
+
+
+2. LES RUBRIQUES
+----------------
+  - Mes finances : vues Mois, Année, Patrimoine et Statistiques, avec le
+    journal de toutes les opérations.
+  - My Car : kilomètres avant la prochaine vidange, dépenses,
+    carburant, prix moyen du litre, consommation (L/100 km), km parcourus,
+    coût par km, récapitulatif mensuel ou annuel, liste des vidanges et
+    journal du véhicule (par année avec ‹ ›, ou toutes les années).
+  - House (un terrain, une construction) : coût de revient (terrain +
+    travaux), valeur actuelle et appréciation, travaux par année ou par mois
+    et par catégorie (arrosage, eau-pompe-forage, maçonnerie, matériaux,
+    main-d'œuvre, électricité, administratif…), perspectives (budget du
+    projet, reste à investir, date d'achèvement au rythme actuel, effort
+    mensuel pour tenir l'échéance, valeur projetée) et journal des travaux.
+  - Données et réglages : Une opération · Coller une liste · Postes et
+    libellés · Comptes et biens · Repères vidange · Projet maison · Parités.
+Toucher une ligne d'un journal l'ouvre dans « Une opération » ; après
+« Enregistrer » ou « Annuler », on revient là où l'on était.
+
+Avant la date de début du suivi quotidien (si elle est réglée), seules les dépenses du
+véhicule, reprises de l'ancien Carnet du véhicule, sont notées : les vues
+Mois et Année l'indiquent (« suivi partiel ») et les statistiques
+journalières ne commencent qu'à cette date.
+
+
+Journal : l'en-tête de chaque jour est coloré selon ses dépenses courantes
+(couleur seule, sans mention écrite ni légende). On prend la journée la moins chère et la plus chère depuis le
+début du suivi, et on partage l'écart en trois tranches égales : vert (tranche du
+bas), jaune (tranche du milieu, autour de la moyenne du plus bas et du plus
+haut), rouge (tranche du haut). Les bornes se mettent à jour avec chaque
+nouvelle dépense. Les virements (retraits, épargne) ne comptent pas.
+
+Montants masqués : dans la vue Patrimoine seulement, le patrimoine net, les
+soldes des comptes, la valeur des biens et les prêts s'affichent « ••••• »
+à chaque ouverture (et quand l'application passe en arrière-plan). Le bouton
+« 👁 Afficher », visible dans cette vue, les montre ; « 🙈 Masquer » les
+cache. Les autres vues (Mois, Année, Statistiques, carnets) ne sont pas
+masquées.
+
+
+2 bis. SUR LE TÉLÉPHONE (HORS LIGNE, SYNCHRONISÉ)
+-------------------------------------------------
+Deux façons d'avoir AppYa sur le téléphone :
+  - VERSION AUTONOME (le plus simple, sans ordinateur) : ouvrez le lien web
+    du projet (https://yayayou47.github.io/AppYa/) dans Chrome, ou installez
+    l'APK (page « Releases » du dépôt GitHub). Les données restent dans le
+    téléphone ; sauvegardez-les avec Données et réglages › Sauvegarde.
+  - VERSION SYNCHRONISÉE avec cet ordinateur (ce qui suit) : le téléphone et
+    l'ordinateur sont reliés par Tailscale (installé et connecté sur les deux,
+    même compte). Sur l'ordinateur :
+        sudo tailscale set --operator=$USER
+        tailscale serve --bg 8780
+    « tailscale status » donne le nom de l'ordinateur en …ts.net. Ouvrez
+    https://<nom-de-l-ordinateur>.ts.net dans Chrome sur le téléphone,
+puis menu ⋮ › « Installer l'application » (ou « Ajouter à l'écran
+d'accueil »). AppYa s'ouvre alors comme une application, même sans réseau.
+
+  - Les saisies (une opération, coller une liste, modifier, supprimer) se
+    font hors ligne : elles sont gardées dans le téléphone et envoyées à
+    l'ordinateur dès qu'il est joignable (partage de connexion, Wi-Fi ou
+    internet, Tailscale actif, ordinateur allumé).
+  - La synchronisation est automatique (ouverture, retour du réseau, toutes
+    les 2 minutes) ; le bouton en haut (« ✓ À jour », « 3 en attente »,
+    « Hors ligne ») la lance tout de suite.
+  - Une ligne modifiée des deux côtés : la modification la plus récente gagne
+    et un message le signale. Une ligne refusée par l'ordinateur (montant
+    nul…) reste dans le téléphone, signalée « refusée », à corriger.
+  - Une vidange envoyée par le téléphone met le repère à jour sur
+    l'ordinateur.
+  - Les réglages (postes, comptes, biens, repères, projet maison, parités)
+    se modifient quand le téléphone est relié à l'ordinateur.
+  - L'adresse sécurisée est relayée par Tailscale (« tailscale serve ») ;
+    pour la couper : tailscale serve --https=443 off
+  - Hors ligne, AppYa affiche la dernière version ouverte en ligne. Après
+    une mise à jour sur l'ordinateur, ouvrir une fois AppYa sur le téléphone
+    avec l'ordinateur joignable : la nouvelle version est gardée pour la
+    suite. Si l'ordinateur ne répond pas, la page s'ouvre en 3 à 4 secondes.
+
+Où sont les données du téléphone ? Dans Chrome, sur le téléphone même, dans
+l'espace privé du site AppYa (base IndexedDB « appya ») : les lignes, les
+réglages et la file des saisies non encore envoyées. L'application installée
+et l'onglet Chrome partagent cet espace. La copie de référence reste celle de
+l'ordinateur (~/AppYa/donnees/carnet.json, sauvegardée chaque jour). Ne pas
+effacer les données du site dans Chrome (ni désinstaller Chrome) tant que le
+bouton n'affiche pas « ✓ À jour » : les saisies en attente seraient perdues.
+
+
+3. UNE SEULE NOTE POUR TOUT
+---------------------------
+Depuis la version 2.0, le carnet est un suivi financier : dépenses, revenus,
+comptes (espèces, banques, mobile money), prêts accordés et biens sont dans
+le même journal. Chaque ligne est une opération ; sa NATURE se lit dans le
+libellé, sans signe + ou − :
+
+    10 vivres le 02/10/26               dépense, payée en espèces
+    400 salaire banque le 27/10/26      revenu (salaire, prime, intérêts…) sur le compte Banque
+    300 retrait banque                  virement Banque → Espèces (pas une dépense)
+    100 épargne banque > mobile         virement entre deux comptes
+    4 abonnement carte                  dépense payée avec le compte « carte »
+    prêt 100 Ali échéance 30/07/26      prêt accordé : ouvre son compte de créance
+    remb 75 Ali                         remboursement reçu : réduit sa créance
+    50 ciment maison                    investissement dans le bien « maison »
+    25 carburant 35,7L 110882km         dépense Voiture : 35,7 litres, compteur 110 882 km
+    17 vidange huile 110818km           entretien ; met à jour le repère de vidange
+    25 achat pneu                       investissement dans la voiture
+    20 main d'oeuvre maçon maison       travaux de la maison (main-d'œuvre)
+    12 pharmacie                        dépense payée en espèces
+
+Compte qui paie : sans précision, la dépense est faite en espèces. Les
+autres comptes (banque, carte, mobile money…) se créent dans Données et
+réglages › Comptes et biens, chacun avec ses mots-clés (« banque »,
+« mobile »…) : un mot-clé présent dans la ligne désigne le compte.
+
+Véhicule : « L » (litres) et « km » (compteur) se lisent seulement sur les
+lignes de la voiture ; l'ancienne forme « 25 essence (35,71) (106183) »
+reste comprise (nombre décimal = litres, nombre de 10 000 ou plus = km).
+Un petit nombre entier entre parenthèses, comme « (458) », est un cumul
+ignoré. Les mots vidange, carburant, essence, gasoil, garage, pneu… désignent
+toujours la voiture ; pour une réparation, écrivez par exemple
+« réparation voiture radiateur » ou choisissez le poste dans l'aperçu.
+
+Un retrait n'est jamais une dépense : les dépenses faites avec l'argent
+retiré sont notées une à une. Un prêt sort de votre argent comme une
+dépense, mais la personne garde un compte de ce qu'elle vous doit jusqu'à
+ce qu'il revienne à zéro. Les frais de construction et d'entretien d'un
+bien sont des investissements : ils sortent de vos comptes mais ne
+comptent pas dans les dépenses courantes du mois ; ils s'ajoutent au coût
+du bien.
+
+Montants en milliers : 10 = 10 000 CFA, 2,5 = 2 500, 1750 = 1 750 000.
+Un nombre de 10 000 ou plus est pris tel quel (25000 = 25 000 CFA).
+Sous le champ, le carnet affiche le montant compris (« = 10 000 CFA »).
+Dans « Coller une liste », la date d'une ligne vaut pour les suivantes ;
+vérifiez nature, compte et poste dans l'aperçu avant d'importer.
+
+
+4. CE QUE FAIT LE SUIVI FINANCIER
+------------------------
+  - Vue Mois : dépenses du mois, moyenne par jour (avec l'écart type entre
+    parenthèses : plus il est grand, plus les dépenses varient d'un jour à l'autre), comparaison avec le mois
+    précédent, entrées, investissements et prêts, solde du mois ;
+    petit graphique des dépenses par semaine (semaine en cours en évidence) ;
+    répartition des dépenses par poste ; journal.
+  - Vue Année : les mêmes totaux, et un tableau mois × poste.
+  - Vue Patrimoine : solde de chaque compte, biens, prêts en cours,
+    patrimoine net (comptes + biens + ce qu'on vous doit).
+      · Comptes : le solde = dernier solde noté (« Noter le solde ») + les
+        opérations postérieures. Chaque solde noté est comparé au précédent :
+        un écart signale une opération oubliée.
+      · Biens : prix d'achat + investissements = coût de revient ; notez la
+        valeur actuelle (« Mettre à jour la valeur ») et le carnet calcule la
+        plus- ou moins-value et le taux annuel moyen (appréciation pour un
+        bien actif comme un terrain, dépréciation pour un bien passif comme
+        une voiture).
+      · Prêts : prêté, remboursé, reste dû, échéance (en rouge si dépassée).
+  - Devise d'affichage : le menu en haut (FCFA par défaut, €, $, ¥…) convertit
+    tous les montants affichés ; « ⚙ Parités » règle les taux (1 € = 655 FCFA…)
+    et permet d'ajouter une devise. La saisie et l'export restent en francs CFA.
+  - Chaque bouton n'affiche que son contenu : Mois, Année, Patrimoine,
+    Statistiques ; « ⚙ Parités » ouvre son écran, un second clic ramène à la
+    vue précédente.
+  - Statistiques, par mois ou par année (flèches ‹ ›), sur une période
+    choisie (du … au …) ou sur tout l'historique : alertes (prêt en retard, rythme de dépense, écarts de
+    relevés, réserve d'espèces…), courbe des dépenses cumulées du mois avec
+    projection, dépenses et entrées par mois, histogramme des dépenses par jour,
+    moyenne par jour de la semaine, libellés les plus coûteux, composition du
+    patrimoine, puis conclusions et perspectives. Chaque graphique a un
+    « Voir les données ».
+  - Budgets : un montant mensuel par poste ; un dépassement s'affiche en rouge.
+  - Touchez une ligne pour la modifier ; ✕ puis « Supprimer ? » pour l'effacer.
+  - Touchez un compte, une personne ou un bien pour filtrer le journal.
+  - « Exporter Excel » ouvre un menu : Tout (toutes les rubriques, 12
+    feuilles), Suivi financier (journal de la période affichée, postes,
+    récapitulatif mensuel, comptes, prêts, biens), Carnet du véhicule (journal
+    avec km et litres, récapitulatif mensuel avec consommation et coût par km,
+    vidanges) ou Carnet de la maison (travaux, récapitulatif par année et par
+    catégorie, fiche du projet). Montants en francs CFA ; le fichier
+    AppYa_<rubrique>_<date>.xlsx s'ouvre avec LibreOffice Calc.
+  - Onglet « Comptes et biens » : ajouter ou renommer un compte (couleur, mots-clés,
+    taux d'intérêt), ajouter un bien (date et prix d'achat, mots-clés
+    d'investissement, poste de ses frais d'usage).
+
+
+5. PERSONNALISER LES POSTES (onglet « Postes et libellés »)
+-----------------------------------------------------------
+  - Ajouter, renommer, recolorer, supprimer un poste (ses lignes vont dans
+    le poste de votre choix). Le budget mensuel se règle au même endroit.
+  - Mots-clés : un nouveau libellé va dans le PREMIER poste de la liste dont
+    un mot-clé apparaît dans le libellé. Exemple : « famille » dans Foyer,
+    placé au-dessus de Téléphone et Perso, range « crédit téléphone
+    famille » et « parfum famille » au Foyer. Les flèches ↑ ↓ règlent cet ordre.
+  - Tableau des libellés : changez le poste d'un libellé (ex. « freestyle »)
+    et toutes ses lignes suivent ; l'association est retenue pour la suite.
+  - « Vérifier avec les mots-clés » propose de reclasser les anciennes
+    lignes ; vous cochez ce que vous acceptez.
+
+Postes par défaut (nouveau carnet) : Foyer, vivres · Loyer, logement ·
+Aides et dons · Enfants, école · Santé · Voiture · Téléphone, internet ·
+Transport · Repas, boissons · Perso · Autre.
+
+
+6. LA COMMANDE appya
+------------------------------
+    appya                 ouvre le carnet ; s'il est déjà ouvert dans un
+                          onglet, aucun onglet n'est ajouté (voir plus bas)
+    appya nouvel-onglet   ouvre quand même un nouvel onglet
+    appya etat            tourne-t-il ? à quelle adresse ?
+    appya arreter | demarrer | redemarrer
+    appya reseau oui|non  accès depuis le téléphone (même Wi-Fi)
+    appya reseau nouvelle-cle   change la clé d'accès du téléphone
+    appya sauvegarder     copie datée de carnet.json dans Documents
+    appya journal         messages du serveur (en cas de problème)
+    appya dossier         ouvre ~/AppYa
+
+Un seul onglet : l'icône AppYa (comme « appya ») n'ouvre un onglet que s'il
+n'y en a aucun. Sinon, l'onglet déjà ouvert se signale : son titre clignote
+(« ● AppYa est ouvert ici ») et, si vous avez autorisé ses notifications
+(bouton « Autoriser » proposé la première fois), une notification apparaît :
+un clic dessus vous ramène à l'onglet. Pour un second onglet volontaire :
+clic droit sur l'icône › « Ouvrir dans un nouvel onglet », ou
+appya nouvel-onglet.
+
+Accès depuis le téléphone : il est protégé par une clé. « appya
+etat » affiche un lien du type  http://192.168.1.20:8780/?cle=k7m2…  ;
+ouvrez-le une fois sur le téléphone, qui s'en souvient ensuite (un an).
+Les autres appareils du Wi-Fi ne voient rien sans ce lien : ne le partagez
+pas. Si vous l'avez donné par erreur, tapez  appya reseau nouvelle-cle
+(chaque téléphone devra rouvrir le nouveau lien). Sur cet ordinateur, aucune
+clé n'est demandée.
+
+
+7. VOS DONNÉES
+--------------
+    ~/AppYa/donnees/carnet.json       opérations, postes, budgets, comptes et biens
+    ~/AppYa/donnees/sauvegardes/      une copie automatique par jour (60 gardées)
+
+Copie miroir dans le dossier d'où AppYa a été installé (par exemple un
+second disque) :
+    <dossier d'installation>/donnees/carnet.json     recopié à chaque modification
+    <dossier d'installation>/donnees/sauvegardes/    les mêmes sauvegardes
+Si ce disque n'est pas monté, la copie est sautée sans gêner AppYa et
+refaite à la modification suivante (ou au prochain démarrage). « appya etat »
+et le journal du serveur (« appya journal ») indiquent la copie miroir.
+Si ce dossier est sur le même disque physique que ~, il ne protège pas
+d'une panne du disque : gardez aussi une copie ailleurs (clé USB…) :
+    appya sauvegarder /media/$USER/MA_CLE
+
+Restaurer une sauvegarde :
+    appya arreter
+    cp ~/AppYa/donnees/sauvegardes/carnet-AAAA-MM-JJ.json ~/AppYa/donnees/carnet.json
+    appya demarrer
+
+Mettre à jour : décompressez la nouvelle version et relancez
+« bash installer.sh » ; vos données ne sont jamais écrasées.
+Une mise à jour n'ouvre pas de nouvel onglet : rechargez l'onglet AppYa
+déjà ouvert (F5).
+AppYa 3.3 ne lit que le format de données actuel (version 5) : les
+conversions des anciens formats et la reprise des anciennes applications
+(Suivi financier, Carnet du véhicule) ont été retirées le 14/11/2026, une
+fois toutes les données converties.
+
+
+Désinstaller :
+    bash desinstaller.sh          garde vos données
+    bash desinstaller.sh --tout   supprime aussi ~/AppYa (copie finale dans Documents)
+Il se lance indifféremment depuis ~/AppYa ou depuis le dossier d'installation :
+il agit toujours sur l'installation réelle. Avant tout retrait, il recopie
+une dernière fois les données dans la copie miroir (disque branché). Il
+ne supprime jamais le dossier d'origine.
+
+Contenu : serveur.py (AppYa 3.3, Python, bibliothèque standard), app/index.html,
+app/moteur.js et app/mode.js (version autonome), app/sw.js et
+app/manifest.webmanifest (téléphone), app/xlsx.full.min.js
+(SheetJS 0.18.5, licence Apache 2.0), appya, installer.sh, desinstaller.sh,
+donnees/ (copie miroir de vos données, voir la partie 7).
+
+
+8. CHANGER D'ORDINATEUR
+-----------------------
+Le dossier d'installation contient tout : le programme et, dans
+donnees/, la copie miroir à jour de vos données et de leurs sauvegardes.
+
+Sur l'ancien ordinateur :
+  1. Sur le téléphone, ouvrez AppYa avec l'ordinateur joignable et attendez
+     « ✓ À jour » : les saisies du téléphone arrivent sur l'ordinateur.
+  2. Vérifiez la copie miroir :  appya etat  (ou la date de
+     <dossier d'installation>/donnees/carnet.json).
+  3. Copiez le dossier AppYa entier (clé USB, disque externe…).
+  4. Facultatif :  bash desinstaller.sh  (vos données restent en place).
+
+Sur le nouvel ordinateur (Ubuntu) :
+  5. Posez le dossier AppYa là où vous voulez garder la copie miroir (par
+     exemple sur un second disque), puis dans un terminal :
+         cd <dossier AppYa>
+         bash installer.sh
+     Comme ~/AppYa n'existe pas encore, l'installation y reprend
+     donnees/carnet.json et donnees/sauvegardes/ du dossier copié. Ce dossier
+     devient la copie miroir du nouvel ordinateur.
+     Si ~/AppYa existe déjà, ses données sont CONSERVÉES ; l'installation
+     compare les deux carnets et, si celui du dossier copié est plus récent,
+     affiche la commande pour l'adopter.
+  6. Téléphone : installez Tailscale sur le nouvel ordinateur et connectez-le
+     au même compte, puis :
+         sudo tailscale set --operator=$USER
+         tailscale serve --bg 8780
+     « tailscale status » donne le nouveau nom en …ts.net. Sur le téléphone,
+     ouvrez https://<nouveau nom>.ts.net dans Chrome et réinstallez
+     l'application (⋮ › Installer l'application). C'est une nouvelle adresse :
+     le téléphone repart des données du nouvel ordinateur ; l'ancienne
+     application du téléphone peut être supprimée une fois l'étape 1 faite.
+
+
+9. VERSION AUTONOME, APK ET SAUVEGARDES
+---------------------------------------
+Le code d'AppYa est publié sur https://github.com/yayayou47/AppYa (sans
+aucune donnée). Trois versions, construites à partir du même code :
+  - Ordinateur (Ubuntu) : fichier AppYa-ubuntu-<version>.zip de la page
+    « Releases » ; décompressez puis  bash installer.sh  (carnet vide).
+  - Lien web : https://yayayou47.github.io/AppYa/  à ouvrir dans Chrome, puis
+    ⋮ › « Installer l'application ». Mise à jour automatique.
+  - Android : fichier AppYa-<version>.apk de la page « Releases » (autoriser
+    l'installation d'applications de cette source la première fois).
+Dans les deux versions téléphone, les données restent dans l'appareil.
+Données et réglages › Sauvegarde : « Exporter mes données » crée un fichier
+appya-AAAA-MM-JJ.json à garder en lieu sûr ; « Importer » le recharge (sur le
+même appareil ou un autre). Ce fichier a le format de donnees/carnet.json :
+pour passer du téléphone à l'ordinateur, copiez-le en donnees/carnet.json du
+dossier AppYa AVANT de lancer  bash installer.sh  sur un nouvel ordinateur.

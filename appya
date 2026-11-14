@@ -1,0 +1,144 @@
+#!/bin/bash
+# Commande de gestion d'AppYa (installée dans ~/.local/bin).
+#   appya              ouvre le carnet dans le navigateur (le démarre si besoin) ; s'il est déjà
+#                      ouvert dans un onglet, aucun onglet n'est ajouté : l'onglet existant se signale
+#   appya nouvel-onglet   ouvre quand même un nouvel onglet
+#   appya etat         indique si le carnet tourne et à quelle adresse
+#   appya demarrer | arreter | redemarrer
+#   appya reseau oui|non|nouvelle-cle   accès téléphone (même Wi-Fi), avec clé
+#   appya sauvegarder [dossier]   copie carnet.json (par défaut dans ~/Documents)
+#   appya journal      dernières lignes du journal du serveur
+#   appya dossier      ouvre le dossier du carnet
+
+DIR="__DIR__"
+SERVICE="appya.service"
+UNIT="$HOME/.config/systemd/user/$SERVICE"
+PORT_DEFAUT=8780
+
+if [ ! -f "$DIR/serveur.py" ]; then
+  msg="Dossier d'AppYa introuvable : $DIR. S'il est sur un disque externe, branchez-le puis réessayez."
+  echo "$msg" >&2
+  command -v notify-send >/dev/null && notify-send "AppYa" "$msg"
+  exit 1
+fi
+
+adresse() { head -n1 "$DIR/donnees/.adresse" 2>/dev/null || echo "http://localhost:$PORT_DEFAUT"; }
+
+repond() {
+  python3 - "$(adresse)" <<'PY' 2>/dev/null
+import sys, json, urllib.request
+try:
+    with urllib.request.urlopen(sys.argv[1] + "/api/info", timeout=1) as r:
+        sys.exit(0 if json.load(r).get("app") == "appya" else 1)
+except Exception:
+    sys.exit(1)
+PY
+}
+
+# lien pour le téléphone, avec la clé d'accès (donnees/.cle, créée par le serveur en mode --reseau)
+lien_reseau() { echo "http://$(hostname -I | awk '{print $1}'):$(adresse | sed 's/.*://')/?cle=$(head -n1 "$DIR/donnees/.cle" 2>/dev/null)"; }
+
+avec_service() { [ -f "$UNIT" ] && command -v systemctl >/dev/null && systemctl --user show-environment >/dev/null 2>&1; }
+
+LANCE=0
+demarrer() {
+  repond && return 0
+  LANCE=1
+  if avec_service; then
+    systemctl --user start "$SERVICE"
+  else
+    mkdir -p "$DIR/donnees"
+    # shellcheck disable=SC2046  # options vides = aucun argument
+    nohup python3 "$DIR/serveur.py" --sans-navigateur $(cat "$DIR/donnees/.options" 2>/dev/null) \
+      >> "$DIR/donnees/serveur.log" 2>&1 &
+  fi
+  for _ in $(seq 1 30); do repond && return 0; sleep 0.2; done
+  echo "Le carnet n'a pas démarré. Consultez : appya journal" >&2
+  command -v notify-send >/dev/null && notify-send "AppYa" "Le carnet n'a pas démarré. Ouvrez un terminal et tapez : appya journal"
+  return 1
+}
+
+arreter() {
+  if avec_service; then systemctl --user stop "$SERVICE"; fi
+  pkill -f "$DIR/serveur.py" 2>/dev/null
+  rm -f "$DIR/donnees/.adresse"
+  echo "Carnet arrêté."
+}
+
+# onglets AppYa ouverts sur cet ordinateur : demande à l'onglet existant de se signaler.
+# Répond « ouverts notif » (ex. « 1 0 ») ; « 0 0 » si aucun onglet ou serveur trop ancien.
+rappel_onglet() {
+  python3 - "$(adresse)" <<'PY' 2>/dev/null || echo "0 0"
+import sys, json, urllib.request
+req = urllib.request.Request(sys.argv[1] + "/api/onglets/rappel", data=b"", method="POST")
+with urllib.request.urlopen(req, timeout=2) as r:
+    e = json.load(r)
+print(int(e.get("ouverts", 0)), 1 if e.get("notif") else 0)
+PY
+}
+
+case "${1:-ouvrir}" in
+  ouvrir)
+    demarrer || exit 1
+    # serveur tout juste (re)lancé : laisser aux onglets déjà ouverts le temps de se reconnecter
+    [ "$LANCE" = 1 ] && sleep 2.5
+    set -- $(rappel_onglet)
+    if [ "${1:-0}" -gt 0 ]; then
+      # l'onglet affiche sa propre notification si l'utilisateur l'a autorisée ; sinon on prévient ici
+      [ "${2:-0}" = 1 ] || { command -v notify-send >/dev/null && notify-send -i "$DIR/app/icone-192.png" "AppYa" "AppYa est déjà ouvert dans un onglet du navigateur (titre « ● AppYa est ouvert ici »)."; }
+      echo "AppYa est déjà ouvert dans un onglet. Pour en ouvrir un autre : appya nouvel-onglet"
+    else
+      xdg-open "$(adresse)" >/dev/null 2>&1 &
+    fi ;;
+  nouvel-onglet)
+    demarrer && { xdg-open "$(adresse)" >/dev/null 2>&1 & } ;;
+  demarrer)   demarrer && echo "Carnet démarré : $(adresse)" ;;
+  arreter)    arreter ;;
+  redemarrer) arreter; sleep 0.5; demarrer && echo "Carnet redémarré : $(adresse)" ;;
+  etat)
+    if repond; then
+      echo "Le carnet tourne : $(adresse)"
+      grep -q -- "--reseau" "$DIR/donnees/.options" 2>/dev/null && \
+        echo "Accès réseau activé, lien pour le téléphone (contient la clé, ne le partagez pas) : $(lien_reseau)"
+    else
+      echo "Le carnet est arrêté. Lancez : appya"
+    fi
+    avec_service && echo "Démarrage automatique : $(systemctl --user is-enabled $SERVICE 2>/dev/null)"
+    echo "Données : $DIR/donnees/carnet.json"
+    m="$(head -n1 "$DIR/donnees/.miroir" 2>/dev/null)"
+    if [ -z "$m" ]; then echo "Copie miroir : aucune"
+    elif [ -f "$m/carnet.json" ]; then
+      if cmp -s "$m/carnet.json" "$DIR/donnees/carnet.json"; then echo "Copie miroir : $m/carnet.json (à jour)"
+      else echo "Copie miroir : $m/carnet.json (en retard : refaite à la prochaine modification)"; fi
+    else echo "Copie miroir : $m (disque non branché ?)"; fi ;;
+  reseau)
+    case "$2" in
+      oui) echo "--reseau" > "$DIR/donnees/.options" ;;
+      non) rm -f "$DIR/donnees/.options" ;;
+      nouvelle-cle)
+        grep -q -- "--reseau" "$DIR/donnees/.options" 2>/dev/null || { echo "L'accès réseau n'est pas activé (appya reseau oui)."; exit 1; }
+        rm -f "$DIR/donnees/.cle" ;;  # les téléphones déjà connectés devront rouvrir le nouveau lien
+      *) echo "Usage : appya reseau oui|non|nouvelle-cle"; exit 1 ;;
+    esac
+    if avec_service; then systemctl --user restart "$SERVICE"; else arreter >/dev/null; demarrer; fi
+    sleep 1
+    if [ "$2" != non ]; then
+      echo "Accès réseau activé. Sur le téléphone (même Wi-Fi), ouvrez une fois ce lien (il contient la clé d'accès) :"
+      echo "  $(lien_reseau)"
+      command -v ufw >/dev/null && sudo -n ufw status 2>/dev/null | grep -q "Status: active" && \
+        echo "Le pare-feu ufw est actif : autorisez le port avec  sudo ufw allow from 192.168.0.0/16 to any port $PORT_DEFAUT proto tcp"
+    else
+      echo "Accès réseau désactivé : le carnet n'est plus visible que sur cet ordinateur."
+    fi ;;
+  sauvegarder)
+    dest="${2:-$(xdg-user-dir DOCUMENTS 2>/dev/null || echo "$HOME")}"
+    mkdir -p "$dest"
+    f="$dest/appya-$(date +%Y-%m-%d-%H%M).json"
+    cp "$DIR/donnees/carnet.json" "$f" && echo "Sauvegarde : $f" ;;
+  journal)
+    if avec_service; then journalctl --user -u "$SERVICE" -n 40 --no-pager
+    else tail -n 40 "$DIR/donnees/serveur.log" 2>/dev/null || echo "Aucun journal."; fi ;;
+  dossier) xdg-open "$DIR" >/dev/null 2>&1 & ;;
+  aide|-h|--help) sed -n '2,12p' "$0" | sed 's/^# \{0,1\}//' ;;
+  *) echo "Commande inconnue : $1. Tapez : appya aide"; exit 1 ;;
+esac

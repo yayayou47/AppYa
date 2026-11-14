@@ -1,0 +1,282 @@
+/* AppYa — moteur local (version autonome : téléphone ou navigateur seul, sans ordinateur).
+   Portage fidèle des règles de serveur.py : validation des opérations (nettoyer), réglages (postes, budgets,
+   comptes, biens, parités), reclassement, repère de vidange automatique, carnet vide de départ.
+   TOUTE MODIFICATION DES RÈGLES DANS serveur.py DOIT ÊTRE REPORTÉE ICI (et inversement). */
+(function () {
+  'use strict';
+  const POSTES_DEFAUT = [
+    {id: 'foyer', label: 'Foyer, vivres', couleur: '#2f6fa8',
+     mots: ['riz', 'huile', 'savon', 'sucre', 'farine', 'alimentaire', 'vivres', 'lait', 'pain', 'viande', 'poisson', 'légumes', 'marché', 'famille']},
+    {id: 'loyer', label: 'Loyer, logement', couleur: '#c58b2a', mots: ['loyer', 'contribution', 'logement']},
+    {id: 'aides', label: 'Aides et dons', couleur: '#c0533a',
+     mots: ['aide', 'aumône', 'aumone', 'prestation', 'baptême', 'mariage', 'funéraire', 'don']},
+    {id: 'enfants', label: 'Enfants, école', couleur: '#2e8a57', mots: ['scolarité', 'école', 'fourniture', 'enfant']},
+    {id: 'sante', label: 'Santé', couleur: '#d9772f', mots: ['médic', 'soin', 'examen', 'pharmacie', 'hôpital', 'analyse', 'clinique']},
+    {id: 'voiture', label: 'Voiture', couleur: '#6b7b90',
+     mots: ['carburant', 'essence', 'gasoil', 'assurance', 'fiche technique', 'amende', 'vidange', 'lavage', 'garage', 'pneu', 'mécan', 'voiture']},
+    {id: 'tel', label: 'Téléphone, internet', couleur: '#2f97ad', mots: ['crédit', 'forfait', 'internet', 'téléphone']},
+    {id: 'transport', label: 'Transport', couleur: '#8a9a2e', mots: ['transport', 'taxi', 'moto', 'clando', 'bus']},
+    {id: 'repas', label: 'Repas, boissons', couleur: '#9363b0',
+     mots: ['dej', 'déj', 'diner', 'dîner', 'café', 'jus', 'boisson', 'repas']},
+    {id: 'perso', label: 'Perso', couleur: '#cc5f86', mots: ['vêtement', 'chaussure', 'parfum', 'coiff', 'cadeau']},
+    {id: 'autre', label: 'Autre', couleur: '#9a968c', mots: []},
+  ];
+  const COMPTES_DEFAUT = [{id: 'especes', nom: 'Espèces', type: 'especes', mots: ['espèces', 'especes', 'cash', 'liquide'], releves: []}];
+  const NATURES = ['depense', 'revenu', 'virement', 'pret', 'remboursement', 'investissement'];
+  const TYPES_COMPTE = ['especes', 'courant', 'epargne', 'carte', 'mobile'];
+  const TYPES_BIEN = ['actif', 'passif'];
+  const CAT_VEHICULE = ['carburant', 'entretien', 'reparation', 'service', 'achat', 'investissement', 'autre'];
+  const CAT_MAISON = ['terrain', 'administratif', 'arrosage', 'eau', 'maconnerie', 'materiaux', 'electricite', 'main-oeuvre', 'autre'];
+  const MOTS_CAT_MAISON = [
+    ['terrain', ['achat terrain', 'bornage', 'lotissement']],
+    ['administratif', ['titre foncier', 'permis', 'notaire', 'mairie', 'cadastre', 'dossier', 'timbre']],
+    ['main-oeuvre', ['main d', 'main-d', 'ouvrier', 'gardien', 'manoeuvre', 'manœuvre', 'tâcheron', 'tacheron']],
+    ['arrosage', ['arrosage', 'arroser']],
+    ['eau', ['pompe', 'forage', 'puits', 'citerne', 'robinet', 'eau']],
+    ['maconnerie', ['fondation', 'maçon', 'macon', 'brique', 'parpaing', 'béton', 'beton', 'dalle', 'mur', 'trou', 'fouille']],
+    ['materiaux', ['ciment', 'sable', 'gravier', 'fer ', 'tôle', 'tole', 'bois', 'planche', 'matériau', 'materiau']],
+    ['electricite', ['électric', 'electric', 'câble', 'cable', 'solaire', 'panneau']],
+  ];
+  const RE_ID = /^[a-z0-9_-]{1,40}$/, RE_COULEUR = /^#[0-9a-fA-F]{6}$/, RE_DATE = /^\d{4}-\d{2}-\d{2}$/, RE_DEVISE = /^[A-Z]{3}$/;
+  const copie = x => JSON.parse(JSON.stringify(x));
+  const erreur = m => { throw new Error(m); };
+  const horodatage = () => new Date().toISOString();
+  const texte = (v, n) => String(v == null ? '' : v).split(/\s+/).filter(Boolean).join(' ').slice(0, n);
+  const ids = (d, cle) => new Set(((d.parametres || {})[cle] || []).map(x => x.id));
+  const idsPostes = d => { const s = ids(d, 'postes'); return s.size ? s : new Set(POSTES_DEFAUT.map(x => x.id)); };
+  const biens = d => (d.parametres || {}).biens || [];
+  const idsMaisons = d => biens(d).filter(b => b.maison).map(b => b.id);
+  const idsVehicules = d => biens(d).filter(b => b.vehicule).map(b => b.id);
+
+  function montantPositif(v, quoi = 'Montant', zero = false) {
+    const m = typeof v === 'number' ? v : (v === '' || v == null ? NaN : Number(v));
+    if (!Number.isFinite(m) || m < 0 || (m === 0 && !zero)) erreur(`${quoi} invalide : il doit être positif.`);
+    return Number.isInteger(m) ? m : Math.round(m * 100) / 100;
+  }
+  function devinerCatMaison(libelle) {
+    const lib = String(libelle || '').toLowerCase();
+    for (const [cat, mots] of MOTS_CAT_MAISON) if (mots.some(m => lib.includes(m))) return cat;
+    return 'autre';
+  }
+  function marquer(d, o, maj) { d.rev = (+d.rev || 0) + 1; o.rev = d.rev; o.maj = maj || horodatage(); return o; }
+  function marquerParametres(d) { d.rev = (+d.rev || 0) + 1; (d.parametres = d.parametres || {}).rev = d.rev; }
+
+  function vide() {
+    return {version: 5, rev: 1, operations: [], supprimees: [],
+            parametres: {rev: 1, budgets: {}, postes: copie(POSTES_DEFAUT), comptes: copie(COMPTES_DEFAUT), biens: []}};
+  }
+
+  function nettoyer(doc, d) {
+    if (!doc || typeof doc !== 'object') erreur('Corps de requête invalide.');
+    const date = String(doc.date || '');
+    if (!RE_DATE.test(date)) erreur('Date invalide (format attendu AAAA-MM-JJ).');
+    const montant = montantPositif(doc.montant);
+    const libelle = texte(doc.libelle, 200);
+    if (!libelle) erreur('Le libellé est obligatoire.');
+    const nature = doc.nature || 'depense';
+    if (!NATURES.includes(nature)) erreur("Nature d'opération inconnue : " + nature);
+    let comptes = ids(d, 'comptes'); if (!comptes.size) comptes = new Set(['especes']);
+    const compte = doc.compte || 'especes';
+    if (!comptes.has(compte)) erreur('Compte inconnu : ' + compte);
+    const out = {date, montant, libelle, nature, compte};
+    if (nature === 'depense') out.categorie = idsPostes(d).has(doc.categorie) ? doc.categorie : 'autre';
+    else if (nature === 'virement') {
+      if (!comptes.has(doc.vers)) erreur('Compte de destination du virement inconnu : ' + doc.vers);
+      if (doc.vers === compte) erreur("Un virement doit aller d'un compte à un autre.");
+      out.vers = doc.vers;
+    } else if (nature === 'pret' || nature === 'remboursement') {
+      const personne = texte(doc.personne, 60);
+      if (!personne) erreur('Indiquez la personne concernée par le prêt.');
+      out.personne = personne;
+      const ech = String(doc.echeance || '');
+      if (nature === 'pret' && ech) { if (!RE_DATE.test(ech)) erreur('Échéance invalide (format attendu AAAA-MM-JJ).'); out.echeance = ech; }
+    } else if (nature === 'investissement') {
+      if (!ids(d, 'biens').has(doc.bien)) erreur("Choisissez le bien concerné par l'investissement.");
+      out.bien = doc.bien;
+    }
+    if (nature === 'investissement' && idsMaisons(d).includes(out.bien))
+      out.cat_maison = CAT_MAISON.includes(doc.cat_maison) ? doc.cat_maison : devinerCatMaison(libelle);
+    if ((nature === 'depense' || nature === 'investissement') && doc.vehicule) {
+      if (!idsVehicules(d).includes(doc.vehicule)) erreur('Véhicule inconnu : ' + doc.vehicule);
+      out.vehicule = doc.vehicule;
+      out.cat_vehicule = CAT_VEHICULE.includes(doc.cat_vehicule) ? doc.cat_vehicule : 'autre';
+      for (const [champ, quoi] of [['km', 'Kilométrage'], ['quantite', 'Quantité']])
+        if (![undefined, null, '', 0].includes(doc[champ])) out[champ] = montantPositif(doc[champ], quoi);
+      if ('quantite' in out) out.unite = ['L', 'u'].includes(doc.unite) ? doc.unite : (out.cat_vehicule === 'carburant' ? 'L' : 'u');
+    }
+    out.cree = String(doc.cree || new Date().toISOString().slice(0, 19) + 'Z');
+    const rem = texte(doc.remarque, 300);
+    if (rem) out.remarque = rem;
+    return out;
+  }
+
+  function vidangeAuto(d, o) {
+    const lib = String(o.libelle || '').toLowerCase();
+    if (!(o.vehicule && o.km && lib.includes('vidange') && !lib.includes('boîte') && !lib.includes('boite'))) return false;
+    for (const b of biens(d)) if (b.id === o.vehicule) {
+      const vd = b.vidange = b.vidange || {intervalle: 3000, dernier: 0, prochain: 0};
+      if (o.km > (vd.dernier || 0)) { vd.dernier = Math.trunc(o.km); vd.prochain = Math.trunc(o.km) + Math.trunc(vd.intervalle || 3000); return true; }
+    }
+    return false;
+  }
+
+  function nettoyerMots(liste) {
+    const mots = [];
+    for (let m of (liste || []).slice(0, 300)) { m = texte(m, 80); if (m && !mots.some(k => k.toLowerCase() === m.toLowerCase())) mots.push(m); }
+    return mots;
+  }
+  function nettoyerDevises(liste) {
+    const out = [], vus = new Set();
+    for (const x of liste || []) {
+      const code = String(x.code || '').trim().toUpperCase();
+      if (!RE_DEVISE.test(code)) erreur(`Code de devise invalide : ${code} (3 lettres, par exemple USD).`);
+      if (vus.has(code)) erreur('Devise en double : ' + code);
+      vus.add(code);
+      let taux = 1;
+      if (code !== 'XAF') {
+        taux = Number(x.taux);
+        if (!(taux > 0 && taux < 1e9)) erreur(`Parité invalide pour ${code} : elle doit être positive.`);
+        taux = Math.round(taux * 1e6) / 1e6;
+      }
+      const dv = {code, nom: texte(x.nom, 40) || code, symbole: texte(x.symbole, 6) || code, taux};
+      const maj = String(x.maj || '');
+      if (maj) { if (!RE_DATE.test(maj)) erreur('Date de parité invalide pour ' + code + '.'); dv.maj = maj; }
+      out.push(dv);
+    }
+    if (!vus.has('XAF')) out.unshift({code: 'XAF', nom: 'Franc CFA', symbole: 'FCFA', taux: 1});
+    return out;
+  }
+  function nettoyerComptes(liste, d) {
+    const comptes = [], vus = new Set(), noms = new Set();
+    for (const x of liste || []) {
+      const cid = String(x.id || '').trim(), nom = texte(x.nom, 60);
+      if (!RE_ID.test(cid)) erreur('Identifiant de compte invalide : ' + cid);
+      if (!nom) erreur('Chaque compte doit avoir un nom.');
+      if (vus.has(cid) || noms.has(nom.toLowerCase())) erreur('Deux comptes portent le même nom : ' + nom);
+      vus.add(cid); noms.add(nom.toLowerCase());
+      const rel = {};
+      for (const r of x.releves || []) {
+        if (!RE_DATE.test(String(r.date || ''))) erreur('Date de relevé invalide pour ' + nom + '.');
+        rel[r.date] = montantPositif(r.solde, 'Solde du relevé de ' + nom, true);
+      }
+      const c = {id: cid, nom, type: TYPES_COMPTE.includes(x.type) ? x.type : 'courant', mots: nettoyerMots(x.mots),
+                 releves: Object.keys(rel).sort().map(k => ({date: k, solde: rel[k]}))};
+      if (RE_COULEUR.test(String(x.couleur || ''))) c.couleur = x.couleur;
+      if (![undefined, null, ''].includes(x.taux)) {
+        c.taux = montantPositif(x.taux, "Taux d'intérêt de " + nom, true);
+        c.periode = Math.trunc(montantPositif(x.periode || 12, 'Période des intérêts'));
+      }
+      comptes.push(c);
+    }
+    if (!vus.has('especes')) comptes.unshift(copie(COMPTES_DEFAUT[0]));
+    const garde = new Set(comptes.map(c => c.id));
+    const manquants = [...new Set(d.operations.flatMap(o => [o.compte, o.vers]).filter(Boolean))].filter(c => !garde.has(c));
+    if (manquants.length) erreur('Impossible de supprimer un compte qui a des opérations : ' + manquants.sort().join(', '));
+    return comptes;
+  }
+  function nettoyerBiens(liste, d) {
+    const out = [], vus = new Set(), postes = idsPostes(d);
+    for (const x of liste || []) {
+      const bid = String(x.id || '').trim(), nom = texte(x.nom, 60);
+      if (!RE_ID.test(bid)) erreur('Identifiant de bien invalide : ' + bid);
+      if (!nom || vus.has(bid)) erreur('Chaque bien doit avoir un nom unique.');
+      vus.add(bid);
+      const da = String(x.date_achat || '');
+      if (da && !RE_DATE.test(da)) erreur("Date d'achat invalide pour " + nom + '.');
+      const est = {};
+      for (const e of x.estimations || []) {
+        if (!RE_DATE.test(String(e.date || ''))) erreur("Date d'estimation invalide pour " + nom + '.');
+        est[e.date] = montantPositif(e.valeur, 'Valeur estimée de ' + nom, true);
+      }
+      const b = {id: bid, nom, type: TYPES_BIEN.includes(x.type) ? x.type : 'actif', date_achat: da,
+                 prix_achat: montantPositif(x.prix_achat || 0, "Prix d'achat de " + nom, true),
+                 poste: postes.has(x.poste) ? x.poste : '', mots: nettoyerMots(x.mots),
+                 estimations: Object.keys(est).sort().map(k => ({date: k, valeur: est[k]}))};
+      if (x.vehicule) {
+        const vg = x.vidange || {};
+        const km = (k, defaut = 0) => { const v = Number(vg[k] || defaut); if (!Number.isFinite(v)) erreur('Repère de vidange invalide pour ' + nom + '.'); return Math.max(0, Math.trunc(v)); };
+        b.vehicule = true;
+        b.vidange = {intervalle: km('intervalle', 3000) || 3000, dernier: km('dernier'), prochain: km('prochain')};
+      }
+      if (x.maison) {
+        const pj = x.projet || {}, ech = String(pj.echeance || '');
+        if (ech && !RE_DATE.test(ech)) erreur('Échéance du projet invalide pour ' + nom + '.');
+        b.maison = true;
+        b.projet = {budget: montantPositif(pj.budget || 0, 'Budget du projet', true), echeance: ech, note: texte(pj.note, 300)};
+      }
+      out.push(b);
+    }
+    const manquants = [...new Set(d.operations.filter(o => o.nature === 'investissement').map(o => o.bien)
+      .concat(d.operations.filter(o => o.vehicule).map(o => o.vehicule)))].filter(b => b && !vus.has(b));
+    if (manquants.length) erreur('Impossible de supprimer un bien qui a des investissements : ' + manquants.sort().join(', '));
+    return out;
+  }
+
+  function regler(d, corps) {
+    const prm = d.parametres = d.parametres || {};
+    if ('postes' in corps) {
+      let postes = []; const vus = new Set(), noms = new Set();
+      for (const x of corps.postes || []) {
+        const pid = String(x.id || '').trim(), label = String(x.label || '').trim().slice(0, 60);
+        if (!RE_ID.test(pid)) erreur('Identifiant de poste invalide : ' + pid);
+        if (!label) erreur('Chaque poste doit avoir un nom.');
+        if (vus.has(pid) || noms.has(label.toLowerCase())) erreur('Deux postes portent le même nom : ' + label);
+        vus.add(pid); noms.add(label.toLowerCase());
+        const coul = String(x.couleur || '#9a968c');
+        postes.push({id: pid, label, couleur: RE_COULEUR.test(coul) ? coul : '#9a968c', mots: pid !== 'autre' ? nettoyerMots(x.mots) : []});
+      }
+      if (!vus.has('autre')) postes.push(copie(POSTES_DEFAUT[POSTES_DEFAUT.length - 1]));
+      else postes = postes.filter(x => x.id !== 'autre').concat(postes.filter(x => x.id === 'autre'));
+      prm.postes = postes;
+    }
+    const lesIds = idsPostes(d), deplacer = corps.deplacer || {};
+    let n = 0;
+    for (const x of d.operations) {
+      if (x.nature !== 'depense') continue;
+      const c = x.categorie; let cible = c in deplacer ? String(deplacer[c]) : c;
+      if (!lesIds.has(cible)) cible = 'autre';
+      if (cible !== c) { x.categorie = cible; marquer(d, x); n++; }
+    }
+    if ('budgets' in corps) {
+      const budgets = {};
+      for (const [k, v0] of Object.entries(corps.budgets || {})) {
+        if (!lesIds.has(k)) continue;
+        const v = Math.round(Number(v0));
+        if (!Number.isFinite(v)) erreur('Budget invalide pour ' + k + '.');
+        if (v > 0) budgets[k] = v;
+      }
+      prm.budgets = budgets;
+    } else prm.budgets = Object.fromEntries(Object.entries(prm.budgets || {}).filter(([k]) => lesIds.has(k)));
+    if ('comptes' in corps) prm.comptes = nettoyerComptes(corps.comptes, d);
+    if ('biens' in corps) prm.biens = nettoyerBiens(corps.biens, d);
+    if ('devises' in corps) prm.devises = nettoyerDevises(corps.devises);
+    for (const b of prm.biens || []) if (b.poste && !lesIds.has(b.poste)) b.poste = '';
+    marquerParametres(d);
+    return {parametres: prm, deplacees: n};
+  }
+
+  function reclasser(d, corps) {
+    const lesIds = idsPostes(d), voulu = {};
+    for (const c of (corps.changements || [])) {
+      if (!lesIds.has(c.categorie)) erreur('Poste inconnu : ' + c.categorie);
+      voulu[String(c.id)] = c.categorie;
+    }
+    let n = 0;
+    for (const x of d.operations)
+      if (x.id in voulu && x.nature === 'depense' && x.categorie !== voulu[x.id]) { x.categorie = voulu[x.id]; marquer(d, x); n++; }
+    return {modifiees: n};
+  }
+
+  /* contrôle d'un fichier importé (« Importer mes données ») : même format que donnees/carnet.json */
+  function verifierImport(d) {
+    if (!d || typeof d !== 'object' || d.version !== 5 || !Array.isArray(d.operations) || !d.parametres)
+      erreur("Ce fichier n'est pas une sauvegarde AppYa (format 5).");
+    const prm = d.parametres;
+    if (!Array.isArray(prm.postes) || !Array.isArray(prm.comptes)) erreur('Sauvegarde incomplète : postes ou comptes absents.');
+    prm.biens = prm.biens || []; prm.budgets = prm.budgets || {}; d.supprimees = d.supprimees || [];
+    for (const o of d.operations) if (!o.id) erreur('Sauvegarde abîmée : une ligne sans identifiant.');
+    return d;
+  }
+
+  window.AppYaMoteur = {vide, nettoyer, vidangeAuto, regler, reclasser, marquer, verifierImport, POSTES_DEFAUT, COMPTES_DEFAUT};
+})();

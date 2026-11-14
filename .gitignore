@@ -1,0 +1,19 @@
+# Données personnelles : JAMAIS dans le dépôt
+donnees/
+*.json.tmp
+appya-*.json
+# Notes personnelles et de développement
+CLAUDE.md
+AGENTS.md
+LISEZMOI-PERSO.txt
+# Construction
+__pycache__/
+*.pyc
+node_modules/
+www/
+_site/
+dist/
+android/
+# Signature de l'APK : hors du dépôt
+*.jks
+*.keystore

@@ -13,13 +13,13 @@ jobs:
   construire:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
       - name: Aucune donnée personnelle dans le dépôt
         run: bash outils/verifier-depot.sh
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@v5
         with:
-          node-version: 20
-      - uses: actions/setup-java@v4
+          node-version: 22
+      - uses: actions/setup-java@v5
         with:
           distribution: temurin
           java-version: 17
@@ -62,7 +62,7 @@ jobs:
             --out "dist/AppYa-$VERSION.apk" "$RUNNER_TEMP/aligne.apk"
           "$BT/apksigner" verify --print-certs "dist/AppYa-$VERSION.apk" | head -n 3
           rm -f "$RUNNER_TEMP/appya.jks"
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v5
         with:
           name: AppYa-${{ env.VERSION }}
           path: dist/

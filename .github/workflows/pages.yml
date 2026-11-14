@@ -19,7 +19,7 @@ jobs:
       name: github-pages
       url: ${{ steps.deploiement.outputs.page_url }}
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
       - name: Aucune donnée personnelle dans le dépôt
         run: bash outils/verifier-depot.sh
       - name: Version autonome

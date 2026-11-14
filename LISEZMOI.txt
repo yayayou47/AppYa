@@ -1,4 +1,4 @@
-APPYA OUSNOU 1.0.0 — SUIVI FINANCIER, ENGINS ET MAISON — VERSION UBUNTU
+APPYA OUSNOU 1.0.1 — SUIVI FINANCIER, ENGINS ET MAISON — VERSION UBUNTU
 ======================================================================
 
 Une application qui tourne dans votre navigateur, sur votre ordinateur
@@ -51,8 +51,14 @@ Variantes :
     main-d'œuvre, électricité, administratif…), perspectives (budget du
     projet, reste à investir, date d'achèvement au rythme actuel, effort
     mensuel pour tenir l'échéance, valeur projetée) et journal des travaux.
-  - Données et réglages : Une opération · Coller une liste · Postes et
-    libellés · Comptes et biens · Repères vidange · Projet maison · Parités.
+  - Données et réglages, en trois groupes d'onglets :
+    Saisir (Une opération · Coller une liste · Relevé bancaire),
+    Personnaliser (Postes et libellés · Comptes et biens · Événements et
+    revenus · Programmées · Repères vidange · Projet maison · Parités),
+    Sécurité (Sauvegarde et retour). Les explications de chaque onglet
+    s'ouvrent avec « Comment ça marche ? ». Un point orange sur un onglet
+    et un bouton « Enregistrer » encadré signalent des modifications non
+    encore enregistrées ; fermer la page demande alors confirmation.
 Toucher une ligne d'un journal l'ouvre dans « Une opération » ; après
 « Enregistrer » ou « Annuler », on revient là où l'on était.
 
@@ -389,13 +395,14 @@ il agit toujours sur l'installation réelle. Avant tout retrait, il recopie
 une dernière fois les données dans la copie miroir (disque branché). Il
 ne supprime jamais le dossier d'origine.
 
-Contenu : serveur.py (AppYa Ousnou 1.0.0, Python, bibliothèque standard), app/index.html,
+Contenu : serveur.py (AppYa Ousnou 1.0.1, Python, bibliothèque standard), app/index.html,
 app/moteur.js et app/mode.js (version autonome), app/releve.js et
 app/pdf.min.js + app/pdf.worker.min.js (pdf.js 3.11.174, Mozilla, licence
 Apache 2.0 : app/LICENCE-pdfjs.txt ; lecture des relevés), app/sw.js et
 app/manifest.webmanifest (téléphone), app/xlsx.full.min.js
 (SheetJS 0.18.5, licence Apache 2.0), appya, installer.sh, desinstaller.sh,
 donnees/ (copie miroir de vos données, voir la partie 7).
+Code d'AppYa sous licence MIT (fichier LICENSE).
 
 
 8. CHANGER D'ORDINATEUR

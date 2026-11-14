@@ -132,7 +132,15 @@ tr.click{cursor:pointer}
 tr.click:hover td{background:var(--accent-soft)}
 tr.tot td{font-weight:700;border-bottom:0}
 
-.tabs{display:flex;gap:4.2px;background:var(--bg);border-radius:10.5px;padding:3.15px;width:fit-content;max-width:100%;flex-wrap:wrap}
+.tabs{display:flex;gap:6px 14px;max-width:100%;flex-wrap:wrap;align-items:flex-start}
+.tgrp{display:flex;flex-wrap:wrap;align-items:center;gap:4.2px;background:var(--bg);border-radius:10.5px;padding:3.15px 3.15px 3.15px 10px;max-width:100%}
+.tgl{font-size:.68rem;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);margin-right:4px}
+.tabs button.brouillon::after{content:"";width:7px;height:7px;border-radius:50%;background:var(--warn,#c77700);margin-left:2px}
+.btn.brouillon{box-shadow:0 0 0 3px var(--accent-soft)}
+@media (max-width:640px){.tabs{width:100%}.tgrp{display:grid;grid-template-columns:1fr 1fr;width:100%;padding:4px}.tgl{grid-column:1/-1;padding:2px 6px 0}.tgrp button{padding:6px 8px;font-size:.84rem;min-width:0;text-align:left}.tgrp button:last-child:nth-child(even){grid-column:1/-1}}
+details.aide{font-size:.8rem;color:var(--muted)}
+details.aide>summary{cursor:pointer;width:fit-content;font-weight:500;color:var(--accent,inherit)}
+details.aide>.hint{margin-top:6px}
 .tabs button{border:0;background:transparent;padding:7.35px 13.65px;border-radius:8.4px;font-weight:500;color:var(--muted)}
 .tabs button[aria-selected="true"]{background:var(--surface);color:var(--ink);box-shadow:0 1px 2px rgba(0,0,0,.08)}
 form{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10.5px}
@@ -653,18 +661,24 @@ tr.solde td{color:var(--muted)}
   </section>
 
   <section class="panel" aria-label="Données et réglages" id="saisie" tabindex="-1" hidden>
-    <div class="tabs" role="tablist">
-      <button role="tab" id="tOne" aria-selected="true"><svg class="ic" aria-hidden="true" focusable="false"><use href="#i-plus"/></svg><span>Une opération</span></button>
-      <button role="tab" id="tPaste" aria-selected="false"><svg class="ic" aria-hidden="true" focusable="false"><use href="#i-coller"/></svg><span>Coller une liste</span></button>
-      <button role="tab" id="tPostes" aria-selected="false"><svg class="ic" aria-hidden="true" focusable="false"><use href="#i-tag"/></svg><span>Postes et libellés</span></button>
-      <button role="tab" id="tCB" aria-selected="false"><svg class="ic" aria-hidden="true" focusable="false"><use href="#i-banque"/></svg><span>Comptes et biens</span></button>
-      <button role="tab" id="tEvt" aria-selected="false"><svg class="ic" aria-hidden="true" focusable="false"><use href="#i-etoile"/></svg><span>Événements et revenus</span></button>
-      <button role="tab" id="tRel" aria-selected="false"><svg class="ic" aria-hidden="true" focusable="false"><use href="#i-releve"/></svg><span>Relevé bancaire</span></button>
-      <button role="tab" id="tProg" aria-selected="false"><svg class="ic" aria-hidden="true" focusable="false"><use href="#i-cycle"/></svg><span>Programmées</span></button>
-      <button role="tab" id="tVid" aria-selected="false"><svg class="ic" aria-hidden="true" focusable="false"><use href="#i-huile"/></svg><span>Repères vidange</span></button>
-      <button role="tab" id="tMai" aria-selected="false"><svg class="ic" aria-hidden="true" focusable="false"><use href="#i-chantier"/></svg><span>Projet maison</span></button>
-      <button role="tab" id="tPar" aria-selected="false"><svg class="ic" aria-hidden="true" focusable="false"><use href="#i-change"/></svg><span>Parités</span></button>
-      <button role="tab" id="tSav" aria-selected="false"><svg class="ic" aria-hidden="true" focusable="false"><use href="#i-sauve"/></svg><span>Sauvegarde et retour</span></button>
+    <div class="tabs" role="tablist" aria-label="Données et réglages">
+      <div class="tgrp" role="presentation"><span class="tgl" aria-hidden="true">Saisir</span>
+        <button role="tab" id="tOne" aria-selected="true"><svg class="ic" aria-hidden="true" focusable="false"><use href="#i-plus"/></svg><span>Une opération</span></button>
+        <button role="tab" id="tPaste" aria-selected="false"><svg class="ic" aria-hidden="true" focusable="false"><use href="#i-coller"/></svg><span>Coller une liste</span></button>
+        <button role="tab" id="tRel" aria-selected="false"><svg class="ic" aria-hidden="true" focusable="false"><use href="#i-releve"/></svg><span>Relevé bancaire</span></button>
+      </div>
+      <div class="tgrp" role="presentation"><span class="tgl" aria-hidden="true">Personnaliser</span>
+        <button role="tab" id="tPostes" aria-selected="false"><svg class="ic" aria-hidden="true" focusable="false"><use href="#i-tag"/></svg><span>Postes et libellés</span></button>
+        <button role="tab" id="tCB" aria-selected="false"><svg class="ic" aria-hidden="true" focusable="false"><use href="#i-banque"/></svg><span>Comptes et biens</span></button>
+        <button role="tab" id="tEvt" aria-selected="false"><svg class="ic" aria-hidden="true" focusable="false"><use href="#i-etoile"/></svg><span>Événements et revenus</span></button>
+        <button role="tab" id="tProg" aria-selected="false"><svg class="ic" aria-hidden="true" focusable="false"><use href="#i-cycle"/></svg><span>Programmées</span></button>
+        <button role="tab" id="tVid" aria-selected="false"><svg class="ic" aria-hidden="true" focusable="false"><use href="#i-huile"/></svg><span>Repères vidange</span></button>
+        <button role="tab" id="tMai" aria-selected="false"><svg class="ic" aria-hidden="true" focusable="false"><use href="#i-chantier"/></svg><span>Projet maison</span></button>
+        <button role="tab" id="tPar" aria-selected="false"><svg class="ic" aria-hidden="true" focusable="false"><use href="#i-change"/></svg><span>Parités</span></button>
+      </div>
+      <div class="tgrp" role="presentation"><span class="tgl" aria-hidden="true">Sécurité</span>
+        <button role="tab" id="tSav" aria-selected="false"><svg class="ic" aria-hidden="true" focusable="false"><use href="#i-sauve"/></svg><span>Sauvegarde et retour</span></button>
+      </div>
     </div>
 
     <form id="oneForm">
@@ -707,7 +721,7 @@ tr.solde td{color:var(--muted)}
     </div>
 
     <div id="posteBox" hidden style="display:flex;flex-direction:column;gap:12.6px">
-      <div class="hint">Les postes classent les <b>dépenses</b>. Un nouveau libellé est classé dans le <b>premier poste de la liste</b> dont un mot-clé apparaît dans le libellé (« famille » range « crédit téléphone famille » au Foyer s'il est au-dessus de Téléphone). Les flèches changent l'ordre. Budget mensuel en milliers (150 = 150 000 CFA), vide = pas de budget.</div>
+      <details class="aide"><summary>Comment ça marche ?</summary><div class="hint">Les postes classent les <b>dépenses</b>. Un nouveau libellé est classé dans le <b>premier poste de la liste</b> dont un mot-clé apparaît dans le libellé (« famille » range « crédit téléphone famille » au Foyer s'il est au-dessus de Téléphone). Les flèches changent l'ordre. Budget mensuel en milliers (150 = 150 000 CFA), vide = pas de budget.</div></details>
       <div class="phdr"><span>Couleur</span><span>Poste et mots-clés</span><span style="text-align:right">Budget / mois</span><span style="text-align:right">Ordre</span></div>
       <div id="posteList"></div>
       <div class="row"><button class="btn ghost" type="button" id="addPoste">+ Ajouter un poste</button><button class="btn" type="button" id="savePostes">Enregistrer les postes</button><span id="posteMsg" class="muted"></span></div>
@@ -726,19 +740,19 @@ tr.solde td{color:var(--muted)}
 
     <div id="cbBox" hidden style="display:flex;flex-direction:column;gap:12.6px">
       <h3 class="sub">Comptes</h3>
-      <div class="hint">Les mots-clés servent à reconnaître le compte dans une note (« retrait banque », « carte visa »). Taux : intérêt servi par période (par exemple 1,3 % tous les 6 mois). Les soldes se notent dans la vue Patrimoine.</div>
+      <details class="aide"><summary>Comment ça marche ?</summary><div class="hint">Les mots-clés servent à reconnaître le compte dans une note (« retrait banque », « carte visa »). Taux : intérêt servi par période (par exemple 1,3 % tous les 6 mois). Les soldes se notent dans la vue Patrimoine.</div></details>
       <div class="cbhead" style="grid-template-columns:46.2px minmax(0,1.2fr) minmax(0,1fr) minmax(0,1.6fr) 10.5em 35.7px"><span></span><span>Nom</span><span>Type</span><span>Mots-clés</span><span>Taux % · période (mois)</span><span></span></div>
       <div id="cptEdit"></div>
       <div class="row"><button class="btn ghost" type="button" id="addCpt">+ Ajouter un compte</button><button class="btn" type="button" id="saveCpt">Enregistrer les comptes</button><span id="cptMsg" class="muted"></span></div>
       <h3 class="sub">Biens</h3>
-      <div class="hint">Actif : prend de la valeur (terrain). Passif : en perd (voiture). Les mots-clés font d'une note un <b>investissement</b> dans ce bien (« arrosage », « pompe »). Le poste lié compte les frais d'usage (carburant, vidange…) sans les ajouter au coût du bien. Montants en milliers.</div>
+      <details class="aide"><summary>Comment ça marche ?</summary><div class="hint">Actif : prend de la valeur (terrain). Passif : en perd (voiture). Les mots-clés font d'une note un <b>investissement</b> dans ce bien (« arrosage », « pompe »). Le poste lié compte les frais d'usage (carburant, vidange…) sans les ajouter au coût du bien. Montants en milliers.</div></details>
       <div class="cbhead" style="grid-template-columns:minmax(0,1fr) 6.5em 9.5em 7em 35.7px"><span>Nom · poste des frais d'usage</span><span>Type</span><span>Date d'achat</span><span>Prix · mots-clés</span><span></span></div>
       <div id="bienEdit"></div>
       <div class="row"><button class="btn ghost" type="button" id="addBien">+ Ajouter un bien</button><button class="btn" type="button" id="saveBien">Enregistrer les biens</button><span id="bienMsg" class="muted"></span></div>
     </div>
     <div id="vidPanel" hidden style="display:flex;flex-direction:column;gap:12px">
       <div class="row" id="vidChoix" hidden><label class="label" for="vidVeh">Engin</label><select id="vidVeh" style="width:auto"></select></div>
-      <div class="hint">Repères de vidange de <b id="vidVehNom"></b>, au compteur (kilomètres, ou heures de marche pour un groupe électrogène). Une vidange d'huile notée avec son kilométrage les met à jour (case à cocher dans « Une opération », automatiquement dans « Coller une liste »).</div>
+      <div class="hint">Repères de vidange de <b id="vidVehNom"></b>.</div><details class="aide"><summary>Comment ça marche ?</summary><div class="hint">Les repères se notent au compteur (kilomètres, ou heures de marche pour un groupe électrogène). Une vidange d'huile notée avec son kilométrage les met à jour (case à cocher dans « Une opération », automatiquement dans « Coller une liste »).</div></details>
       <form id="vidForm" class="vidform">
         <div class="field"><label class="label" for="sInt" id="sIntLab">Intervalle de vidange (km)</label><input id="sInt" inputmode="numeric"></div>
         <div class="field"><label class="label" for="sLast" id="sLastLab">Dernière vidange (km)</label><input id="sLast" inputmode="numeric"></div>
@@ -747,7 +761,7 @@ tr.solde td{color:var(--muted)}
       </form>
     </div>
     <div id="maiPanel" hidden style="display:flex;flex-direction:column;gap:12px">
-      <div class="hint">Le carnet de la maison suit les travaux (investissements) du bien choisi. Budget en milliers ; échéance et note facultatives. Le budget sert aux perspectives : avancement, reste à investir, date d'achèvement estimée.</div>
+      <details class="aide"><summary>Comment ça marche ?</summary><div class="hint">Le carnet de la maison suit les travaux (investissements) du bien choisi. Budget en milliers ; échéance et note facultatives. Le budget sert aux perspectives : avancement, reste à investir, date d'achèvement estimée.</div></details>
       <form id="pjForm" class="vidform">
         <div class="field"><label class="label" for="pjBien">Bien suivi</label><select id="pjBien"></select></div>
         <div class="field"><label class="label" for="pjBudget">Budget des travaux (en milliers)</label><input id="pjBudget" inputmode="decimal" placeholder="5000" autocomplete="off" aria-describedby="pjBudgetH"><span class="hint" id="pjBudgetH"></span></div>
@@ -758,7 +772,7 @@ tr.solde td{color:var(--muted)}
     </div>
     <div id="relBox" hidden style="display:flex;flex-direction:column;gap:12px">
     <div class="phead"><h3 class="sub">Relevé bancaire</h3><span class="hint">PDF ou photo · comparé au carnet, rien n'est modifié sans votre accord</span></div>
-    <div class="hint">Le relevé est lu <b>dans cet appareil</b> (rien n'est envoyé). PDF du site de la banque : lecture directe. PDF scanné ou photo : reconnaissance de texte (OCR), dont le module (≈ 15 Mo) se télécharge la première fois. Ensuite : ✓ lignes déjà notées, ✎ montants ou dates à corriger, ➕ lignes absentes du carnet à ajouter, ⚠ lignes du carnet absentes du relevé.</div>
+    <details class="aide"><summary>Comment ça marche ?</summary><div class="hint">Le relevé est lu <b>dans cet appareil</b> (rien n'est envoyé). PDF du site de la banque : lecture directe. PDF scanné ou photo : reconnaissance de texte (OCR), dont le module (≈ 15 Mo) se télécharge la première fois. Ensuite : ✓ lignes déjà notées, ✎ montants ou dates à corriger, ➕ lignes absentes du carnet à ajouter, ⚠ lignes du carnet absentes du relevé.</div></details>
     <div class="row"><label class="label" for="relFichier">Fichier du relevé</label><input type="file" id="relFichier" accept="application/pdf,.pdf,image/*"></div>
     <div class="row"><label class="label" for="relCpt">Compte</label><select id="relCpt" style="width:auto"></select>
       <label class="label" for="relDepuis">Comparer à partir du</label><input type="date" id="relDepuis" style="width:auto">
@@ -768,17 +782,17 @@ tr.solde td{color:var(--muted)}
     </div>
     <div id="progBox" hidden style="display:flex;flex-direction:column;gap:12px">
     <div class="phead"><h3 class="sub">Opérations programmées</h3><span class="hint">Frais de tenue de compte, abonnements, intérêts</span></div>
-    <div class="hint">Chaque échéance passée est <b>proposée à confirmer</b> (bandeau en haut de l'écran), jamais enregistrée seule. Le jour 30 ou 31 devient le dernier jour des mois plus courts. « Intérêts du compte » propose le solde du compte à l'échéance × son taux (réglé dans Comptes et biens) ; vous corrigez avec le montant du relevé.</div>
+    <details class="aide"><summary>Comment ça marche ?</summary><div class="hint">Chaque échéance passée est <b>proposée à confirmer</b> (bandeau en haut de l'écran), jamais enregistrée seule. Le jour 30 ou 31 devient le dernier jour des mois plus courts. « Intérêts du compte » propose le solde du compte à l'échéance × son taux (réglé dans Comptes et biens) ; vous corrigez avec le montant du relevé.</div></details>
     <div id="progList" class="evlist"></div>
     <div class="row"><button class="btn ghost" type="button" id="progAdd">+ Frais ou abonnement</button><button class="btn ghost" type="button" id="progAddInt">+ Intérêts d'un compte</button><button class="btn" type="button" id="progSave">Enregistrer</button><span id="progMsg" class="muted" role="status"></span></div>
     </div>
     <div id="evtBox" hidden style="display:flex;flex-direction:column;gap:12px">
     <div class="phead"><h3 class="sub">Événements</h3><span class="hint">Mariage, baptême, circoncision, voyage, projet…</span></div>
-    <div class="hint">Une dépense ou un revenu rattaché à un événement est <b>exceptionnel</b> : il sort des dépenses courantes, des postes et des statistiques journalières, et apparaît dans la section « Exceptionnel » des vues Mois et Année, avec le total de l'événement. Les soldes des comptes, eux, comptent tout. Les mots-clés rattachent automatiquement une saisie (« tenue mariage Awa » → Mariage Awa).</div>
+    <details class="aide"><summary>Comment ça marche ?</summary><div class="hint">Une dépense ou un revenu rattaché à un événement est <b>exceptionnel</b> : il sort des dépenses courantes, des postes et des statistiques journalières, et apparaît dans la section « Exceptionnel » des vues Mois et Année, avec le total de l'événement. Les soldes des comptes, eux, comptent tout. Les mots-clés rattachent automatiquement une saisie (« tenue mariage Awa » → Mariage Awa).</div></details>
     <div id="evtList" class="evlist"></div>
     <div class="row"><button class="btn ghost" type="button" id="evtAdd">+ Ajouter un événement</button><button class="btn" type="button" id="evtSave">Enregistrer les événements</button><span id="evtMsg" class="muted" role="status"></span></div>
     <div class="phead"><h3 class="sub">Types de revenus</h3><span class="hint">Courant : revient chaque mois · ponctuel : exceptionnel</span></div>
-    <div class="hint">Un revenu est classé dans le premier type dont un mot-clé apparaît dans le libellé. Les revenus des types ponctuels (mission, atelier, consultance, jury…) sont comptés à part des entrées courantes.</div>
+    <details class="aide"><summary>Comment ça marche ?</summary><div class="hint">Un revenu est classé dans le premier type dont un mot-clé apparaît dans le libellé. Les revenus des types ponctuels (mission, atelier, consultance, jury…) sont comptés à part des entrées courantes.</div></details>
     <div id="revList" class="evlist"></div>
     <div class="row"><button class="btn ghost" type="button" id="revAdd">+ Ajouter un type</button><button class="btn" type="button" id="revSave">Enregistrer les types de revenus</button><span id="revMsg" class="muted" role="status"></span></div>
     </div>
@@ -787,7 +801,7 @@ tr.solde td{color:var(--muted)}
     <div class="hint" id="savTexte"></div>
     <div class="row"><button class="btn" type="button" id="savExport">Exporter mes données</button><span id="savMsg" class="muted" role="status"></span></div>
     <div class="phead"><h3 class="sub">Retour en arrière</h3><span class="hint">Les 20 derniers changements de réglages</span></div>
-    <div class="hint">Avant chaque changement de réglages (postes, comptes, biens, événements, types de revenus, opérations programmées, parités), AppYa garde l'état d'avant. « Rétablir » y revient, y compris le classement des lignes déplacées ; un retour se défait comme un autre changement. Les opérations du journal ne sont pas concernées : une opération supprimée se rétablit avec « Annuler » juste après.</div>
+    <details class="aide"><summary>Comment ça marche ?</summary><div class="hint">Avant chaque changement de réglages (postes, comptes, biens, événements, types de revenus, opérations programmées, parités), AppYa garde l'état d'avant. « Rétablir » y revient, y compris le classement des lignes déplacées ; un retour se défait comme un autre changement. Les opérations du journal ne sont pas concernées : une opération supprimée se rétablit avec « Annuler » juste après.</div></details>
     <div id="histList" class="evlist"></div>
     <div class="row"><button class="btn ghost" type="button" id="origineBtn">Revenir aux réglages d'origine</button><span id="histMsg" class="muted" role="status"></span></div>
     <div id="savImportBox" hidden style="display:flex;flex-direction:column;gap:8px">
@@ -797,7 +811,7 @@ tr.solde td{color:var(--muted)}
     </div>
     <div id="paritesBox" hidden style="display:flex;flex-direction:column;gap:12px">
     <div class="phead"><h3 class="sub">Parités des devises</h3><span class="hint">1 unité de la devise = … francs CFA</span></div>
-    <div class="hint">Les montants restent enregistrés et saisis en francs CFA ; la devise choisie ne change que l'affichage. Le franc CFA (XAF, BEAC) est la référence : parité 1.</div>
+    <details class="aide"><summary>Comment ça marche ?</summary><div class="hint">Les montants restent enregistrés et saisis en francs CFA ; la devise choisie ne change que l'affichage. Le franc CFA (XAF, BEAC) est la référence : parité 1.</div></details>
     <div class="cbhead parhead"><span>Code</span><span>Nom</span><span>Symbole</span><span>1 unité = FCFA</span><span>Mise à jour</span><span></span></div>
     <div id="parList"></div>
     <div class="row"><button class="btn ghost" type="button" id="addDev">+ Ajouter une devise</button><button class="btn" type="button" id="saveDev">Enregistrer les parités</button><span id="parMsg" class="muted"></span></div>
@@ -886,7 +900,7 @@ function setProgrammees(l){PROGS=(Array.isArray(l)?l:[]).map(x=>({...x,ignorees:
 const PERIODES={1:'chaque mois',2:'tous les 2 mois',3:'chaque trimestre',6:'chaque semestre',12:'chaque année'};
 const TYPES_EVT={mariage:'Mariage',bapteme:'Baptême',circoncision:'Circoncision',funerailles:'Funérailles',fete:'Fête','voyage-tourisme':'Voyage (tourisme)','voyage-mission':'Voyage (mission)','voyage-vacances':'Voyage (vacances)',sante:'Santé',projet:'Projet',autre:'Autre'};
 /* Nature d'une opération : s = sens sur le compte (+1 entrée, −1 sortie, 0 virement) */
-const VERSION_APP='Ousnou 1.0.0';   // nom et numéro de version (même valeur que VERSION / VERSION_NOM dans serveur.py)
+const VERSION_APP='Ousnou 1.0.1';   // nom et numéro de version (même valeur que VERSION / VERSION_NOM dans serveur.py)
 const NAT={depense:{l:'Dépense',s:-1},revenu:{l:'Revenu',s:1},virement:{l:'Virement',s:0},pret:{l:'Prêt accordé',s:-1},remboursement:{l:'Remboursement reçu',s:1},investissement:{l:'Investissement',s:-1}};
 const TYPES_CPT={especes:'Espèces',courant:'Compte courant',epargne:'Épargne',carte:'Carte prépayée',mobile:'Mobile money'};
 const MOTS_REVENU=['salaire','salary','prime','revenu','interet','honoraire','indemnite','bourse','vacation','perdiem','per diem','prodes','frais de mission','consultance','jury','soutenance','seminaire','atelier'];
@@ -1811,7 +1825,7 @@ $('fAmt').addEventListener('input',amtHint);
 [['fNat','nat'],['fCpt','cpt'],['fCat','cat'],['fVers','vers'],['fBien','bien'],['fPers','pers'],['fCatV','catv'],['fCatM','catm'],['fCatR','rev'],['fEvt','evt'],['fVeh','veh']].forEach(([i,k])=>$(i).addEventListener(i==='fPers'?'input':'change',()=>{touched[k]=true;majChamps()}));
 $('fKm').addEventListener('input',majChamps);
 $('fVidNext').addEventListener('input',()=>{touched.vidnext=true});
-const tabs=[['tOne','oneForm'],['tPaste','pasteBox'],['tPostes','posteBox'],['tCB','cbBox'],['tEvt','evtBox'],['tProg','progBox'],['tRel','relBox'],['tVid','vidPanel'],['tMai','maiPanel'],['tPar','paritesBox'],['tSav','savBox']];
+const tabs=[['tOne','oneForm'],['tPaste','pasteBox'],['tRel','relBox'],['tPostes','posteBox'],['tCB','cbBox'],['tEvt','evtBox'],['tProg','progBox'],['tVid','vidPanel'],['tMai','maiPanel'],['tPar','paritesBox'],['tSav','savBox']];
 function showTab(t,focus){tabs.forEach(([tt,p])=>{const on=tt===t;$(tt).setAttribute('aria-selected',on);$(tt).tabIndex=on?0:-1;$(p).hidden=!on});if(focus)$(t).focus()}
 tabs.forEach(([t,p])=>{$(t).setAttribute('aria-controls',p);$(t).type='button';$(p).setAttribute('role','tabpanel');$(p).setAttribute('aria-labelledby',t)});
 document.querySelector('.tabs').addEventListener('keydown',ev=>{
@@ -1819,6 +1833,12 @@ document.querySelector('.tabs').addEventListener('keydown',ev=>{
   const j={ArrowRight:i+1,ArrowLeft:i-1,Home:0,End:tabs.length-1}[ev.key];if(j===undefined)return;
   ev.preventDefault();showTab(tabs[(j+tabs.length)%tabs.length][0],true)});
 tabs.forEach(([t])=>$(t).onclick=()=>{if(t==='tSav')renderHistorique();if(t==='tEvt'&&!evtDirty)openEvt();if(t==='tProg'&&!progDirty)openProg();if(t==='tRel')initReleve();showTab(t)});showTab('tOne');
+/* modifications non enregistrées : point orange sur l'onglet et bouton « Enregistrer » mis en évidence ; avertissement si on ferme la page */
+const BROUILLONS=[['tPostes',()=>dirty,['savePostes']],['tCB',()=>cbDirty,['saveCpt','saveBien']],['tEvt',()=>evtDirty,['evtSave','revSave']],['tProg',()=>progDirty,['progSave']],['tPar',()=>devDirty,['saveDev']]];
+function majBrouillons(){BROUILLONS.forEach(([t,d,bs])=>{const on=!!d();$(t).classList.toggle('brouillon',on);$(t).title=on?'Modifications non enregistrées':'';bs.forEach(b=>$(b).classList.toggle('brouillon',on))})}
+['input','change','click'].forEach(e=>$('saisie').addEventListener(e,()=>setTimeout(majBrouillons,0)));
+setInterval(majBrouillons,1500);
+window.addEventListener('beforeunload',ev=>{if(BROUILLONS.some(([,d])=>d())){ev.preventDefault();ev.returnValue=''}});
 function resetForm(){['fAmt','fLib','fRem','fPers','fEch','fKm','fQty'].forEach(i=>$(i).value='');$('fLibHint').textContent='';$('fUnit').value='L';$('fVid').checked=true;touched={};$('fVidNext').value='';$('fNat').value='depense';$('fCpt').value='especes';$('fCat').value='autre';$('fEvt').value='';editId=null;$('editBar').hidden=true;$('addBtn').textContent='Ajouter';majChamps();amtHint();render()}
 /* fenêtre de confirmation : résumé lisible de l'opération avant l'enregistrement (Échap ou « Modifier » = annuler) */
 /* ================= annuler : message en bas de l'écran, 10 secondes ================= */

@@ -130,8 +130,22 @@
         .reduce((s, o) => s + (o.nature === 'virement' ? (o.vers === c.id ? o.montant : 0) - (o.compte === c.id ? o.montant : 0) : (o.compte === c.id ? SENS[o.nature] * o.montant : 0)), 0);
     }
     d.operations = ops;
+    reduire(d, ECHELLE);
     for (const o of ops) M.marquer(d, o, o.cree);
     return d;
   }
-  window.AppYaDemo = {generer};
+  /* Tous les montants de la démo sont ramenés à ECHELLE (0,4 = 60 % de moins) : soldes, patrimoine, prix d'achat,
+     budgets, opérations. Les données sont simulées à l'échelle d'origine puis réduites d'un même facteur, de sorte que
+     chaque total (patrimoine, solde, dépenses du mois…) est exactement réduit de 60 %. Les litres suivent les montants
+     (le prix du litre reste réaliste) ; kilomètres, heures et dates ne changent pas. */
+  const ECHELLE = 0.4;
+  function reduire(d, f) {
+    const r = v => Math.round(v * f), P = d.parametres;
+    for (const c of P.comptes) for (const x of c.releves) x.solde = r(x.solde);
+    for (const b of P.biens) { b.prix_achat = r(b.prix_achat); if (b.projet) b.projet.budget = r(b.projet.budget); }
+    for (const e of P.evenements) if (e.budget) e.budget = r(e.budget);
+    for (const p of P.programmees) if (p.montant) p.montant = r(p.montant);
+    for (const o of d.operations) { o.montant = r(o.montant); if (o.quantite) o.quantite = Math.round(o.quantite * f * 10) / 10; }
+  }
+  window.AppYaDemo = {generer, version: 2};
 })();

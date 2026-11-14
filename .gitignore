@@ -17,3 +17,5 @@ android/
 # Signature de l'APK : hors du dépôt
 *.jks
 *.keystore
+# Fichiers publiés (copies locales des Releases GitHub)
+versions/

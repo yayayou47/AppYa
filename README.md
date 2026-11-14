@@ -5,6 +5,8 @@ Dépenses, revenus, comptes (espèces, banque, mobile money), prêts aux proches
 statistiques, export Excel. Fonctionne hors ligne. **Aucune donnée n'est incluse** : chacun commence
 avec un carnet vide, et ses données restent chez lui.
 
+**Démo** (trois années de données simulées, rien à installer) : https://yayayou47.github.io/AppYa/?demo
+
 ## Trois façons de l'utiliser
 
 | Version | Où trouver | Où sont les données |

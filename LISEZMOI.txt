@@ -123,6 +123,22 @@ dans Une opération, la prochaine est proposée au compteur + l'intervalle
 (3 000 km par défaut) et reste modifiable ; dans Repères vidange, la
 prochaine se recalcule quand on change la dernière ou l'intervalle.
 
+Engins : rubrique « Engins » (ancien My Car), bouton « + Ajouter un engin » :
+voiture, moto, bus, camion, groupe électrogène, autre. Un groupe électrogène
+se suit en HEURES de marche (compteur, vidange tous les 250 h par défaut,
+consommation en L/h) ; les autres engins en kilomètres.
+
+Premier lancement : avec un carnet vide, une page d'accueil présente AppYa,
+les trois premières étapes (comptes, engins et maison, première opération)
+et un lien vers la DÉMO.
+Démo : adresse terminée par « ?demo » (lien « Voir la démo » en bas de page,
+ou https://yayayou47.github.io/AppYa/?demo). Trois années de données
+simulées (comptes, salaire, dépenses, voiture, moto, groupe électrogène,
+construction d'une villa, mariage, mission, baptême, prêts, frais bancaires).
+Elles sont rangées à part : vos propres données ne sont ni lues ni modifiées.
+« Recréer les données de démo » les remet à zéro ; « Quitter la démo » ramène
+à votre carnet.
+
 Montants masqués : dans la vue Patrimoine seulement, le patrimoine net, les
 soldes des comptes, la valeur des biens et les prêts s'affichent « ••••• »
 à chaque ouverture (et quand l'application passe en arrière-plan). Le bouton

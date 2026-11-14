@@ -29,6 +29,9 @@
 [hidden]{display:none!important}
 dialog.confirm{border:1px solid var(--line);border-radius:14px;padding:18px 20px;width:min(440px,calc(100vw - 32px));background:var(--surface);color:var(--ink);box-shadow:0 12px 40px rgba(0,0,0,.25)}
 dialog.confirm.large{width:min(640px,calc(100vw - 32px))}
+.accueil h2{margin:0 0 6px}.accueil p{margin:0 0 8px}
+.accetapes{margin:0 0 12px;padding-left:1.3em;display:flex;flex-direction:column;gap:6px}
+a.btn{text-decoration:none;display:inline-flex;align-items:center}
 .relsec{margin:6px 0 2px;font-size:.95rem}
 .relrow{display:flex;flex-wrap:wrap;gap:6px 10px;align-items:center;padding:7px 9px;border:1px solid var(--line);border-radius:10px;margin-bottom:6px}
 .relrow input[type=checkbox]{width:auto;flex:0 0 auto;margin:0}
@@ -478,6 +481,20 @@ tr.solde td{color:var(--muted)}
       </div>
     </div>
   </header>
+  <div class="alerte demo-bandeau" id="demoBandeau" hidden role="status">
+    <div><b>Version de démonstration</b> : trois années de données simulées (comptes, engins, maison, événements…). Explorez librement : vos propres données ne sont ni lues ni modifiées.
+      <div class="row" style="margin-top:6px"><a class="btn" id="demoQuitter" href="./">Quitter la démo</a><button class="btn ghost" type="button" id="demoRecreer">Recréer les données de démo</button></div></div>
+  </div>
+  <section class="panel accueil" id="accueil" hidden aria-labelledby="accTitre">
+    <h2 id="accTitre">Bienvenue dans AppYa</h2>
+    <p>AppYa suit vos <b>dépenses et revenus</b> (espèces, banque, mobile money), vos <b>prêts</b>, vos <b>engins</b> (voiture, moto, groupe électrogène : carburant, vidanges) et la <b>construction d'une maison</b>. Vos données restent chez vous.</p>
+    <ol class="accetapes">
+      <li><b>Vos comptes</b> : banque, épargne, mobile money… (Données et réglages › Comptes et biens). L'argent liquide est déjà là.</li>
+      <li><b>Vos engins et votre maison</b>, si vous en avez : rubrique Engins › « + Ajouter un engin » ; une maison se déclare dans Comptes et biens (rôle « Maison »).</li>
+      <li><b>Votre première opération</b> : « 10 vivres », « 400 salaire banque »… les montants se tapent en milliers ; AppYa reconnaît la nature, le poste et le compte.</li>
+    </ol>
+    <div class="row"><a class="btn" href="?demo" id="accDemo">Voir la démo (3 ans de données simulées)</a><button class="btn ghost" type="button" id="accComptes">Créer mes comptes</button><button class="btn ghost" type="button" id="accSaisir">Saisir une opération</button><button class="btn ghost" type="button" id="accFermer">Fermer</button></div>
+  </section>
   <div class="alerte prog-bandeau" id="progBandeau" hidden role="status">
     <div><b id="progN"></b> <span class="hint" id="progDet"></span>
       <div class="row" style="margin-top:6px"><button class="btn" type="button" id="progVoir">Vérifier et confirmer</button></div></div>
@@ -496,6 +513,7 @@ tr.solde td{color:var(--muted)}
   <div class="ctl subctl" id="subCtl">
     <div class="seg segic" role="group" aria-label="Vue de Mes finances" id="segFin"><button id="vMois" aria-pressed="true"><svg class="ic" aria-hidden="true" focusable="false"><use href="#i-mois"/></svg><span>Mois</span></button><button id="vAn" aria-pressed="false"><svg class="ic" aria-hidden="true" focusable="false"><use href="#i-annee"/></svg><span>Année</span></button><button id="vPat" aria-pressed="false"><svg class="ic" aria-hidden="true" focusable="false"><use href="#i-patrimoine"/></svg><span>Patrimoine</span></button><button id="vStats" aria-pressed="false"><svg class="ic" aria-hidden="true" focusable="false"><use href="#i-stats"/></svg><span>Statistiques</span></button></div>
     <div class="seg" role="group" aria-label="Engin affiché" id="segEngins" hidden></div>
+    <button type="button" class="btn ghost" id="addEngin" hidden>+ Ajouter un engin</button>
     <div class="seg" role="group" aria-label="Maison affichée" id="segMaisons" hidden></div>
     <div class="seg" role="group" aria-label="Période du véhicule" id="segVeh" hidden><button id="vehAn" aria-pressed="true">Par année</button><button id="vehTout" aria-pressed="false">Toutes les années</button></div>
     <div class="seg" role="group" aria-label="Période de la maison" id="segMai" hidden><button id="maiAn" aria-pressed="false">Par année</button><button id="maiTout" aria-pressed="true">Depuis le début</button></div>
@@ -661,9 +679,9 @@ tr.solde td{color:var(--muted)}
       <fieldset class="full vehf" id="wVeh" hidden><legend class="label">Véhicule</legend>
         <div class="field" id="wVehSel" hidden><label class="label" for="fVeh">Engin</label><select id="fVeh"></select></div>
         <div class="field"><label class="label" for="fCatV">Catégorie</label><select id="fCatV"></select></div>
-        <div class="field"><label class="label" for="fKm">Compteur (km)</label><input id="fKm" inputmode="numeric" placeholder="110 882" autocomplete="off" aria-describedby="fKmHint"><span class="hint" id="fKmHint"></span></div>
+        <div class="field"><label class="label" for="fKm" id="fKmLab">Compteur (km)</label><input id="fKm" inputmode="numeric" placeholder="110 882" autocomplete="off" aria-describedby="fKmHint"><span class="hint" id="fKmHint"></span></div>
         <div class="field"><label class="label" for="fQty">Quantité</label><div class="qty"><input id="fQty" inputmode="decimal" placeholder="35,71" autocomplete="off"><select id="fUnit" aria-label="Unité"><option value="L">litres</option><option value="u">unités</option></select></div></div>
-        <div class="check vidbox" id="vidBox" hidden><label><input type="checkbox" id="fVid" checked> Nouvelle vidange</label><span>· prochaine à <input id="fVidNext" inputmode="numeric" aria-label="Prochaine vidange (km)" class="num" style="width:7.5em;display:inline-block"> km <span class="hint" id="fVidInt"></span></span></div>
+        <div class="check vidbox" id="vidBox" hidden><label><input type="checkbox" id="fVid" checked> Nouvelle vidange</label><span>· prochaine à <input id="fVidNext" inputmode="numeric" aria-label="Prochaine vidange (km)" class="num" style="width:7.5em;display:inline-block"> <span id="fVidU">km</span> <span class="hint" id="fVidInt"></span></span></div>
       </fieldset>
       <fieldset class="full vehf" id="wMai" hidden><legend class="label">Maison</legend>
         <div class="field"><label class="label" for="fCatM">Catégorie des travaux</label><select id="fCatM"></select></div>
@@ -715,11 +733,11 @@ tr.solde td{color:var(--muted)}
     </div>
     <div id="vidPanel" hidden style="display:flex;flex-direction:column;gap:12px">
       <div class="row" id="vidChoix" hidden><label class="label" for="vidVeh">Engin</label><select id="vidVeh" style="width:auto"></select></div>
-      <div class="hint">Repères de vidange de <b id="vidVehNom"></b>, en kilomètres au compteur. Une vidange d'huile notée avec son kilométrage les met à jour (case à cocher dans « Une opération », automatiquement dans « Coller une liste »).</div>
+      <div class="hint">Repères de vidange de <b id="vidVehNom"></b>, au compteur (kilomètres, ou heures de marche pour un groupe électrogène). Une vidange d'huile notée avec son kilométrage les met à jour (case à cocher dans « Une opération », automatiquement dans « Coller une liste »).</div>
       <form id="vidForm" class="vidform">
-        <div class="field"><label class="label" for="sInt">Intervalle de vidange (km)</label><input id="sInt" inputmode="numeric"></div>
-        <div class="field"><label class="label" for="sLast">Dernière vidange (km)</label><input id="sLast" inputmode="numeric"></div>
-        <div class="field"><label class="label" for="sNext">Prochaine vidange (km)</label><input id="sNext" inputmode="numeric"><span class="hint">Calculée à partir de la dernière et de l'intervalle ; modifiable.</span></div>
+        <div class="field"><label class="label" for="sInt" id="sIntLab">Intervalle de vidange (km)</label><input id="sInt" inputmode="numeric"></div>
+        <div class="field"><label class="label" for="sLast" id="sLastLab">Dernière vidange (km)</label><input id="sLast" inputmode="numeric"></div>
+        <div class="field"><label class="label" for="sNext" id="sNextLab">Prochaine vidange (km)</label><input id="sNext" inputmode="numeric"><span class="hint">Calculée à partir de la dernière et de l'intervalle ; modifiable.</span></div>
         <div class="row full"><button class="btn" type="submit">Enregistrer les repères</button><span id="vidMsg" class="muted"></span></div>
       </form>
     </div>
@@ -794,6 +812,19 @@ tr.solde td{color:var(--muted)}
   <p class="hint">Rien n'est enregistré sans vous : cochez, corrigez la date ou le montant si le relevé diffère, puis enregistrez. « Ignorer » écarte l'échéance pour de bon (frais non prélevés ce mois-là).</p>
   <div id="dlgProgList" class="evlist"></div>
   <div class="row"><button class="btn" id="dlgProgOk" type="button">Enregistrer les cochées</button><button class="btn ghost" id="dlgProgIgn" type="button">Ignorer les cochées</button><button class="btn ghost" id="dlgProgNon" type="button">Plus tard</button><span id="dlgProgMsg" class="muted" role="status"></span></div>
+</dialog>
+<dialog id="dlgEngin" class="confirm" aria-labelledby="dlgEnginTitre">
+  <h3 id="dlgEnginTitre">Ajouter un engin</h3>
+  <form id="enginForm" class="vidform" style="grid-template-columns:1fr 1fr">
+    <div class="field full"><label class="label" for="eNom">Nom</label><input id="eNom" maxlength="60" placeholder="Toyota Corolla, Yamaha, Groupe 5 kVA…" required autocomplete="off"></div>
+    <div class="field"><label class="label" for="eType">Type</label><select id="eType"></select></div>
+    <div class="field"><label class="label" for="ePoste">Poste des frais d'usage</label><select id="ePoste"></select></div>
+    <div class="field"><label class="label" for="eInt" id="eIntLab">Intervalle de vidange (km)</label><input id="eInt" inputmode="numeric"></div>
+    <div class="field"><label class="label" for="eDer" id="eDerLab">Dernière vidange (km, facultatif)</label><input id="eDer" inputmode="numeric"></div>
+    <div class="field"><label class="label" for="eDate">Date d'achat (facultatif)</label><input type="date" id="eDate"></div>
+    <div class="field"><label class="label" for="ePrix">Prix d'achat (milliers, facultatif)</label><input id="ePrix" inputmode="decimal"></div>
+    <div class="row full"><button class="btn" type="submit">Ajouter</button><button class="btn ghost" type="button" id="eAnnuler">Annuler</button><span id="eMsg" class="muted" role="status"></span></div>
+  </form>
 </dialog>
 <dialog id="dlgOp" class="confirm" aria-labelledby="dlgTitre">
   <h3 id="dlgTitre">Vérifier avant d'enregistrer</h3>
@@ -916,11 +947,13 @@ async function reqServeur(method,url,body){
    dernière révision reçue. Les réglages (postes, comptes, biens, parités) se modifient en direct sur l'ordinateur. */
 /* Version autonome (lien web GitHub Pages, APK Android) : mode.js y met APPYA_AUTONOME = true. Les données vivent
    seulement dans l'appareil (IndexedDB), sans ordinateur ; moteur.js applique les règles du serveur. */
-const MODE_AUTONOME=window.APPYA_AUTONOME===true&&!!window.indexedDB&&!!window.AppYaMoteur;
+/* Démo (adresse « ?demo ») : version autonome avec trois ans de données simulées, rangées à part (base « appya-demo ») */
+const MODE_DEMO=(()=>{try{return new URLSearchParams(location.search).has('demo')}catch(e){return false}})()&&!!window.indexedDB&&!!window.AppYaMoteur;
+const MODE_AUTONOME=(window.APPYA_AUTONOME===true||MODE_DEMO)&&!!window.indexedDB&&!!window.AppYaMoteur;
 const MODE_SYNC=!MODE_AUTONOME&&(()=>{let force=false;try{force=localStorage.getItem('appya-test-sync')==='1'}catch(e){}
   return !!(window.isSecureContext&&window.indexedDB&&(force||!['localhost','127.0.0.1','[::1]'].includes(location.hostname)))})();
 let IDB=null;
-function ouvrirIDB(){return new Promise((res,rej)=>{const r=indexedDB.open('appya',1);r.onupgradeneeded=()=>r.result.createObjectStore('kv');r.onsuccess=()=>res(r.result);r.onerror=()=>rej(r.error)})}
+function ouvrirIDB(){return new Promise((res,rej)=>{const r=indexedDB.open(MODE_DEMO?'appya-demo':'appya',1);r.onupgradeneeded=()=>r.result.createObjectStore('kv');r.onsuccess=()=>res(r.result);r.onerror=()=>rej(r.error)})}
 async function kvGet(k){IDB=IDB||await ouvrirIDB();return new Promise((res,rej)=>{const t=IDB.transaction('kv').objectStore('kv').get(k);t.onsuccess=()=>res(t.result);t.onerror=()=>rej(t.error)})}
 async function kvSet(k,v){IDB=IDB||await ouvrirIDB();return new Promise((res,rej)=>{const tx=IDB.transaction('kv','readwrite');tx.objectStore('kv').put(v,k);tx.oncomplete=()=>res();tx.onerror=()=>rej(tx.error)})}
 const LOC={donnees:null,file:[],rev:0,dernier:'',etat:'',msg:'',lu:false};
@@ -935,12 +968,14 @@ async function locPret(){
   if(!LOC.donnees){await synchroniser();
     if(!LOC.donnees)throw new Error("Première ouverture : reliez le téléphone à l'ordinateur (Tailscale actif, ordinateur allumé) pour charger vos données une première fois.")}
 }
+function chargerScript(src){return new Promise((res,rej)=>{const s=document.createElement('script');s.src=src;s.onload=res;s.onerror=()=>rej(new Error('Module introuvable : '+src));document.head.appendChild(s)})}
+async function donneesDemo(){if(!window.AppYaDemo)await chargerScript('demo.js');return window.AppYaDemo.generer(today)}
 async function reqAutonome(method,url,body){
   const p=url.split('?')[0],M=window.AppYaMoteur;
   await locCharger();
-  if(!LOC.donnees){LOC.donnees=M.vide();await locSauver()}
+  if(!LOC.donnees){LOC.donnees=MODE_DEMO?await donneesDemo():M.vide();await locSauver()}
   const d=LOC.donnees,ops=d.operations;
-  if(method==='GET'&&p==='/api/info')return {version:'',fichier:'dans cet appareil (rien ne quitte le téléphone)',sauvegardes:'Données et réglages › Sauvegarde',app:'appya'};
+  if(method==='GET'&&p==='/api/info')return MODE_DEMO?{version:'',fichier:'données de démonstration (simulées)',sauvegardes:'aucune',app:'appya'}:{version:'',fichier:'dans cet appareil (rien ne quitte le téléphone)',sauvegardes:'Données et réglages › Sauvegarde',app:'appya'};
   if(method==='GET'&&p==='/api/donnees')return JSON.parse(JSON.stringify(d));
   // chaque écriture travaille sur une copie : une erreur de validation ne laisse rien à moitié fait
   const essai=JSON.parse(JSON.stringify(d));let res;
@@ -1183,6 +1218,8 @@ function voirJournal(f){filtre=f;query='';$('q').value='';shown=80;render();$('l
 
 function render(){
   majBandeauProg();
+  $('demoBandeau').hidden=!MODE_DEMO;
+  $('accueil').hidden=MODE_DEMO||!ready||all.length>0||memo('appya-accueil-vu')==='1'||view!=='mois';
   // trois rubriques : Mes finances (Mois, Année, Patrimoine, Statistiques), My Car, Données et réglages ;
   // chaque vue n'affiche que son contenu
   const isM=view==='mois',isA=view==='annee',isP=view==='patrimoine',isS=view==='stats',isV=view==='vehicule',isH=view==='maison',isD=view==='donnees',isF=!isV&&!isH&&!isD,sm=isS?statsMode:'';
@@ -1193,7 +1230,7 @@ function render(){
   $('vehAn').setAttribute('aria-pressed',!vehAll);$('vehTout').setAttribute('aria-pressed',vehAll);
   $('segFin').hidden=!isF;$('segVeh').hidden=!isV;$('subCtl').hidden=isD;
   {const lv=VEHS(),cv=VEH(),lm=MAISONS(),cm=MAISON();
-    $('segEngins').hidden=!isV||lv.length<2;$('segMaisons').hidden=!isH||lm.length<2;
+    $('segEngins').hidden=!isV||lv.length<2;$('addEngin').hidden=!isV;$('segMaisons').hidden=!isH||lm.length<2;
     if(isV&&lv.length>1)$('segEngins').innerHTML=lv.map(b=>`<button type="button" data-v="${b.id}" aria-pressed="${cv&&b.id===cv.id}">${esc(b.nom)}</button>`).join('');
     if(isH&&lm.length>1)$('segMaisons').innerHTML=lm.map(b=>`<button type="button" data-h="${b.id}" aria-pressed="${cm&&b.id===cm.id}">${esc(b.nom)}</button>`).join('');}
   $('prev').hidden=$('next').hidden=!(isM||isA||sm==='mois'||sm==='annee'||(isV&&!vehAll)||(isH&&!maiAll));$('navBox').hidden=isD||(isV&&vehAll)||(isH&&maiAll);
@@ -1440,6 +1477,10 @@ $('aMai').onclick=()=>{view='maison';render()};
 $('aDon').onclick=()=>{retourVue=null;view='donnees';render()};
 function openMonth(ev){const t=ev.target.closest('[data-m]');if(!t)return;cur.m=+t.dataset.m;view='mois';render();window.scrollTo({top:0,behavior:doux()})}
 $('chart').addEventListener('click',openMonth);$('yearTbl').addEventListener('click',openMonth);
+$('accFermer').onclick=()=>{memo('appya-accueil-vu','1');render()};
+$('accComptes').onclick=()=>{view='donnees';render();showTab('tCB');$('saisie').scrollIntoView({behavior:doux()})};
+$('accSaisir').onclick=()=>{view='donnees';render();showTab('tOne');$('fAmt').focus()};
+$('demoRecreer').onclick=async()=>{if(!confirm('Effacer les données de démo modifiées et recréer les trois années simulées ?'))return;await locCharger();LOC.donnees=await donneesDemo();await locSauver();await charger();status('Données de démo recréées.')};
 $('segEngins').addEventListener('click',ev=>{const b=ev.target.closest('[data-v]');if(!b)return;choisirEngin(b.dataset.v);render()});
 $('segMaisons').addEventListener('click',ev=>{const b=ev.target.closest('[data-h]');if(!b)return;choisirMaison(b.dataset.h);render()});
 $('bars').addEventListener('click',ev=>{const b=ev.target.closest('[data-c]');if(!b)return;filtre=filtre===b.dataset.c?'':b.dataset.c;render()});
@@ -1464,6 +1505,9 @@ const ENGINS={voiture:'Voiture',moto:'Moto',bus:'Bus',camion:'Camion',groupe:'Gr
 const memo=(k,v)=>{try{if(v===undefined)return localStorage.getItem(k)||'';localStorage.setItem(k,v)}catch(e){return ''}};
 let vehSelId=memo('appya-engin'),maiSelId=memo('appya-maison');
 const VEHS=()=>BIENS.filter(b=>b.vehicule);
+/* unité du compteur : heures de marche pour un groupe électrogène, kilomètres sinon */
+const UK=v=>v&&v.engin==='groupe'?'h':'km';
+const INTERVALLE_DEFAUT=t=>t==='groupe'?250:3000;
 const VEH=()=>{const l=VEHS();return l.find(b=>b.id===vehSelId)||l[0]||null};
 function choisirEngin(id){vehSelId=id;memo('appya-engin',id);vehSel=null}
 /* engin d'une saisie : bien investi, sinon nom propre de l'engin cité (« yamaha », « avante »), sinon l'engin affiché
@@ -1478,35 +1522,35 @@ function enginDe(lib,categorie,bien){
   return l.find(v=>categorie&&v.poste===categorie)||cur;
 }
 const MOTS_VEH_FORTS=['vidange','carburant','essence','gasoil','gazoil','diesel','vulcanis','garage','mecanicien','pneu'];   // forme sans accents (normTxt)
-const vidangeDe=v=>({intervalle:3000,dernier:0,prochain:0,...((v&&v.vidange)||{})});
+const vidangeDe=v=>({intervalle:INTERVALLE_DEFAUT(v&&v.engin),dernier:0,prochain:0,...((v&&v.vidange)||{})});
 const isVidange=e=>/vidange/i.test(e.libelle)&&!/bo[iî]te/i.test(e.libelle);
 const nb=(n,d=0)=>(+n).toLocaleString('fr-FR',{minimumFractionDigits:0,maximumFractionDigits:d});   // km, litres : jamais convertis en devise
 const colV=id=>`var(--cv-${CATV[id]?id:'autre'})`;
 let vehAll=false,vehSel=null,vehQ='',vehShown=60;   // plus d'étiquettes de catégorie (demande du 2026-11-13)
 function vehOps(v=VEH()){return v?sorted(all.filter(e=>e.vehicule===v.id)):[]}
 function chaineKm(list){let prev=null;return list.map(e=>{let diff=null;if(e.km){if(prev!=null)diff=e.km-prev;prev=e.km}return {...e,diff}})}
-function statsVeh(items){
+function statsVeh(items,v=VEH()){
   const total=sum(items),fuel=items.filter(e=>e.cat_vehicule==='carburant'),fuelTot=sum(fuel);
   const withQ=fuel.filter(e=>e.quantite>0),litres=withQ.reduce((a,e)=>a+e.quantite,0),cout=sum(withQ);
   const km=items.reduce((a,e)=>a+(e.diff>0?e.diff:0),0),fk=withQ.filter(e=>e.km).sort((a,b)=>a.km-b.km);
-  let conso=null;if(fk.length>=2){const dist=fk[fk.length-1].km-fk[0].km,l=fk.slice(0,-1).reduce((a,e)=>a+e.quantite,0);if(dist>0)conso=l/dist*100}
+  let conso=null;if(fk.length>=2){const dist=fk[fk.length-1].km-fk[0].km,l=fk.slice(0,-1).reduce((a,e)=>a+e.quantite,0);if(dist>0)conso=UK(v)==='h'?l/dist:l/dist*100}
   return {total,fuelTot,litres,prix:litres?cout/litres:null,km,conso,mois:new Set(items.map(e=>e.date.slice(0,7))).size,n:items.length,inv:ofNat(items,'investissement')};
 }
 function kmNow(v=VEH()){return Math.max(vidangeDe(v).dernier||0,...vehOps(v).map(e=>e.km||0),0)}
 function renderVehicule(){
   const v=VEH();
   ['vehDash','vehRecap','vehVid','vehJournal'].forEach(i=>$(i).hidden=!v);
-  if(!v){$('vehHero').innerHTML='<div class="empty">Aucun engin. Dans Données et réglages › Comptes et biens, ajoutez votre voiture ou votre moto et choisissez son rôle « Engin ».</div>';return}
+  if(!v){$('vehHero').innerHTML='<div class="empty">Aucun engin pour l\'instant : voiture, moto, bus, groupe électrogène… Touchez « + Ajouter un engin » ci-dessus.</div>';return}
   const vd=vidangeDe(v),list=chaineKm(vehOps()),k=kmNow();
   /* vidange */
-  $('kmNow').textContent=k?nb(k)+' km':'—';
+  $('kmNow').textContent=k?nb(k)+' '+UK(v):'—';
   if(vd.prochain&&k){
     const left=vd.prochain-k,span=Math.max(1,vd.prochain-vd.dernier),p=Math.min(100,Math.max(0,(k-vd.dernier)/span*100)),warn=left<=500;
-    $('kmLeft').innerHTML=`${nb(left)}<small>km</small>`;$('gauge').firstElementChild.style.width=p+'%';$('gauge').classList.toggle('warn',warn);
-    $('gauge').setAttribute('aria-valuenow',Math.round(p));$('gauge').setAttribute('aria-valuetext',`${Math.round(p)} % de l'intervalle, ${nb(left)} km avant la vidange`);
+    $('kmLeft').innerHTML=`${nb(left)}<small>${UK(v)}</small>`;$('gauge').firstElementChild.style.width=p+'%';$('gauge').classList.toggle('warn',warn);
+    $('gauge').setAttribute('aria-valuenow',Math.round(p));$('gauge').setAttribute('aria-valuetext',`${Math.round(p)} % de l'intervalle, ${nb(left)} ${UK(v)} avant la vidange`);
     const pill=$('vPill');pill.hidden=false;pill.className='pill'+(warn?' warn':'');pill.textContent=left<=0?'Vidange dépassée':warn?'Vidange bientôt':Math.round(p)+' % de l\'intervalle';
-  }else{$('kmLeft').innerHTML='—<small>km</small>';$('vPill').hidden=true}
-  $('tLast').textContent='dernière '+(vd.dernier?nb(vd.dernier)+' km':'—');$('tNext').textContent='prochaine '+(vd.prochain?nb(vd.prochain)+' km':'—');
+  }else{$('kmLeft').innerHTML=`—<small>${UK(v)}</small>`;$('vPill').hidden=true}
+  $('tLast').textContent='dernière '+(vd.dernier?nb(vd.dernier)+' '+UK(v):'—');$('tNext').textContent='prochaine '+(vd.prochain?nb(vd.prochain)+' '+UK(v):'—');
   $('vehDashNom').textContent=`${v.nom} · ${ENGINS[v.engin]||'Engin'}`;
   /* indicateurs de la période */
   const items=vehAll?list:list.filter(e=>e.date.startsWith(cur.y+'-')),st=statsVeh(items);
@@ -1515,13 +1559,14 @@ function renderVehicule(){
   const tile=(l,val,s)=>`<div class="stat"><span class="label">${l}</span><span class="v">${val}</span><span class="s">${s}</span></div>`;
   $('vehHero').innerHTML=tile('Dépenses',fmtM(st.total),`${U()}${st.mois?` · ${fmtM(st.total/st.mois)} par mois`:''}`)+
     tile('Carburant',fmtM(st.fuelTot),`${U()} · ${nb(st.litres)} L${st.total?` · ${Math.round(st.fuelTot/st.total*100)} %`:''}`)+
-    tile('Prix moyen du litre',st.prix?fmtM(st.prix):'—',`${U()}/L`)+tile('Consommation',st.conso?nb(st.conso,1):'—','L/100 km')+
-    tile('Km parcourus',st.km?nb(st.km):'—',st.km&&st.mois?`km · ${nb(st.km/st.mois)} km/mois`:'km')+tile('Coût total par km',st.km?fmtM(st.total/st.km):'—',`${U()}/km`);
+    tile('Prix moyen du litre',st.prix?fmtM(st.prix):'—',`${U()}/L`)+tile('Consommation',st.conso?nb(st.conso,1):'—',UK(v)==='h'?'L/h':'L/100 km')+
+    (UK(v)==='h'?tile('Heures de marche',st.km?nb(st.km):'—',st.km&&st.mois?`h · ${nb(st.km/st.mois)} h/mois`:'h')+tile('Coût par heure',st.km?fmtM(st.total/st.km):'—',`${U()}/h`)
+    :tile('Km parcourus',st.km?nb(st.km):'—',st.km&&st.mois?`km · ${nb(st.km/st.mois)} km/mois`:'km')+tile('Coût total par km',st.km?fmtM(st.total/st.km):'—',`${U()}/km`));
   /* récapitulatif : mois de l'année, ou années */
   let bk;
   if(vehAll){const ys=[...new Set(list.map(e=>e.date.slice(0,4)))].sort();bk=ys.map(y=>({key:y,label:y,court:y,items:list.filter(e=>e.date.startsWith(y+'-'))}))}
   else bk=MOIS.map((m,i)=>({key:i,label:new Date(cur.y,i,1).toLocaleDateString('fr-FR',{month:'long'}),court:m.slice(0,4),items:items.filter(e=>+e.date.slice(5,7)-1===i)}));
-  bk.forEach(b=>{b.st=statsVeh(b.items);b.cats={};b.items.forEach(e=>b.cats[e.cat_vehicule]=(b.cats[e.cat_vehicule]||0)+e.montant)});
+  bk.forEach(b=>{b.st=statsVeh(b.items,v);b.cats={};b.items.forEach(e=>b.cats[e.cat_vehicule]=(b.cats[e.cat_vehicule]||0)+e.montant)});
   $('vehRecTitre').textContent=vehAll?'Récapitulatif annuel':'Récapitulatif mensuel';$('vehRecHint').textContent=vehAll?'Touchez une année pour l\'ouvrir':'Touchez un mois pour filtrer le journal';
   const mx=Math.max(1,...bk.map(b=>b.st.total)),used=CATS_V.filter(c=>items.some(e=>e.cat_vehicule===c.id));
   $('vehChart').style.gridTemplateColumns=`repeat(${bk.length},1fr)`;
@@ -1529,16 +1574,16 @@ function renderVehicule(){
   $('vehLegend').innerHTML=used.map(c=>`<span><i class="lk" style="background:${colV(c.id)}" aria-hidden="true"></i>${c.l}</span>`).join('');
   const tot={};used.forEach(c=>tot[c.id]=sum(items.filter(e=>e.cat_vehicule===c.id)));const cell=x=>x?fmtM(x):'–';
   $('vehTbl').innerHTML=!items.length?`<tbody><tr><td class="empty" style="text-align:center">Aucune dépense du véhicule en ${cur.y}.</td></tr></tbody>`:
-    `<thead><tr><th>${vehAll?'Année':'Mois'}</th>${used.map(c=>`<th>${c.l}</th>`).join('')}<th>Total</th><th>Litres</th><th>Km</th>${vehAll?'<th>L/100</th><th>Par km</th>':''}</tr></thead><tbody>`+
+    `<thead><tr><th>${vehAll?'Année':'Mois'}</th>${used.map(c=>`<th>${c.l}</th>`).join('')}<th>Total</th><th>Litres</th><th>${UK(v)==='h'?'Heures':'Km'}</th>${vehAll?(UK(v)==='h'?'<th>L/h</th><th>Par h</th>':'<th>L/100</th><th>Par km</th>'):''}</tr></thead><tbody>`+
     bk.filter(b=>b.st.n).map(b=>`<tr class="click${vehSel===b.key?' sel':''}" data-k="${b.key}"><td>${esc(b.label)}</td>${used.map(c=>`<td>${cell(b.cats[c.id])}</td>`).join('')}<td><b>${fmtM(b.st.total)}</b></td><td>${b.st.litres?nb(b.st.litres):'–'}</td><td>${b.st.km?nb(b.st.km):'–'}</td>${vehAll?`<td>${b.st.conso?nb(b.st.conso,1):'–'}</td><td>${b.st.km?fmtM(b.st.total/b.st.km):'–'}</td>`:''}</tr>`).join('')+
     `<tr class="tot"><td>Total</td>${used.map(c=>`<td>${cell(tot[c.id])}</td>`).join('')}<td>${fmtM(st.total)}</td><td>${st.litres?nb(st.litres):'–'}</td><td>${st.km?nb(st.km):'–'}</td>${vehAll?`<td>${st.conso?nb(st.conso,1):'–'}</td><td>${st.km?fmtM(st.total/st.km):'–'}</td>`:''}</tr></tbody>`;
   /* vidanges (toutes années) */
   let pv=null;const vr=list.filter(e=>isVidange(e)&&e.km).map(e=>{const r={...e,int:pv!=null?e.km-pv:null};pv=e.km;return r}),ints=vr.filter(r=>r.int!=null).map(r=>r.int);
-  $('vidInt').textContent=nb(vd.intervalle);$('vidSub').textContent=ints.length?`intervalle moyen ${nb(moyenne(ints))} km`:'';
-  $('vidTbl').innerHTML=vr.length?`<thead><tr><th>Date</th><th>Nature</th><th>Km</th><th>Intervalle</th><th>Coût</th></tr></thead><tbody>`+
-    vr.slice(-1).map(r=>`<tr><td>${dmy(r.date)}</td><td style="text-align:left;font-family:var(--f-body)">${esc(r.libelle)}</td><td>${nb(r.km)}</td><td class="${r.int>vd.intervalle*1.2?'long':''}">${r.int!=null?nb(r.int)+' km':'–'}${r.int>vd.intervalle*1.2?'<span class="sr"> (intervalle trop long)</span>':''}</td><td>${fmtM(r.montant)}</td></tr>`).join('')+
-    (vd.prochain?`<tr class="tot"><td>Prochaine</td><td style="text-align:left">prévue</td><td>${nb(vd.prochain)}</td><td>${vd.dernier?nb(vd.prochain-vd.dernier)+' km':'–'}</td><td></td></tr>`:'')+'</tbody>'
-    :'<tbody><tr><td class="empty" style="text-align:center">Aucune vidange avec kilométrage enregistrée.</td></tr></tbody>';
+  $('vidInt').textContent=nb(vd.intervalle);$('vidSub').textContent=ints.length?`intervalle moyen ${nb(moyenne(ints))} ${UK(v)}`:'';
+  $('vidTbl').innerHTML=vr.length?`<thead><tr><th>Date</th><th>Nature</th><th>${UK(v)==='h'?'Heures':'Km'}</th><th>Intervalle</th><th>Coût</th></tr></thead><tbody>`+
+    vr.slice(-1).map(r=>`<tr><td>${dmy(r.date)}</td><td style="text-align:left;font-family:var(--f-body)">${esc(r.libelle)}</td><td>${nb(r.km)}</td><td class="${r.int>vd.intervalle*1.2?'long':''}">${r.int!=null?nb(r.int)+' '+UK(v):'–'}${r.int>vd.intervalle*1.2?'<span class="sr"> (intervalle trop long)</span>':''}</td><td>${fmtM(r.montant)}</td></tr>`).join('')+
+    (vd.prochain?`<tr class="tot"><td>Prochaine</td><td style="text-align:left">prévue</td><td>${nb(vd.prochain)}</td><td>${vd.dernier?nb(vd.prochain-vd.dernier)+' '+UK(v):'–'}</td><td></td></tr>`:'')+'</tbody>'
+    :'<tbody><tr><td class="empty" style="text-align:center">Aucune vidange avec compteur enregistrée.</td></tr></tbody>';
   if(vr.length)$('vidTbl').querySelector('tbody tr:first-child td:first-child').innerHTML=`Dernière<br><span class="hint">${dmy(vr[vr.length-1].date)}</span>`;
   /* filtres et journal du véhicule */
   let jl=items.slice().reverse();
@@ -1548,7 +1593,7 @@ function renderVehicule(){
   let html='',jd=null;
   for(const e of jl.slice(0,vehShown)){
     if(e.date!==jd){jd=e.date;html+=`<div class="dayhead"><strong>${new Date(e.date+'T12:00:00').toLocaleDateString('fr-FR',{weekday:'long',day:'numeric',month:'long',year:'numeric'})}</strong></div>`}
-    const det=[CATV[e.cat_vehicule]?.l||'Autre'].concat(e.nature==='investissement'?['coût du véhicule']:[],e.quantite?[`${nb(e.quantite,2)} ${e.unite==='u'?'u.':'L'}`]:[],e.km?[`${nb(e.km)} km`]:[],e.diff>0?[`+${nb(e.diff)} km`]:[]).join(' · ');
+    const det=[CATV[e.cat_vehicule]?.l||'Autre'].concat(e.nature==='investissement'?['coût du véhicule']:[],e.quantite?[`${nb(e.quantite,2)} ${e.unite==='u'?'u.':'L'}`]:[],e.km?[`${nb(e.km)} ${UK(v)}`]:[],e.diff>0?[`+${nb(e.diff)} ${UK(v)}`]:[]).join(' · ');
     html+=`<div class="item${editId===e.id?' editing':''}" data-id="${e.id}"><button type="button" class="lib"><span class="sr">Modifier : </span><span>${esc(e.libelle)}</span><span class="tag"><span class="dot" aria-hidden="true" style="background:${colV(e.cat_vehicule)}"></span>${esc(det)}${e.remarque&&!/^carnet du véhicule \S+$/.test(e.remarque)?` · ${esc(e.remarque.replace(/ ?·? ?carnet du véhicule \S+/,''))}`:''}</span></button><span class="amt">${fmt(e.montant)}<span class="sr"> ${U()}</span></span><button type="button" class="del" data-del="${e.id}" aria-label="Supprimer ${esc(e.libelle)}">✕</button></div>`;
   }
   $('vehList').innerHTML=jl.length?html:'<div class="empty">Aucune dépense du véhicule pour ce filtre.</div>';
@@ -1561,9 +1606,26 @@ $('vehMore').onclick=()=>{vehShown+=150;render()};
 $('vehAn').onclick=()=>{vehAll=false;vehSel=null;render()};
 $('vehTout').onclick=()=>{vehAll=true;vehSel=null;render()};
 
+/* ajouter un engin depuis la rubrique Engins */
+function majEnginForm(){const t=$('eType').value,u=t==='groupe'?'h':'km';$('eIntLab').textContent=`Intervalle de vidange (${u})`;$('eDerLab').textContent=`Dernière vidange (${u}, facultatif)`;
+  if(!$('eInt').dataset.touche)$('eInt').value=INTERVALLE_DEFAUT(t);
+  if(!$('ePoste').dataset.touche){const pref=t==='groupe'?['energie','foyer']:t==='bus'||t==='camion'?['transport','voiture']:['voiture','transport'];$('ePoste').value=pref.find(x=>CAT[x])||'autre'}}
+$('addEngin').onclick=()=>{$('enginForm').reset();delete $('eInt').dataset.touche;delete $('ePoste').dataset.touche;
+  $('eType').innerHTML=Object.entries(ENGINS).map(([k,l])=>`<option value="${k}">${l}</option>`).join('');
+  $('ePoste').innerHTML=CATS.map(c=>`<option value="${c.id}">${esc(c.label)}</option>`).join('');majEnginForm();$('eMsg').textContent='';$('dlgEngin').showModal();$('eNom').focus()};
+$('eType').addEventListener('change',majEnginForm);$('eInt').addEventListener('input',()=>{$('eInt').dataset.touche=1});$('ePoste').addEventListener('change',()=>{$('ePoste').dataset.touche=1});
+$('eAnnuler').onclick=()=>$('dlgEngin').close();
+$('enginForm').addEventListener('submit',async ev=>{ev.preventDefault();
+  const nom=$('eNom').value.trim(),t=$('eType').value,int=Math.round(num($('eInt').value))||INTERVALLE_DEFAUT(t),der=Math.round(num($('eDer').value))||0;
+  const prix=$('ePrix').value.trim()?milliers($('ePrix').value):0;if(!nom){$('eMsg').textContent='Donnez un nom.';return}if(!isFinite(prix)){$('eMsg').textContent="Prix d'achat invalide (en milliers).";return}
+  const id=nouvelId(nom,new Set(BIENS.map(b=>b.id)));
+  const b={id,nom,type:'passif',date_achat:$('eDate').value,prix_achat:prix,poste:$('ePoste').value==='autre'?'':$('ePoste').value,mots:[],estimations:[],vehicule:true,engin:t,vidange:{intervalle:int,dernier:der,prochain:der?der+int:0}};
+  try{await api.params({biens:BIENS.concat([b])});choisirEngin(id);$('dlgEngin').close();await charger();status(`Engin « ${nom} » ajouté.`)}catch(e){$('eMsg').textContent=e.message}});
+
 /* repères de vidange (Données et réglages) */
 function openVidange(){const v=VEH(),vd=vidangeDe(v);$('vidVehNom').textContent=v?v.nom:'aucun engin (Comptes et biens › rôle « Engin »)';$('vidForm').hidden=!v;
   $('vidChoix').hidden=VEHS().length<2;$('vidVeh').innerHTML=VEHS().map(b=>`<option value="${b.id}"${v&&b.id===v.id?' selected':''}>${esc(b.nom)}</option>`).join('');
+  const u=UK(v);$('sIntLab').textContent=`Intervalle de vidange (${u})`;$('sLastLab').textContent=`Dernière vidange (${u})`;$('sNextLab').textContent=`Prochaine vidange (${u})`;
   $('sInt').value=vd.intervalle||'';$('sLast').value=vd.dernier||'';$('sNext').value=vd.prochain||''}
 ['sInt','sLast'].forEach(i=>$(i).addEventListener('input',()=>{const a=num($('sInt').value),b=num($('sLast').value);if(a>0&&b>0)$('sNext').value=b+a}));
 $('vidVeh').addEventListener('change',()=>{choisirEngin($('vidVeh').value);openVidange();render()});
@@ -1699,9 +1761,9 @@ function majChamps(){
   const v=bInv||BIEN[$('fVeh').value]||VEH();
   $('wVeh').hidden=!ctx;$('wVehSel').hidden=!!bInv||VEHS().length<2;
   $('wMai').hidden=!(n==='investissement'&&BIEN[$('fBien').value]&&BIEN[$('fBien').value].maison);
-  if(ctx){const k=kmNow(v),km=num($('fKm').value),vd=vidangeDe(v);$('fKmHint').textContent=k?`Dernier relevé (${v.nom}) : ${nb(k)} km`:'';
+  if(ctx){const k=kmNow(v),km=num($('fKm').value),vd=vidangeDe(v);$('fKmLab').textContent=`Compteur (${UK(v)})`;$('fKmHint').textContent=k?`Dernier relevé (${v.nom}) : ${nb(k)} ${UK(v)}`:'';
     const vid=$('fCatV').value==='entretien'&&isVidange({libelle:$('fLib').value})&&km>0;$('vidBox').hidden=!vid;
-    if(vid){if(!touched.vidnext)$('fVidNext').value=Math.round(km+vd.intervalle);$('fVidInt').textContent=`(compteur + intervalle de ${nb(vd.intervalle)}, modifiable)`}}
+    if(vid){if(!touched.vidnext)$('fVidNext').value=Math.round(km+vd.intervalle);$('fVidU').textContent=UK(v);$('fVidInt').textContent=`(compteur + intervalle de ${nb(vd.intervalle)}, modifiable)`}}
   $('fCptLab').textContent={revenu:'Reçu sur',remboursement:'Reçu sur',virement:'Depuis le compte'}[n]||'Payé avec';
 }
 function deviner(){
@@ -1774,12 +1836,12 @@ function confirmerOp(doc,opt={}){
   if(doc.echeance)lignes.push(['Échéance',dmy(doc.echeance)]);
   if(doc.bien)lignes.push(['Bien',(BIEN[doc.bien]||{}).nom||doc.bien]);
   if(doc.cat_maison)lignes.push(['Travaux',(CATS_M.find(c=>c.id===doc.cat_maison)||{}).l||doc.cat_maison]);
-  if(doc.vehicule){lignes.push(['Véhicule',((BIEN[doc.vehicule]||{}).nom||doc.vehicule)+' · '+((CATS_V.find(c=>c.id===doc.cat_vehicule)||{}).l||doc.cat_vehicule)]);
-    if(doc.km)lignes.push(['Compteur',`${nb(doc.km)} km`]);if(doc.quantite)lignes.push(['Quantité',`${String(doc.quantite).replace('.',',')} ${doc.unite}`])}
+  if(doc.vehicule){lignes.push(['Engin',((BIEN[doc.vehicule]||{}).nom||doc.vehicule)+' · '+((CATS_V.find(c=>c.id===doc.cat_vehicule)||{}).l||doc.cat_vehicule)]);
+    if(doc.km)lignes.push(['Compteur',`${nb(doc.km)} ${UK(BIEN[doc.vehicule])}`]);if(doc.quantite)lignes.push(['Quantité',`${String(doc.quantite).replace('.',',')} ${doc.unite}`])}
   if(doc.remarque)lignes.push(['Remarque',doc.remarque]);
   $('dlgTitre').textContent=opt.edition?'Enregistrer ces modifications ?':'Ajouter cette opération ?';
   $('dlgResume').innerHTML=lignes.map(([k,v,c])=>`<dt>${k}</dt><dd${c?` class="${c}"`:''}>${esc(v)}</dd>`).join('');
-  $('dlgNote').textContent=opt.vidange?`Prochaine vidange : ${nb(opt.vidange)} km.`:'';
+  $('dlgNote').textContent=opt.vidange?`Prochaine vidange : ${nb(opt.vidange)} ${UK(BIEN[doc.vehicule])}.`:'';
   $('dlgNote').hidden=!opt.vidange;
   if(typeof dlg.showModal!=='function')return Promise.resolve(confirm(lignes.map(([k,v])=>k+' : '+v).join('\n')));
   return new Promise(res=>{
@@ -1842,13 +1904,13 @@ $('oneForm').addEventListener('submit',async ev=>{
       remarque:$('fRem').value.trim(),cree:old?old.cree:new Date().toISOString()});
     const nouvVid=avecVeh&&!$('vidBox').hidden&&$('fVid').checked&&km>0,vehOp=BIEN[doc.vehicule];
     const prochVid=nouvVid?Math.round(num($('fVidNext').value))||km+vidangeDe(vehOp).intervalle:0;
-    if(nouvVid&&prochVid<=km){$('addMsg').textContent='La prochaine vidange doit être au-delà du compteur.';$('addBtn').disabled=false;return}
+    if(nouvVid&&prochVid<=km){$('addMsg').textContent='La prochaine vidange doit être au-delà du compteur actuel.';$('addBtn').disabled=false;return}
     if(!await confirmerOp(doc,{edition:!!editId,vidange:prochVid})){$('addMsg').textContent='Rien n\'a été enregistré : corrigez puis validez à nouveau.';$('addBtn').disabled=false;return}
     if(editId){await api.put(editId,doc);$('addMsg').textContent='Modifications enregistrées.'}
     else{await api.add(doc);$('addMsg').textContent=`Ajouté : ${NAT[nature].l.toLowerCase()}, ${fmtC(montant)} FCFA, ${libelle}`}
     const [y,m]=doc.date.split('-').map(Number);const vr=retourVue||view;if(vr==='mois')cur={y,m:m-1};else if(vr==='annee'||vr==='vehicule'||vr==='maison')cur.y=y;
     if(nouvVid&&MODE_SYNC)$('addMsg').textContent+=' Le repère de vidange sera mis à jour à la synchronisation.';
-    else if(nouvVid){const vd=vidangeDe(vehOp);await enregistrerVidange({...vd,dernier:km,prochain:prochVid},vehOp);await charger(true);$('addMsg').textContent+=` Vidange (${vehOp.nom}) : prochaine à ${nb(prochVid)} km.`}
+    else if(nouvVid){const vd=vidangeDe(vehOp);await enregistrerVidange({...vd,dernier:km,prochain:prochVid},vehOp);await charger(true);$('addMsg').textContent+=` Vidange (${vehOp.nom}) : prochaine à ${nb(prochVid)} ${UK(vehOp)}.`}
     const keepDate=doc.date,etaitEdition=!!editId;resetForm();fillSelects();$('fDate').value=keepDate;if(etaitEdition)revenir();else $('fAmt').focus();
   }catch(e){$('addMsg').textContent=e.message||"L'enregistrement a échoué. Réessayez."}
   $('addBtn').disabled=false;
@@ -2120,7 +2182,7 @@ $('saveBien').onclick=async()=>{
     out.push({id:old?old.id:nouvelId(nom,pris),nom,type:r.querySelector('.bType').value,date_achat:r.querySelector('.bDate').value,prix_achat:prix,
       poste:r.querySelector('.bPoste').value,mots:listeMots(r.querySelector('.bMots').value),estimations:old?old.estimations:[],
       ...(()=>{const ro=r.querySelector('.bRole').value;
-        if(ro.startsWith('v:'))return {vehicule:true,engin:ro.slice(2),vidange:(old&&old.vidange)||{intervalle:3000,dernier:0,prochain:0}};
+        if(ro.startsWith('v:'))return {vehicule:true,engin:ro.slice(2),vidange:(old&&old.vidange)||{intervalle:INTERVALLE_DEFAUT(ro.slice(2)),dernier:0,prochain:0}};
         if(ro==='maison')return {maison:true,projet:(old&&old.projet)||{budget:0,echeance:'',note:''}};return {}})()});
   }
   $('saveBien').disabled=true;
@@ -2830,14 +2892,16 @@ if(!MODE_SYNC&&!MODE_AUTONOME&&'EventSource' in window&&/^(localhost|127\.0\.0\.
 /* ================= démarrage ================= */
 render();charger().then(()=>{if(MODE_SYNC)synchroniser()});
 if(MODE_SYNC||MODE_AUTONOME){
-  if('serviceWorker' in navigator&&window.isSecureContext&&!window.Capacitor)navigator.serviceWorker.register('sw.js').catch(()=>{});
+  if('serviceWorker' in navigator&&window.isSecureContext&&!window.Capacitor&&!MODE_DEMO)navigator.serviceWorker.register('sw.js').catch(()=>{});
   if(navigator.storage&&navigator.storage.persist)navigator.storage.persist().catch(()=>{});   // éviter que le navigateur efface les données du téléphone
 }
 if(MODE_SYNC){
   setInterval(()=>synchroniser(),120000);addEventListener('online',()=>synchroniser());majSync();
 }
 req('GET','/api/info').then(i=>{$('footFile').innerHTML=MODE_AUTONOME?`Données : <b>${esc(i.fichier)}</b> · copies de sécurité : <b>${esc(i.sauvegardes)}</b>`:`Fichier de données : <code>${esc(i.fichier)}</code> · sauvegarde automatique chaque jour dans <code>${esc(i.sauvegardes)}</code>`}).catch(()=>{});
-if(MODE_AUTONOME)$('footTxt').textContent='AppYa · suivi financier, véhicule et maison · version autonome : vos données restent dans cet appareil.';
+if(!MODE_DEMO)$('footFile').insertAdjacentHTML('afterend',' <a href="?demo" style="color:var(--accent)">Voir la démo</a>');
+if(MODE_DEMO)$('footTxt').textContent='AppYa · version de démonstration · données simulées, rangées à part de vos données.';
+else if(MODE_AUTONOME)$('footTxt').textContent='AppYa · suivi financier, véhicule et maison · version autonome : vos données restent dans cet appareil.';
 if(window.matchMedia){const mq=matchMedia('(prefers-color-scheme: dark)');const f=()=>render();mq.addEventListener?mq.addEventListener('change',f):mq.addListener(f)}
 document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='visible'&&ready&&!editId){if(MODE_SYNC)synchroniser();else charger(true)}});
 </script>

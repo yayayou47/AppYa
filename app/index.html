@@ -367,6 +367,23 @@ tr.sel td{background:var(--accent-soft)}
 .nat{font-size:.68rem;font-weight:600;text-transform:uppercase;letter-spacing:.05em;padding:1px 6.3px;border-radius:103.95px;border:1px solid var(--line);color:var(--muted)}
 .nat.in{color:var(--ok);border-color:currentColor}
 .nat.out{color:var(--warn);border-color:currentColor}
+.nat.exc{color:#9a6b00;border-color:currentColor}
+:root[data-theme="dark"] .nat.exc{color:#f0c060}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]) .nat.exc{color:#f0c060}}
+.evlist{display:flex;flex-direction:column;gap:8px}
+.evrow{display:flex;flex-wrap:wrap;gap:6px;align-items:center;padding:8px;border:1px solid var(--line);border-radius:10px}
+.evrow input,.evrow select{width:auto;flex:1 1 9em;min-width:0}
+.evrow .eNom,.evrow .rNom{flex:2 1 14em;font-weight:600}
+.evrow .eMots,.evrow .rMots{flex:3 1 16em}
+.evrow input[type=date]{flex:0 1 10em}
+.evrow .eBud{flex:0 1 7em}
+.evrow label.chk{display:flex;gap:4px;align-items:center;flex:0 0 auto;font-size:.9rem}
+.exclist{display:flex;flex-direction:column;gap:6px}
+.excrow{display:flex;flex-wrap:wrap;justify-content:space-between;gap:4px 12px;text-align:left;padding:9px 12px;border:1px solid var(--line);border-radius:10px;background:var(--surface);color:var(--ink);cursor:pointer;font:inherit}
+.excrow:hover,.excrow.sel{border-color:var(--accent);background:var(--accent-soft)}
+.excrow .excnom{font-weight:600}
+.excrow .excval{display:flex;flex-wrap:wrap;gap:4px 12px;font-size:.9rem;font-variant-numeric:tabular-nums}
+.excrow .in{color:var(--ok)}
 .nat.inv{color:var(--accent);border-color:currentColor}
 .item .amt.in{color:var(--ok)}
 .acct{display:flex;flex-direction:column;gap:6.3px;padding:10.5px 0 10.5px 12.6px;border-bottom:1px solid var(--line);border-left:6.3px solid var(--cc,transparent)}
@@ -420,6 +437,7 @@ tr.solde td{color:var(--muted)}
     <symbol id="i-annee" viewBox="0 0 24 24"><rect x="3.5" y="5" width="17" height="15.5" rx="2"/><path d="M3.5 10h17M8 3v4M16 3v4M9.2 10v10.5M14.8 10v10.5M3.5 15.2h17"/></symbol>
     <symbol id="i-patrimoine" viewBox="0 0 24 24"><ellipse cx="12" cy="6.5" rx="7" ry="2.5"/><path d="M5 6.5v4c0 1.4 3.1 2.5 7 2.5s7-1.1 7-2.5v-4"/><path d="M5 10.5v4c0 1.4 3.1 2.5 7 2.5s7-1.1 7-2.5v-4"/><path d="M5 14.5v3c0 1.4 3.1 2.5 7 2.5s7-1.1 7-2.5v-3"/></symbol>
     <symbol id="i-stats" viewBox="0 0 24 24"><path d="M4 20h16"/><path d="M7.5 20v-6M12 20V7.5M16.5 20v-9.5"/></symbol>
+    <symbol id="i-etoile" viewBox="0 0 24 24"><path d="M12 3.5l2.6 5.3 5.8.8-4.2 4.1 1 5.8-5.2-2.7-5.2 2.7 1-5.8-4.2-4.1 5.8-.8z"/></symbol>
     <symbol id="i-sauve" viewBox="0 0 24 24"><path d="M12 3v11M7.5 9.5 12 14l4.5-4.5"/><path d="M4 15v3.5A2.5 2.5 0 0 0 6.5 21h11a2.5 2.5 0 0 0 2.5-2.5V15"/></symbol>
     <symbol id="i-excel" viewBox="0 0 24 24"><rect x="2" y="3" width="14" height="18" rx="2.2" fill="#1d6f42" stroke="none"/><path d="M5.6 8.2l6.8 7.6M12.4 8.2l-6.8 7.6" stroke="#fff" stroke-width="2.2"/><path d="M14 12h7.5M18.5 8.7 21.8 12l-3.3 3.3"/></symbol>
   </defs>
@@ -495,6 +513,11 @@ tr.solde td{color:var(--muted)}
   <section class="panel" aria-label="Dépenses par poste" id="postesPanel">
     <div class="phead"><h2>Dépenses par poste</h2><span class="hint" id="posteHint">Touchez un poste pour filtrer le journal</span></div>
     <div class="bars" id="bars"></div>
+  </section>
+
+  <section class="panel" aria-labelledby="excTitre" id="excPanel" hidden>
+    <div class="phead"><h2 id="excTitre">Exceptionnel</h2><span class="hint">Événements et revenus ponctuels, hors courant · touchez pour filtrer le journal</span></div>
+    <div id="excList" class="exclist"></div>
   </section>
 
   <section class="panel" aria-label="Rythme" id="rythmePanel">
@@ -589,6 +612,7 @@ tr.solde td{color:var(--muted)}
       <button role="tab" id="tPaste" aria-selected="false"><svg class="ic" aria-hidden="true" focusable="false"><use href="#i-coller"/></svg><span>Coller une liste</span></button>
       <button role="tab" id="tPostes" aria-selected="false"><svg class="ic" aria-hidden="true" focusable="false"><use href="#i-tag"/></svg><span>Postes et libellés</span></button>
       <button role="tab" id="tCB" aria-selected="false"><svg class="ic" aria-hidden="true" focusable="false"><use href="#i-banque"/></svg><span>Comptes et biens</span></button>
+      <button role="tab" id="tEvt" aria-selected="false"><svg class="ic" aria-hidden="true" focusable="false"><use href="#i-etoile"/></svg><span>Événements et revenus</span></button>
       <button role="tab" id="tVid" aria-selected="false"><svg class="ic" aria-hidden="true" focusable="false"><use href="#i-huile"/></svg><span>Repères vidange</span></button>
       <button role="tab" id="tMai" aria-selected="false"><svg class="ic" aria-hidden="true" focusable="false"><use href="#i-chantier"/></svg><span>Projet maison</span></button>
       <button role="tab" id="tPar" aria-selected="false"><svg class="ic" aria-hidden="true" focusable="false"><use href="#i-change"/></svg><span>Parités</span></button>
@@ -603,6 +627,8 @@ tr.solde td{color:var(--muted)}
       <div class="field"><label class="label" for="fNat">Nature</label><select id="fNat"></select></div>
       <div class="field"><label class="label" for="fCpt" id="fCptLab">Payé avec</label><select id="fCpt"></select></div>
       <div class="field" id="wCat"><label class="label" for="fCat">Poste</label><select id="fCat"></select></div>
+      <div class="field" id="wRev" hidden><label class="label" for="fCatR">Type de revenu</label><select id="fCatR"></select></div>
+      <div class="field" id="wEvt" hidden><label class="label" for="fEvt">Événement (facultatif)</label><select id="fEvt" aria-describedby="fEvtHint"></select><span class="hint" id="fEvtHint">Rattachée à un événement, l'opération compte comme exceptionnelle.</span></div>
       <div class="field" id="wVers" hidden><label class="label" for="fVers">Vers le compte</label><select id="fVers"></select></div>
       <div class="field" id="wPers" hidden><label class="label" for="fPers">Personne</label><input type="text" id="fPers" list="dlPers" autocomplete="off"><datalist id="dlPers"></datalist></div>
       <div class="field" id="wEch" hidden><label class="label" for="fEch">Échéance (facultatif)</label><input type="date" id="fEch"></div>
@@ -680,6 +706,16 @@ tr.solde td{color:var(--muted)}
         <div class="row full"><button class="btn" type="submit">Enregistrer le projet</button><span id="pjMsg" class="muted"></span></div>
       </form>
     </div>
+    <div id="evtBox" hidden style="display:flex;flex-direction:column;gap:12px">
+    <div class="phead"><h3 class="sub">Événements</h3><span class="hint">Mariage, baptême, circoncision, voyage, projet…</span></div>
+    <div class="hint">Une dépense ou un revenu rattaché à un événement est <b>exceptionnel</b> : il sort des dépenses courantes, des postes et des statistiques journalières, et apparaît dans la section « Exceptionnel » des vues Mois et Année, avec le total de l'événement. Les soldes des comptes, eux, comptent tout. Les mots-clés rattachent automatiquement une saisie (« tenue mariage Awa » → Mariage Awa).</div>
+    <div id="evtList" class="evlist"></div>
+    <div class="row"><button class="btn ghost" type="button" id="evtAdd">+ Ajouter un événement</button><button class="btn" type="button" id="evtSave">Enregistrer les événements</button><span id="evtMsg" class="muted" role="status"></span></div>
+    <div class="phead"><h3 class="sub">Types de revenus</h3><span class="hint">Courant : revient chaque mois · ponctuel : exceptionnel</span></div>
+    <div class="hint">Un revenu est classé dans le premier type dont un mot-clé apparaît dans le libellé. Les revenus des types ponctuels (mission, atelier, consultance, jury…) sont comptés à part des entrées courantes.</div>
+    <div id="revList" class="evlist"></div>
+    <div class="row"><button class="btn ghost" type="button" id="revAdd">+ Ajouter un type</button><button class="btn" type="button" id="revSave">Enregistrer les types de revenus</button><span id="revMsg" class="muted" role="status"></span></div>
+    </div>
     <div id="savBox" hidden style="display:flex;flex-direction:column;gap:12px">
     <div class="phead"><h3 class="sub">Sauvegarde de vos données</h3></div>
     <div class="hint" id="savTexte"></div>
@@ -739,10 +775,26 @@ function setBiens(b){
   BIENS=(Array.isArray(b)?b:[]).map(x=>({id:x.id,nom:x.nom,type:x.type==='passif'?'passif':'actif',date_achat:x.date_achat||'',prix_achat:+x.prix_achat||0,poste:x.poste||'',mots:Array.isArray(x.mots)?x.mots:[],estimations:Array.isArray(x.estimations)?x.estimations:[],vehicule:!!x.vehicule,vidange:x.vidange||null,maison:!!x.maison,projet:x.projet||null}));
   BIEN=Object.fromEntries(BIENS.map(b=>[b.id,b]));
 }
+/* Courant / exceptionnel : types de revenus (courants ou ponctuels) et événements (mariage, voyage…) ; une dépense ou un
+   revenu rattaché à un événement, ou un revenu d'un type ponctuel, est EXCEPTIONNEL. Les soldes comptent tout. */
+let REVENUS=[], REV={};
+function setRevenus(r){
+  const def=(window.AppYaMoteur&&window.AppYaMoteur.REVENUS_DEFAUT)||[];
+  REVENUS=(Array.isArray(r)&&r.length?r:def).map(x=>({id:x.id,label:x.label,courant:!!x.courant,mots:Array.isArray(x.mots)?x.mots:[]}));
+  if(!REVENUS.some(x=>x.id==='autre'))REVENUS.push({id:'autre',label:'Autre revenu',courant:false,mots:[]});
+  REV=Object.fromEntries(REVENUS.map(x=>[x.id,x]));
+}
+setRevenus();
+let EVTS=[], EVT={};
+function setEvenements(l){
+  EVTS=(Array.isArray(l)?l:[]).map(x=>({id:x.id,nom:x.nom,type:x.type||'autre',debut:x.debut||'',fin:x.fin||'',budget:+x.budget||0,mots:Array.isArray(x.mots)?x.mots:[],note:x.note||''}));
+  EVT=Object.fromEntries(EVTS.map(x=>[x.id,x]));
+}
+const TYPES_EVT={mariage:'Mariage',bapteme:'Baptême',circoncision:'Circoncision',funerailles:'Funérailles',fete:'Fête','voyage-tourisme':'Voyage (tourisme)','voyage-mission':'Voyage (mission)','voyage-vacances':'Voyage (vacances)',sante:'Santé',projet:'Projet',autre:'Autre'};
 /* Nature d'une opération : s = sens sur le compte (+1 entrée, −1 sortie, 0 virement) */
 const NAT={depense:{l:'Dépense',s:-1},revenu:{l:'Revenu',s:1},virement:{l:'Virement',s:0},pret:{l:'Prêt accordé',s:-1},remboursement:{l:'Remboursement reçu',s:1},investissement:{l:'Investissement',s:-1}};
 const TYPES_CPT={especes:'Espèces',courant:'Compte courant',epargne:'Épargne',carte:'Carte prépayée',mobile:'Mobile money'};
-const MOTS_REVENU=['salaire','salary','prime','revenu','interet','honoraire','indemnite','bourse','vacation','perdiem','prodes'];
+const MOTS_REVENU=['salaire','salary','prime','revenu','interet','honoraire','indemnite','bourse','vacation','perdiem','per diem','prodes','frais de mission','consultance','jury','soutenance','seminaire','atelier'];
 
 /* ================= outils ================= */
 const sombre=()=>{const t=document.documentElement.getAttribute('data-theme');return t?t==='dark':!!(window.matchMedia&&matchMedia('(prefers-color-scheme: dark)').matches)};
@@ -925,7 +977,8 @@ $('syncBtn').onclick=async()=>{
 const norm=x=>{const n=NAT[x.nature]?x.nature:'depense';return {id:x.id,date:String(x.date||''),montant:+x.montant||0,libelle:String(x.libelle||''),nature:n,
   compte:x.compte||'especes',vers:x.vers||'',personne:String(x.personne||''),echeance:x.echeance||'',bien:x.bien||'',
   categorie:n==='depense'?(CAT[x.categorie]?x.categorie:'autre'):'',remarque:String(x.remarque||''),cree:String(x.cree||''),
-  vehicule:x.vehicule||'',cat_vehicule:x.cat_vehicule||'',cat_maison:x.cat_maison||'',km:+x.km||0,quantite:+x.quantite||0,unite:x.unite||''}};
+  vehicule:x.vehicule||'',cat_vehicule:x.cat_vehicule||'',cat_maison:x.cat_maison||'',km:+x.km||0,quantite:+x.quantite||0,unite:x.unite||'',
+  cat_revenu:n==='revenu'?String(x.cat_revenu||''):'',evenement:(n==='depense'||n==='revenu')?String(x.evenement||''):''}};
 const api={
   async add(doc){const x=await req('POST','/api/operations',doc);all.push(norm(x));return x},
   async addMany(docs){const xs=await req('POST','/api/operations',docs);xs.forEach(x=>all.push(norm(x)));return xs},
@@ -939,14 +992,14 @@ async function charger(silencieux){
   try{
     const d=await req('GET','/api/donnees');
     const p=d.parametres||{};
-    setPostes(p.postes);setComptes(p.comptes);setBiens(p.biens);setDevises(p.devises);DEBUT_SUIVI=p.debut_suivi||'';
+    setPostes(p.postes);setComptes(p.comptes);setBiens(p.biens);setRevenus(p.revenus);setEvenements(p.evenements);setDevises(p.devises);DEBUT_SUIVI=p.debut_suivi||'';
     all=(d.operations||[]).map(norm).filter(e=>e.date);
     budgets=p.budgets||{};
     if(!ready){ready=true;
       // au premier chargement, se placer sur le dernier mois saisi si le mois courant est vide
       if(!monthItems(cur.y,cur.m).length&&all.length){const last=all.map(e=>e.date).filter(d=>d<=today).sort().pop()||all[0].date;cur={y:+last.slice(0,4),m:+last.slice(5,7)-1}}}
     status('');if(editId&&!all.some(e=>e.id===editId))resetForm();
-    fillSelects();if(!dirty)openPostes();if(!cbDirty)openCB();renderLibs();render();
+    fillSelects();if(!dirty)openPostes();if(!cbDirty)openCB();if(!evtDirty)openEvt();renderLibs();render();
   }catch(e){if(!silencieux)status(e.message,true);if(!ready)$('list').innerHTML='<div class="empty">Impossible de lire les données.</div>'}
 }
 
@@ -955,11 +1008,20 @@ const sorted=a=>[...a].sort((x,y)=>x.date<y.date?-1:x.date>y.date?1:(x.cree<y.cr
 function monthItems(y,m){const p=`${y}-${pad(m+1)}`;return all.filter(e=>e.date.startsWith(p))}
 function yearItems(y){return all.filter(e=>e.date.startsWith(y+'-'))}
 const sum=a=>a.reduce((s,e)=>s+e.montant,0);
-const deps=a=>a.filter(e=>e.nature==='depense');
+/* type de revenu (enregistré, sinon deviné du libellé) ; exceptionnel = rattaché à un événement, ou revenu ponctuel */
+function guessCatR(lib){return guessCat(lib,REVENUS)}
+const catRev=e=>REV[e.cat_revenu]?e.cat_revenu:guessCatR(e.libelle);
+const estExc=e=>(e.nature==='depense'||e.nature==='revenu')&&(!!e.evenement||(e.nature==='revenu'&&!(REV[catRev(e)]||{}).courant));
+function guessEvt(lib){const L=normTxt(lib);const ev=EVTS.find(x=>x.mots.some(m=>{const k=normTxt(m);return k&&hasWord(L,k)}));return ev?ev.id:''}
+const deps=a=>a.filter(e=>e.nature==='depense'&&!e.evenement);      // dépenses COURANTES (statistiques, postes, couleurs des jours)
+const depsExc=a=>a.filter(e=>e.nature==='depense'&&e.evenement);    // dépenses exceptionnelles (rattachées à un événement)
 const ofNat=(a,...n)=>sum(a.filter(e=>n.includes(e.nature)));
 function byCat(items){const r={};deps(items).forEach(e=>r[e.categorie]=(r[e.categorie]||0)+e.montant);return r}
 /* Flux d'une période : entrées (revenus + remboursements) − sorties (dépenses + investissements + prêts) ; les virements sont neutres */
-function flux(items){const ent=ofNat(items,'revenu','remboursement'),dep=ofNat(items,'depense'),inv=ofNat(items,'investissement'),pre=ofNat(items,'pret');return {ent,dep,inv,pre,net:ent-dep-inv-pre}}
+/* ent = entrées courantes (revenus courants + remboursements), entX = revenus exceptionnels ; dep = dépenses courantes,
+   exc = dépenses exceptionnelles ; net compte TOUT (aucune opération n'échappe au solde) */
+function flux(items){const ent=sum(items.filter(e=>(e.nature==='revenu'&&!estExc(e))||e.nature==='remboursement')),entX=sum(items.filter(e=>e.nature==='revenu'&&estExc(e))),
+  dep=sum(deps(items)),exc=sum(depsExc(items)),inv=ofNat(items,'investissement'),pre=ofNat(items,'pret');return {ent,entX,dep,exc,inv,pre,net:ent+entX-dep-exc-inv-pre}}
 /* Effet d'une opération sur le solde d'un compte */
 function effet(e,cid){if(e.nature==='virement')return (e.vers===cid?e.montant:0)-(e.compte===cid?e.montant:0);return e.compte===cid?NAT[e.nature].s*e.montant:0}
 /* Solde d'un compte = dernier relevé noté + opérations datées APRÈS ce relevé (un relevé inclut les opérations de son jour).
@@ -1034,6 +1096,8 @@ function guessOp(lib){
   if(v&&((r.nature==='depense'&&r.categorie===v.poste)||(r.nature==='investissement'&&BIEN[r.bien]&&BIEN[r.bien].vehicule))){
     r.vehicule=r.nature==='investissement'?r.bien:v.id;const c=guessCatV(lib);r.cat_vehicule=r.nature==='investissement'?(c==='achat'?'achat':'investissement'):c}
   if(r.nature==='investissement'&&BIEN[r.bien]&&BIEN[r.bien].maison)r.cat_maison=guessCatM(lib);
+  if(r.nature==='revenu')r.cat_revenu=guessCatR(lib);
+  if(r.nature==='depense'||r.nature==='revenu')r.evenement=guessEvt(lib);
   return r;
 }
 
@@ -1051,13 +1115,16 @@ function filtreOk(e,f){
   if(!f)return true;const t=f[0],v=f.slice(2);
   if(t==='k')return e.nature==='depense'&&e.categorie===v;
   if(t==='n')return e.nature===v;
+  if(t==='e')return e.evenement===v;
+  if(t==='r')return e.nature==='revenu'&&!e.evenement&&catRev(e)===v;
+  if(t==='x')return estExc(e);
   if(t==='c')return e.compte===v||e.vers===v;
   if(t==='p')return normTxt(e.personne)===v;
   if(t==='b'){const b=BIEN[v];return e.bien===v||(!!b&&!!b.poste&&e.nature==='depense'&&e.categorie===b.poste&&(!b.date_achat||e.date>=b.date_achat))}
   return true;
 }
 function filtreNom(f){const t=f[0],v=f.slice(2);
-  if(t==='k')return (CAT[v]||CAT.autre).label;if(t==='n')return NAT[v].l;if(t==='c')return nomCpt(v);
+  if(t==='k')return (CAT[v]||CAT.autre).label;if(t==='n')return NAT[v].l;if(t==='e')return '★ '+((EVT[v]||{}).nom||v);if(t==='r')return (REV[v]||{label:v}).label;if(t==='x')return 'Exceptionnel';if(t==='c')return nomCpt(v);
   if(t==='p'){const c=creances().find(x=>x.key===v);return c?c.nom:v}if(t==='b')return (BIEN[v]||{}).nom||v;return f}
 function voirJournal(f){filtre=f;query='';$('q').value='';shown=80;render();$('list').scrollIntoView({behavior:doux(),block:'start'})}
 
@@ -1104,29 +1171,29 @@ function render(){
     const elapsed=isCur?now.getDate():days;
     const pm=cur.m===0?{y:cur.y-1,m:11}:{y:cur.y,m:cur.m-1};
     // mois en cours : on compare à la même période du mois précédent (1er → même jour)
-    const prevTot=ofNat(monthItems(pm.y,pm.m).filter(e=>!isCur||+e.date.slice(8,10)<=elapsed),'depense');
+    const prevTot=sum(deps(monthItems(pm.y,pm.m).filter(e=>!isCur||+e.date.slice(8,10)<=elapsed)));
     const pmName=new Date(pm.y,pm.m,1).toLocaleDateString('fr-FR',{month:'long'});
     let delta='—',dcol='';
     if(prevTot>0){const d=(total-prevTot)/prevTot*100;delta=(d>=0?'+':'')+fmt1(d)+' %';dcol=d>0?'var(--warn)':'var(--ok)'}
     const btot=Object.values(budgets).reduce((a,b)=>a+b,0);
     const sdj=ecartTypeJours(items,elapsed);
     const partiel=DEBUT_SUIVI&&iso(new Date(cur.y,cur.m+1,0))<DEBUT_SUIVI?`<div class="partiel">Suivi partiel : avant le ${dmy(DEBUT_SUIVI)}, seules les dépenses du véhicule (reprises de son carnet) sont notées.</div>`:'';
-    $('hero').innerHTML=partiel+stat('Dépenses du mois',fmtM(total),`${U()}${btot?` · budget ${fmtM(btot)}`:''} · ${deps(items).length} lignes`,true)+
+    $('hero').innerHTML=partiel+stat('Dépenses courantes du mois',fmtM(total),`${U()}${btot?` · budget ${fmtM(btot)}`:''} · ${deps(items).length} lignes`,true)+
       stat('Moyenne par jour',`${fmtM(total/elapsed)} <span class="sd" title="Écart type des dépenses journalières (jours sans dépense comptés à 0)"><span aria-hidden="true">(σ ${sdj===null?'—':fmtM(sdj)})</span><span class="sr">, écart type ${sdj===null?'non calculable':fmtM(sdj)+' '+U()}</span></span>`,`${U()} sur ${elapsed} jours`)+
       stat(`Vs ${isCur?'même période':'mois précédent'}`,delta,prevTot?`${fmtM(prevTot)} ${U()} ${isCur?`(1–${elapsed} ${pmName})`:`en ${pmName}`}`:'pas de données',false,dcol)+
-      stat('Entrées',fmtM(F.ent),`${U()} · revenus et remboursements`)+
+      stat('Entrées courantes',fmtM(F.ent),`${U()} · revenus courants et remboursements`)+(F.exc||F.entX?stat('Exceptionnel',fmtM(F.exc),`${U()} dépensés (événements)${F.entX?` · ${fmtM(F.entX)} reçus (ponctuels)`:''}`):'')+
       stat('Investi et prêté',fmtM(F.inv+F.pre),`${U()} · investi ${fmtM(F.inv)} · prêté ${fmtM(F.pre)}`)+
-      stat('Solde du mois',sgnM(F.net),`${U()} · entrées − sorties`,false,fluxCol)+semaines(items,days,isCur?now.getDate():0);
+      stat('Solde du mois',sgnM(F.net),`${U()} · toutes entrées − toutes sorties`,false,fluxCol)+semaines(items,days,isCur?now.getDate():0);
   }else{
-    const months=[...Array(12)].map((_,i)=>ofNat(monthItems(cur.y,i),'depense'));
+    const months=[...Array(12)].map((_,i)=>sum(deps(monthItems(cur.y,i))));
     const used=months.filter(v=>v>0).length;const mx=Math.max(...months),mi=months.indexOf(mx);
     const partielA=DEBUT_SUIVI&&`${cur.y}-01-01`<DEBUT_SUIVI?`<div class="partiel">Suivi partiel : avant le ${dmy(DEBUT_SUIVI)}, seules les dépenses du véhicule sont notées.</div>`:'';
-    $('hero').innerHTML=partielA+stat(`Dépenses ${cur.y}`,fmtM(total),U(),true)+
+    $('hero').innerHTML=partielA+stat(`Dépenses courantes ${cur.y}`,fmtM(total),U(),true)+
       stat('Moyenne mensuelle',used?fmtM(total/used):'—',`sur ${used} mois saisis`)+
       stat('Mois le plus cher',mx?fmtM(mx):'—',mx?new Date(cur.y,mi,1).toLocaleDateString('fr-FR',{month:'long'}):'')+
-      stat('Entrées',fmtM(F.ent),`${U()} · revenus et remboursements`)+
+      stat('Entrées courantes',fmtM(F.ent),`${U()} · revenus courants et remboursements`)+(F.exc||F.entX?stat('Exceptionnel',fmtM(F.exc),`${U()} dépensés (événements)${F.entX?` · ${fmtM(F.entX)} reçus (ponctuels)`:''}`):'')+
       stat('Investi et prêté',fmtM(F.inv+F.pre),`${U()} · investi ${fmtM(F.inv)} · prêté ${fmtM(F.pre)}`)+
-      stat("Solde de l'année",sgnM(F.net),`${U()} · entrées − sorties`,false,fluxCol);
+      stat("Solde de l'année",sgnM(F.net),`${U()} · toutes entrées − toutes sorties`,false,fluxCol);
   }
 
   if(!isP){
@@ -1139,17 +1206,30 @@ function render(){
       return `<button type="button" class="bar${fk===id?' sel':''}" data-c="k:${id}" aria-pressed="${fk===id}"><span class="name"><span class="dot" aria-hidden="true" style="background:${color(c.id)}"></span>${esc(c.label)}</span><div class="track"><div class="fill" style="width:${v/scale*100}%;background:${over?'var(--warn)':color(c.id)}"></div>${b?`<span class="budget" style="left:calc(${b/scale*100}% - 1px)" title="Budget ${fmtM(b)} ${U()}"></span>`:''}</div><span class="amt">${fmtM(v)}<span class="pct">${total?Math.round(v/total*100):0} %</span>${b?`<span class="over" style="color:${over?'var(--warn)':'var(--muted)'}">${over?`dépassé de ${fmtM(v-b)}`:`reste ${fmtM(b-v)}`}</span>`:''}</span></button>`}).join('')
       :'<div class="empty">Aucune dépense sur cette période.</div>';
 
+    /* exceptionnel : par événement (dépenses, revenus, budget) puis revenus ponctuels hors événement, par type */
+    {const parEvt=new Map(),parRev=new Map();
+      items.filter(estExc).forEach(e=>{if(e.evenement){const x=parEvt.get(e.evenement)||{dep:0,ent:0,n:0};if(e.nature==='depense')x.dep+=e.montant;else x.ent+=e.montant;x.n++;parEvt.set(e.evenement,x)}
+        else{const k=catRev(e),x=parRev.get(k)||{ent:0,n:0};x.ent+=e.montant;x.n++;parRev.set(k,x)}});
+      const fsel=filtre;let h='';
+      for(const [id,x] of [...parEvt].sort((a,b)=>(b[1].dep+b[1].ent)-(a[1].dep+a[1].ent))){const ev=EVT[id]||{nom:id,type:'autre',budget:0};
+        const totDep=sum(all.filter(e=>e.evenement===id&&e.nature==='depense')),bud=ev.budget;
+        h+=`<button type="button" class="excrow${fsel==='e:'+id?' sel':''}" data-f="e:${id}" aria-pressed="${fsel==='e:'+id}"><span class="excnom">★ ${esc(ev.nom)} <span class="hint">${esc(TYPES_EVT[ev.type]||'')}${ev.debut?' · '+dmy(ev.debut)+(ev.fin&&ev.fin!==ev.debut?' → '+dmy(ev.fin):''):''}</span></span>`+
+          `<span class="excval">${x.dep?`<span>dépensé <b>${fmtM(x.dep)}</b></span>`:''}${x.ent?`<span class="in">reçu <b>${fmtM(x.ent)}</b></span>`:''}${x.dep&&x.ent?`<span>net <b>${sgnM(x.ent-x.dep)}</b></span>`:''}${bud?`<span${totDep>bud?' style="color:var(--warn)"':''}>budget ${fmtM(totDep)} / ${fmtM(bud)}</span>`:''}</span></button>`}
+      for(const [k,x] of [...parRev].sort((a,b)=>b[1].ent-a[1].ent))
+        h+=`<button type="button" class="excrow${fsel==='r:'+k?' sel':''}" data-f="r:${k}" aria-pressed="${fsel==='r:'+k}"><span class="excnom">${esc((REV[k]||{label:k}).label)} <span class="hint">revenu ponctuel · ${x.n} ligne${x.n>1?'s':''}</span></span><span class="excval"><span class="in">reçu <b>${fmtM(x.ent)}</b></span></span></button>`;
+      $('excPanel').hidden=!h;$('excList').innerHTML=h;}
+
     /* rythme (dépenses) */
     if(!isM){
       const months=[...Array(12)].map((_,i)=>monthItems(cur.y,i));
-      const tots=months.map(it=>ofNat(it,'depense'));const mx=Math.max(1,...tots);
+      const tots=months.map(it=>sum(deps(it)));const mx=Math.max(1,...tots);
       $('chartTitle').textContent='Dépenses par mois';$('chartHint').textContent='Touchez un mois pour l\'ouvrir';
       $('chart').style.gridTemplateColumns='repeat(12,1fr)';
       $('chart').innerHTML=tots.map((v,i)=>`<button type="button" class="wk" data-m="${i}" aria-label="${MOIS[i]} : ${fmtM(v)} ${U()}"><span class="v">${v?fmt(v/1000)+'k':''}</span><div class="col" style="height:${v/mx*72}%"></div><span class="d">${MOIS[i].slice(0,4)}</span></button>`).join('');
       const used=CATS.filter(c=>deps(items).some(e=>e.categorie===c.id));
       $('yearTblWrap').hidden=!items.length;
-      const ligne=(lab,it,attr)=>{const b=byCat(it),f=flux(it);return `<tr${attr}><td>${lab}</td>${used.map(c=>`<td>${b[c.id]?fmtM(b[c.id]):'–'}</td>`).join('')}<td><b>${fmtM(f.dep)}</b></td><td>${f.ent?fmtM(f.ent):'–'}</td><td>${f.inv+f.pre?fmtM(f.inv+f.pre):'–'}</td><td style="color:${f.net>=0?'var(--ok)':'var(--warn)'}">${sgnM(f.net)}</td></tr>`};
-      $('yearTbl').innerHTML=`<thead><tr><th>Mois</th>${used.map(c=>`<th>${esc(c.label)}</th>`).join('')}<th>Dépenses</th><th>Entrées</th><th>Investi, prêté</th><th>Solde</th></tr></thead><tbody>`+
+      const ligne=(lab,it,attr)=>{const b=byCat(it),f=flux(it);return `<tr${attr}><td>${lab}</td>${used.map(c=>`<td>${b[c.id]?fmtM(b[c.id]):'–'}</td>`).join('')}<td><b>${fmtM(f.dep)}</b></td><td>${f.exc?fmtM(f.exc):'–'}</td><td>${f.ent?fmtM(f.ent):'–'}</td><td>${f.entX?fmtM(f.entX):'–'}</td><td>${f.inv+f.pre?fmtM(f.inv+f.pre):'–'}</td><td style="color:${f.net>=0?'var(--ok)':'var(--warn)'}">${sgnM(f.net)}</td></tr>`};
+      $('yearTbl').innerHTML=`<thead><tr><th>Mois</th>${used.map(c=>`<th>${esc(c.label)}</th>`).join('')}<th>Dépenses courantes</th><th>Exceptionnel</th><th>Entrées courantes</th><th>Revenus ponctuels</th><th>Investi, prêté</th><th>Solde</th></tr></thead><tbody>`+
         months.map((it,i)=>it.length?ligne(new Date(cur.y,i,1).toLocaleDateString('fr-FR',{month:'long'}),it,` class="click" data-m="${i}"`):'').join('')+
         ligne('Total',items,' class="tot"')+'</tbody>';
     }
@@ -1160,17 +1240,17 @@ function render(){
 
   /* journal */
   let jl=items.slice().reverse().filter(e=>filtreOk(e,filtre));
-  if(query){const q=normTxt(query);jl=jl.filter(e=>normTxt(e.libelle+' '+e.remarque+' '+e.personne).includes(q))}
+  if(query){const q=normTxt(query);jl=jl.filter(e=>normTxt(e.libelle+' '+e.remarque+' '+e.personne+' '+((EVT[e.evenement]||{}).nom||'')).includes(q))}
   const filt=[];if(filtre)filt.push(filtreNom(filtre));if(query)filt.push(`« ${query} »`);
   const fj=flux(jl);
-  $('jSub').innerHTML=`${jl.length} lignes · dépenses ${fmtM(fj.dep)}${fj.ent?` · entrées ${fmtM(fj.ent)}`:''} ${U()}`+(filt.length?` · ${esc(filt.join(', '))} · <a href="#" id="clr" style="color:var(--accent)">tout afficher</a>`:'');
+  $('jSub').innerHTML=`${jl.length} lignes · dépenses ${fmtM(fj.dep)}${fj.exc?` + ${fmtM(fj.exc)} exceptionnelles`:''}${fj.ent+fj.entX?` · entrées ${fmtM(fj.ent+fj.entX)}`:''} ${U()}`+(filt.length?` · ${esc(filt.join(', '))} · <a href="#" id="clr" style="color:var(--accent)">tout afficher</a>`:'');
   const clr=$('clr');if(clr)clr.onclick=ev=>{ev.preventDefault();filtre='';query='';$('q').value='';render()};
-  const page=jl.slice(0,shown);const dayDep={},dayEnt={};jl.forEach(e=>{if(e.nature==='depense')dayDep[e.date]=(dayDep[e.date]||0)+e.montant;if(NAT[e.nature].s>0)dayEnt[e.date]=(dayEnt[e.date]||0)+e.montant});
+  const page=jl.slice(0,shown);const dayDep={},dayDepC={},dayEnt={};jl.forEach(e=>{if(e.nature==='depense'){dayDep[e.date]=(dayDep[e.date]||0)+e.montant;if(!e.evenement)dayDepC[e.date]=(dayDepC[e.date]||0)+e.montant}if(NAT[e.nature].s>0)dayEnt[e.date]=(dayEnt[e.date]||0)+e.montant});
   let html='',curD=null;const SJ=seuilsJour();
   // légende retirée et niveau non écrit à l'écran (demande du 2026-11-13) : seule la couleur de la journée reste visible
   for(const e of page){
     if(e.date!==curD){curD=e.date;const dl=new Date(e.date+'T12:00:00').toLocaleDateString('fr-FR',{weekday:'long',day:'numeric',month:'long',...(isP?{year:'numeric'}:{})});
-      const nv=SJ&&dayDep[e.date]?niveauJour(dayDep[e.date],SJ):null;
+      const nv=SJ&&dayDepC[e.date]?niveauJour(dayDepC[e.date],SJ):null;
       html+=`<div class="dayhead${nv?' j-'+nv.cls:''}"><strong>${dl}</strong><span class="num">${nv?`<span class="sr">dépenses de la journée : niveau ${nv.l}, </span>`:''}${dayEnt[e.date]?`<span class="in">+${fmt(dayEnt[e.date])}</span> `:''}${dayDep[e.date]?fmt(dayDep[e.date]):''}</span></div>`}
     const s=NAT[e.nature].s;
     html+=`<div class="item${editId===e.id?' editing':''}" data-id="${e.id}"><button type="button" class="lib"${editId===e.id?' aria-current="true"':''}><span class="sr">Modifier : </span><span>${esc(e.libelle)}</span><span class="tag">${opTag(e)}${e.remarque?` · ${esc(e.remarque)}`:''}</span></button><span class="amt${s>0?' in':s===0?' muted':''}">${s>0?'+':''}${fmt(e.montant)}<span class="sr"> ${U()}</span></span><button type="button" class="del" data-del="${e.id}" aria-label="Supprimer ${esc(e.libelle)}">✕</button></div>`;
@@ -1207,9 +1287,10 @@ function seuilsJour(){
 const niveauJour=(v,S)=>v<=S.bas?{cls:'bas',l:'bas'}:v<=S.haut?{cls:'moy',l:'moyen'}:{cls:'haut',l:'élevé'};
 function opTag(e){
   const cn=dotCpt(e.compte)+esc(nomCpt(e.compte));
+  const evTag=e.evenement?` · <span class="nat exc">★ ${esc((EVT[e.evenement]||{}).nom||e.evenement)}</span>`:'';
   switch(e.nature){
-    case 'depense':{const p=CAT[e.categorie]||CAT.autre;return `<span class="dot" aria-hidden="true" style="background:${color(p.id)}"></span>${esc(p.label)}${e.compte!=='especes'?` · ${cn}`:''}`}
-    case 'revenu':return `<span class="nat in">Revenu</span> · ${cn}`;
+    case 'depense':{const p=CAT[e.categorie]||CAT.autre;return `<span class="dot" aria-hidden="true" style="background:${color(p.id)}"></span>${esc(p.label)}${e.compte!=='especes'?` · ${cn}`:''}${evTag}`}
+    case 'revenu':{const r=REV[catRev(e)]||{label:'',courant:true};return `<span class="nat in">Revenu</span> · ${esc(r.label)}${!r.courant&&!e.evenement?' <span class="nat exc">ponctuel</span>':''} · ${cn}${evTag}`}
     case 'virement':return `<span class="nat">Virement</span> · ${cn} → ${dotCpt(e.vers)}${esc(nomCpt(e.vers))}`;
     case 'pret':return `<span class="nat out">Prêt</span> · ${esc(e.personne)} · ${cn}${e.echeance?` · échéance ${dmy(e.echeance)}`:''}`;
     case 'remboursement':return `<span class="nat in">Remboursement</span> · ${esc(e.personne)} · ${cn}`;
@@ -1301,6 +1382,7 @@ $('aDon').onclick=()=>{retourVue=null;view='donnees';render()};
 function openMonth(ev){const t=ev.target.closest('[data-m]');if(!t)return;cur.m=+t.dataset.m;view='mois';render();window.scrollTo({top:0,behavior:doux()})}
 $('chart').addEventListener('click',openMonth);$('yearTbl').addEventListener('click',openMonth);
 $('bars').addEventListener('click',ev=>{const b=ev.target.closest('[data-c]');if(!b)return;filtre=filtre===b.dataset.c?'':b.dataset.c;render()});
+$('excList').addEventListener('click',ev=>{const b=ev.target.closest('[data-f]');if(!b)return;filtre=filtre===b.dataset.f?'':b.dataset.f;render()});
 let qT;$('q').addEventListener('input',()=>{clearTimeout(qT);qT=setTimeout(()=>{query=$('q').value.trim();render()},200)});
 $('more').onclick=()=>{shown+=150;render()};
 
@@ -1515,6 +1597,8 @@ function fillSelects(){
   $('fCat').innerHTML=optsPostes(CAT[v.cat]?v.cat:'autre');$('fVers').innerHTML=optsComptes(v.vers);$('fBien').innerHTML=optsBiens(v.bien);
   $('dlPers').innerHTML=creances().map(c=>`<option value="${esc(c.nom)}">`).join('');
   const cm=$('fCatM').value;$('fCatM').innerHTML=CATS_M.map(c=>`<option value="${c.id}"${c.id===cm?' selected':''}>${esc(c.l)}</option>`).join('');
+  const cr=$('fCatR').value;$('fCatR').innerHTML=REVENUS.map(r=>`<option value="${r.id}"${r.id===cr?' selected':''}>${esc(r.label)} (${r.courant?'courant':'ponctuel'})</option>`).join('');
+  const ce=$('fEvt').value;$('fEvt').innerHTML='<option value="">— aucun : opération courante —</option>'+[...EVTS].sort((a,b)=>(b.debut||'').localeCompare(a.debut||'')).map(x=>`<option value="${x.id}"${x.id===ce?' selected':''}>★ ${esc(x.nom)}</option>`).join('');
   const cv=$('fCatV').value;$('fCatV').innerHTML=CATS_V.map(c=>`<option value="${c.id}"${c.id===cv?' selected':''}>${c.l}</option>`).join('');
   if(!editId&&!touched.nat)deviner();majChamps();
 }
@@ -1522,6 +1606,7 @@ function majChamps(){
   const n=$('fNat').value;
   $('wCat').hidden=n!=='depense';$('wVers').hidden=n!=='virement';$('wPers').hidden=!(n==='pret'||n==='remboursement');
   $('wEch').hidden=n!=='pret';$('wBien').hidden=n!=='investissement';
+  $('wRev').hidden=n!=='revenu';$('wEvt').hidden=!((n==='depense'||n==='revenu')&&EVTS.length);
   // champs du véhicule : dépense du poste du véhicule, ou investissement dans un bien véhicule
   const v=VEH(),ctx=v&&((n==='depense'&&$('fCat').value===v.poste)||(n==='investissement'&&BIEN[$('fBien').value]&&BIEN[$('fBien').value].vehicule));
   $('wVeh').hidden=!ctx;
@@ -1540,6 +1625,8 @@ function deviner(){
   if(!touched.cat)$('fCat').value=g.nature==='depense'?g.categorie:guessCat(lib);
   if(!touched.catv&&g.cat_vehicule)$('fCatV').value=g.cat_vehicule;
   if(!touched.catm&&g.cat_maison)$('fCatM').value=g.cat_maison;
+  if(!touched.rev&&g.cat_revenu)$('fCatR').value=g.cat_revenu;
+  if(!touched.evt)$('fEvt').value=g.evenement||'';
   majChamps();
   // ce que la reconnaissance a réglé (champs non modifiés à la main), affiché sous le libellé
   const n=$('fNat').value,bits=[];
@@ -1548,6 +1635,8 @@ function deviner(){
   if(n==='virement'&&!touched.vers)bits.push(`${nomCpt($('fCpt').value)} → ${nomCpt($('fVers').value)}`);
   else if(!touched.cpt)bits.push(($('fCptLab').textContent||'').toLowerCase()+' '+nomCpt($('fCpt').value));
   if(n==='investissement'&&!touched.bien&&BIEN[$('fBien').value])bits.push('bien '+BIEN[$('fBien').value].nom);
+  if(n==='revenu'&&!touched.rev&&REV[$('fCatR').value]){const r=REV[$('fCatR').value];bits.push(`${r.label} (${r.courant?'courant':'ponctuel'})`)}
+  if(!$('wEvt').hidden&&!touched.evt&&EVT[$('fEvt').value])bits.push('★ '+EVT[$('fEvt').value].nom+' (exceptionnel)');
   if((n==='pret'||n==='remboursement')&&!touched.pers&&$('fPers').value)bits.push($('fPers').value);
   $('fLibHint').textContent=bits.length?'Reconnu : '+bits.join(' · ')+' (modifiable ci-dessous)':'';
 }
@@ -1557,17 +1646,17 @@ const AMT_HINT='10 = 10 000 CFA · 0,5 = 500 CFA · 1750 = 1 750 000';
 function amtHint(){const v=cfa($('fAmt').value);$('fAmtHint').textContent=v>0?`= ${fmtC(v)} FCFA`:($('fAmt').value.trim()?'Montant non reconnu':AMT_HINT)}
 $('fAmt').addEventListener('input',amtHint);
 ['input','change','compositionend'].forEach(t=>$('fLib').addEventListener(t,deviner));   // claviers de téléphone : la saisie prédictive n'émet pas toujours « input »
-[['fNat','nat'],['fCpt','cpt'],['fCat','cat'],['fVers','vers'],['fBien','bien'],['fPers','pers'],['fCatV','catv'],['fCatM','catm']].forEach(([i,k])=>$(i).addEventListener(i==='fPers'?'input':'change',()=>{touched[k]=true;majChamps()}));
+[['fNat','nat'],['fCpt','cpt'],['fCat','cat'],['fVers','vers'],['fBien','bien'],['fPers','pers'],['fCatV','catv'],['fCatM','catm'],['fCatR','rev'],['fEvt','evt']].forEach(([i,k])=>$(i).addEventListener(i==='fPers'?'input':'change',()=>{touched[k]=true;majChamps()}));
 $('fKm').addEventListener('input',majChamps);
-const tabs=[['tOne','oneForm'],['tPaste','pasteBox'],['tPostes','posteBox'],['tCB','cbBox'],['tVid','vidPanel'],['tMai','maiPanel'],['tPar','paritesBox'],['tSav','savBox']];
+const tabs=[['tOne','oneForm'],['tPaste','pasteBox'],['tPostes','posteBox'],['tCB','cbBox'],['tEvt','evtBox'],['tVid','vidPanel'],['tMai','maiPanel'],['tPar','paritesBox'],['tSav','savBox']];
 function showTab(t,focus){tabs.forEach(([tt,p])=>{const on=tt===t;$(tt).setAttribute('aria-selected',on);$(tt).tabIndex=on?0:-1;$(p).hidden=!on});if(focus)$(t).focus()}
 tabs.forEach(([t,p])=>{$(t).setAttribute('aria-controls',p);$(t).type='button';$(p).setAttribute('role','tabpanel');$(p).setAttribute('aria-labelledby',t)});
 document.querySelector('.tabs').addEventListener('keydown',ev=>{
   const i=tabs.findIndex(([t])=>t===ev.target.id);if(i<0)return;
   const j={ArrowRight:i+1,ArrowLeft:i-1,Home:0,End:tabs.length-1}[ev.key];if(j===undefined)return;
   ev.preventDefault();showTab(tabs[(j+tabs.length)%tabs.length][0],true)});
-tabs.forEach(([t])=>$(t).onclick=()=>showTab(t));showTab('tOne');
-function resetForm(){['fAmt','fLib','fRem','fPers','fEch','fKm','fQty'].forEach(i=>$(i).value='');$('fLibHint').textContent='';$('fUnit').value='L';$('fVid').checked=true;touched={};$('fNat').value='depense';$('fCpt').value='especes';$('fCat').value='autre';editId=null;$('editBar').hidden=true;$('addBtn').textContent='Ajouter';majChamps();amtHint();render()}
+tabs.forEach(([t])=>$(t).onclick=()=>{if(t==='tEvt'&&!evtDirty)openEvt();showTab(t)});showTab('tOne');
+function resetForm(){['fAmt','fLib','fRem','fPers','fEch','fKm','fQty'].forEach(i=>$(i).value='');$('fLibHint').textContent='';$('fUnit').value='L';$('fVid').checked=true;touched={};$('fNat').value='depense';$('fCpt').value='especes';$('fCat').value='autre';$('fEvt').value='';editId=null;$('editBar').hidden=true;$('addBtn').textContent='Ajouter';majChamps();amtHint();render()}
 /* fenêtre de confirmation : résumé lisible de l'opération avant l'enregistrement (Échap ou « Modifier » = annuler) */
 function confirmerOp(doc,opt={}){
   const dlg=$('dlgOp');
@@ -1576,6 +1665,8 @@ function confirmerOp(doc,opt={}){
   if(doc.nature==='virement')lignes.push(['Virement',`${nomCpt(doc.compte)} → ${nomCpt(doc.vers)}`]);
   else lignes.push([{revenu:'Reçu sur',remboursement:'Reçu sur'}[doc.nature]||'Payé avec',nomCpt(doc.compte)]);
   if(doc.nature==='depense')lignes.push(['Poste',(CAT[doc.categorie]||{}).label||doc.categorie]);
+  if(doc.cat_revenu){const r=REV[doc.cat_revenu]||{label:doc.cat_revenu};lignes.push(['Type de revenu',`${r.label} (${r.courant?'courant':'ponctuel'})`])}
+  if(doc.evenement)lignes.push(['Événement',`★ ${(EVT[doc.evenement]||{}).nom||doc.evenement} : opération exceptionnelle`]);
   if(doc.personne)lignes.push(['Personne',doc.personne]);
   if(doc.echeance)lignes.push(['Échéance',dmy(doc.echeance)]);
   if(doc.bien)lignes.push(['Bien',(BIEN[doc.bien]||{}).nom||doc.bien]);
@@ -1605,7 +1696,8 @@ function startEdit(id){
   $('fDate').value=e.date;$('fAmt').value=enMilliers(e.montant);$('fLib').value=e.libelle;$('fNat').value=e.nature;$('fCpt').value=e.compte;
   $('fCat').value=e.categorie||'autre';$('fVers').value=e.vers;$('fPers').value=e.personne;$('fEch').value=e.echeance;$('fBien').value=e.bien;$('fRem').value=e.remarque;
   $('fCatM').value=e.cat_maison||guessCatM(e.libelle);$('fCatV').value=e.cat_vehicule||guessCatV(e.libelle);$('fKm').value=e.km||'';$('fQty').value=e.quantite?String(e.quantite).replace('.',','):'';$('fUnit').value=e.unite==='u'?'u':'L';$('fVid').checked=false;
-  touched={nat:1,cpt:1,cat:1,vers:1,pers:1,bien:1,catv:1,catm:1};majChamps();
+  $('fCatR').value=e.nature==='revenu'?catRev(e):'autre';$('fEvt').value=e.evenement||'';
+  touched={nat:1,cpt:1,cat:1,vers:1,pers:1,bien:1,catv:1,catm:1,rev:1,evt:1};majChamps();
   $('editBar').hidden=false;$('editWhat').textContent=`${e.libelle}, ${fmtC(e.montant)} FCFA`;
   $('addBtn').textContent='Enregistrer les modifications';$('addMsg').textContent='';amtHint();render();
   window.scrollTo({top:0,behavior:doux()});
@@ -1619,6 +1711,8 @@ function docOp(o){
   if(o.vehicule&&(o.nature==='depense'||o.nature==='investissement')){d.vehicule=o.vehicule;d.cat_vehicule=o.cat_vehicule||'autre';
     if(o.km>0)d.km=o.km;if(o.quantite>0){d.quantite=o.quantite;d.unite=o.unite||'L'}}
   if(o.nature==='investissement'&&o.cat_maison)d.cat_maison=o.cat_maison;
+  if(o.nature==='revenu')d.cat_revenu=o.cat_revenu||guessCatR(o.libelle);
+  if((o.nature==='depense'||o.nature==='revenu')&&o.evenement)d.evenement=o.evenement;
   if(o.remarque)d.remarque=o.remarque;
   return d;
 }
@@ -1639,6 +1733,7 @@ $('oneForm').addEventListener('submit',async ev=>{
     const doc=docOp({date:$('fDate').value,montant,libelle,nature,compte:$('fCpt').value,categorie:$('fCat').value,vers:$('fVers').value,
       personne:nature==='pret'||nature==='remboursement'?personneConnue($('fPers').value.trim()):'',echeance:$('fEch').value,bien:$('fBien').value,
       vehicule:avecVeh?(nature==='investissement'?$('fBien').value:VEH().id):'',cat_maison:$('wMai').hidden?'':$('fCatM').value,cat_vehicule:$('fCatV').value,km,quantite:qte,unite:$('fUnit').value,
+      cat_revenu:$('fCatR').value,evenement:$('wEvt').hidden?'':$('fEvt').value,
       remarque:$('fRem').value.trim(),cree:old?old.cree:new Date().toISOString()});
     const nouvVid=avecVeh&&!$('vidBox').hidden&&$('fVid').checked&&km>0;
     if(!await confirmerOp(doc,{edition:!!editId,vidange:nouvVid?km+vidangeDe(VEH()).intervalle:0})){$('addMsg').textContent='Rien n\'a été enregistré : corrigez puis validez à nouveau.';$('addBtn').disabled=false;return}
@@ -1708,6 +1803,12 @@ function parseList(text,fallback){
   return out;
 }
 function pvDetail(e,i){
+  const evt=e.evenement&&EVT[e.evenement]?` <span class="nat exc">★ ${esc(EVT[e.evenement].nom)}</span>`:'';
+  if(e.nature==='revenu')return `<select data-i="${i}" data-k="cat_revenu" aria-label="Type de revenu, ligne ${i+1}">${REVENUS.map(r=>`<option value="${r.id}"${r.id===e.cat_revenu?' selected':''}>${esc(r.label)}</option>`).join('')}</select>${evt}`;
+  if(e.nature==='depense')return pvDetailBase(e,i)+evt;
+  return pvDetailBase(e,i);
+}
+function pvDetailBase(e,i){
   const veh=e.vehicule?` <span class="hint">${esc([CATV[e.cat_vehicule]?.l||'Autre'].concat(e.quantite?[nb(e.quantite,2)+' '+(e.unite==='u'?'u.':'L')]:[],e.km?[nb(e.km)+' km']:[]).join(' · '))}</span>`:'';
   if(e.nature==='depense')return `<select data-i="${i}" data-k="categorie" aria-label="Poste, ligne ${i+1}">${optsPostes(e.categorie)}</select>${veh}`;
   if(e.nature==='virement')return `→ <select data-i="${i}" data-k="vers" aria-label="Vers le compte, ligne ${i+1}">${optsComptes(e.vers,e.compte)}</select>`;
@@ -1730,6 +1831,7 @@ $('parseBtn').onclick=()=>{
 $('pvBody').addEventListener('change',ev=>{const s=ev.target.closest('[data-i]');if(!s)return;const e=parsed[+s.dataset.i],k=s.dataset.k;
   e[k]=k==='personne'?s.value.trim():s.value;
   if(k==='nature'){const g=guessOp(e.libelle);if(e.nature==='depense')e.categorie=e.categorie||g.categorie||guessCat(e.libelle);
+    if(e.nature==='revenu')e.cat_revenu=e.cat_revenu||guessCatR(e.libelle);
     if(e.nature==='virement'&&(!e.vers||e.vers===e.compte))e.vers=COMPTES.find(c=>c.id!==e.compte).id;
     if((e.nature==='pret'||e.nature==='remboursement')&&!e.personne)e.personne=extrairePersonne(e.libelle);
     if(!(e.nature==='depense'||e.nature==='investissement'))e.vehicule='';
@@ -2151,7 +2253,7 @@ function dessinerSemaine(w,P){
 /* ---------- 5. libellés les plus coûteux ---------- */
 function dessinerLibelles(w,P){
   const g=new Map();deps(P.ops).forEach(e=>{const k=normTxt(e.libelle);let x=g.get(k);if(!x){x={lab:e.libelle.trim(),v:0,n:0,cat:e.categorie};g.set(k,x)}x.v+=e.montant;x.n++});
-  const tot=ofNat(P.ops,'depense'),top=[...g.values()].sort((a,b)=>b.v-a.v).slice(0,8),fig=$('figLibelles');
+  const tot=sum(deps(P.ops)),top=[...g.values()].sort((a,b)=>b.v-a.v).slice(0,8),fig=$('figLibelles');
   fig.querySelector('.plot').innerHTML=top.length?svgBarresH(w,top,i=>`${top[i].lab} : ${fmt(top[i].v)} ${U()}, ${top[i].n} fois, ${fmt1(top[i].v/tot*100)} % des dépenses`):'<div class="empty">Aucune dépense sur la période.</div>';
   lierTips(fig,i=>({titre:top[i].lab,lignes:[{cls:'k-s1',val:`${fmt(top[i].v)} ${U()}`,lab:`${fmt1(top[i].v/tot*100)} % des dépenses`},{val:`${top[i].n} fois`,lab:`· ${(CAT[top[i].cat]||CAT.autre).label}`}]}));
   fig.querySelector('.vd').innerHTML=tableDonnees(['Libellé','Total','Fois','Part'],top.map(x=>[x.lab,fmt(x.v),x.n,fmt1(x.v/tot*100)+' %']));
@@ -2200,7 +2302,7 @@ function analyser(P,M,H,S,L){
     if(nmin>=2)co.push(`Le ${JOURS_L[imax]} est en moyenne le jour le plus dépensier (${fmt(S.moy[imax])} ${U()}), le ${JOURS_L[imin]} le plus calme (${fmt(S.moy[imin])} ${U()}). Avec ${nmin===nmax?nmin:nmin+' à '+nmax} jours observés par jour de semaine, cet écart reste indicatif.`);
   }else co.push(`La période ne compte que ${P.n} jour${P.n>1?'s':''} de dépenses notées : les moyennes ne sont pas encore significatives.`);
   if(M.B&&M.el)co.push(`Au même stade, ${M.C.nom} totalisait ${fmt(M.prevMeme)} ${U()} contre ${fmt(M.tot)} ${U()} pour ${P.nom}${M.prevMeme?` (${pct(M.tot/M.prevMeme-1)})`:''}.`);
-  const bc=byCat(P.ops),tp=ofNat(P.ops,'depense'),top=Object.entries(bc).sort((a,b)=>b[1]-a[1])[0];
+  const bc=byCat(P.ops),tp=sum(deps(P.ops)),top=Object.entries(bc).sort((a,b)=>b[1]-a[1])[0];
   if(top&&tp)co.push(`Premier poste : ${(CAT[top[0]]||CAT.autre).label}, ${fmt1(top[1]/tp*100)} % des dépenses courantes${L.top[0]?` ; premier libellé : « ${L.top[0].lab} » (${fmt(L.top[0].v)} ${U()}, ${L.top[0].n} fois)`:''}.`);
   const comp=moisSuivis(P).filter(x=>x.f.ent>0);
   comp.forEach(x=>{const ep=all.filter(e=>e.nature==='virement'&&e.date.startsWith(`${x.y}-${pad(x.m+1)}`)&&(CPT[e.vers]||{}).type==='epargne').reduce((a,e)=>a+e.montant,0);
@@ -2268,15 +2370,19 @@ function periodeFinanciere(){const v=vueFin;
 }
 function feuillesFinancier(X){
   const P=periodeFinanciere(),items=sorted(P.items),F=[];
-  F.push(['Journal',feuille(X,[["Date","Nature","Montant (CFA)","Libellé","Poste","Compte","Vers","Personne","Bien","Remarque"]].concat(items.map(e=>[serial(e.date),NAT[e.nature].l,e.montant,e.libelle,
-    e.nature==='depense'?(CAT[e.categorie]||CAT.autre).label:null,nomCpt(e.compte),e.vers?nomCpt(e.vers):null,e.personne||null,e.bien?(BIEN[e.bien]||{}).nom:null,e.remarque||null])),
-    [11,18,14,34,18,14,14,18,18,24],{A:'dd/mm/yyyy',C:'#,##0'},true)]);
-  const bp=byCat(items),tp=ofNat(items,'depense');
+  F.push(['Journal',feuille(X,[["Date","Nature","Montant (CFA)","Libellé","Poste / type de revenu","Courant ou exceptionnel","Événement","Compte","Vers","Personne","Bien","Remarque"]].concat(items.map(e=>[serial(e.date),NAT[e.nature].l,e.montant,e.libelle,
+    e.nature==='depense'?(CAT[e.categorie]||CAT.autre).label:e.nature==='revenu'?(REV[catRev(e)]||{label:''}).label:null,(e.nature==='depense'||e.nature==='revenu')?(estExc(e)?'exceptionnel':'courant'):null,
+    e.evenement?(EVT[e.evenement]||{}).nom||e.evenement:null,nomCpt(e.compte),e.vers?nomCpt(e.vers):null,e.personne||null,e.bien?(BIEN[e.bien]||{}).nom:null,e.remarque||null])),
+    [11,18,14,34,22,14,18,14,14,18,18,24],{A:'dd/mm/yyyy',C:'#,##0'},true)]);
+  const bp=byCat(items),tp=sum(deps(items));
   F.push(['Par poste',feuille(X,[["Poste","Montant (CFA)","Part","Budget mensuel (CFA)"]].concat(CATS.filter(c=>bp[c.id]).sort((a,b)=>bp[b.id]-bp[a.id]).map(c=>[c.label,bp[c.id],tp?bp[c.id]/tp:0,budgets[c.id]||null]),[["Total",tp,1,null]]),
     [18,15,9,20],{B:'#,##0',C:'0.0%',D:'#,##0'})]);
   const used=CATS.filter(c=>deps(all).some(e=>e.categorie===c.id)),mois=[...new Set(all.map(e=>e.date.slice(0,7)))].sort(),ba=byCat(all),fa=flux(all);
-  F.push(['Récap mensuel',feuille(X,[["Mois",...used.map(c=>c.label),"Dépenses","Entrées","Investissements","Prêts","Solde"]].concat(mois.map(m=>{const it=all.filter(e=>e.date.startsWith(m)),b=byCat(it),f=flux(it);
-    return [moisLong(m),...used.map(c=>b[c.id]||0),f.dep,f.ent,f.inv,f.pre,f.net]}),[["Total",...used.map(c=>ba[c.id]||0),fa.dep,fa.ent,fa.inv,fa.pre,fa.net]]),[16].concat(used.map(()=>14),[13,13,15,12,13]))]);
+  F.push(['Récap mensuel',feuille(X,[["Mois",...used.map(c=>c.label),"Dépenses courantes","Dépenses exceptionnelles","Entrées courantes","Revenus ponctuels","Investissements","Prêts","Solde"]].concat(mois.map(m=>{const it=all.filter(e=>e.date.startsWith(m)),b=byCat(it),f=flux(it);
+    return [moisLong(m),...used.map(c=>b[c.id]||0),f.dep,f.exc,f.ent,f.entX,f.inv,f.pre,f.net]}),[["Total",...used.map(c=>ba[c.id]||0),fa.dep,fa.exc,fa.ent,fa.entX,fa.inv,fa.pre,fa.net]]),[16].concat(used.map(()=>14),[13,13,13,13,15,12,13]))]);
+  const evx=EVTS.filter(x=>all.some(e=>e.evenement===x.id));
+  if(evx.length)F.push(['Événements',feuille(X,[["Événement","Type","Début","Fin","Dépenses","Revenus","Net","Budget"]].concat(evx.map(x=>{const it=all.filter(e=>e.evenement===x.id),d=sum(it.filter(e=>e.nature==='depense')),r=sum(it.filter(e=>e.nature==='revenu'));
+    return [x.nom,TYPES_EVT[x.type]||'',x.debut?dmy(x.debut):null,x.fin?dmy(x.fin):null,d,r,r-d,x.budget||null]})),[24,16,11,11,13,13,13,13],{E:'#,##0',F:'#,##0',G:'#,##0',H:'#,##0'})]);
   F.push(['Comptes',feuille(X,[["Compte","Type","Solde (CFA)","Dernier relevé","Solde du relevé"]].concat(COMPTES.map(c=>{const s=etatCompte(c);return [c.nom,TYPES_CPT[c.type]||'',s.solde,s.last?dmy(s.last.date):null,s.last?s.last.solde:null]})),[18,16,14,14,14],{C:'#,##0',E:'#,##0'})]);
   F.push(['Prêts',feuille(X,[["Personne","Prêté","Remboursé","Reste dû","Échéance"]].concat(creances().map(c=>[c.nom,c.prete,c.rembourse,c.reste,c.echeance?dmy(c.echeance):null])),[20,12,12,12,12],{B:'#,##0',C:'#,##0',D:'#,##0'})]);
   F.push(['Biens',feuille(X,[["Bien","Type","Date d'achat","Prix d'achat","Investissements","Coût de revient","Valeur actuelle","Plus/moins-value","Taux annuel"]].concat(BIENS.map(b=>{const s=etatBien(b);return [b.nom,b.type,b.date_achat?dmy(b.date_achat):null,b.prix_achat,s.I,s.cout,s.V,s.pv,s.taux]})),
@@ -2348,6 +2454,41 @@ async function enregistrerFichier(nom,blob){
   }
   const url=URL.createObjectURL(blob);const a=document.createElement('a');a.href=url;a.download=nom;document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),4000);
 }
+/* ================= événements et types de revenus (Données et réglages) ================= */
+let evtDirty=false;
+const utiliseEvt=id=>all.some(e=>e.evenement===id),utiliseRev=id=>all.some(e=>e.nature==='revenu'&&catRev(e)===id);
+function evtRow(x){const used=x.id&&utiliseEvt(x.id);
+  return `<div class="evrow" data-id="${x.id||''}"><input class="eNom" value="${esc(x.nom||'')}" placeholder="Mariage Awa, Voyage Dakar…" aria-label="Nom de l'événement" maxlength="60">
+    <select class="eType" aria-label="Type">${Object.entries(TYPES_EVT).map(([k,v])=>`<option value="${k}"${k===(x.type||'autre')?' selected':''}>${v}</option>`).join('')}</select>
+    <input type="date" class="eDeb" value="${x.debut||''}" aria-label="Début"><input type="date" class="eFin" value="${x.fin||''}" aria-label="Fin">
+    <input class="eBud" inputmode="decimal" value="${x.budget?enMilliers(x.budget):''}" placeholder="budget (k)" aria-label="Budget en milliers">
+    <input class="eMots" value="${esc((x.mots||[]).join(', '))}" placeholder="mots-clés : mariage awa, dot…" aria-label="Mots-clés">
+    <button type="button" class="mini danger" data-x ${used?'disabled title="Événement utilisé : impossible à supprimer"':''} aria-label="Supprimer l'événement">✕</button></div>`}
+function revRow(r){const used=r.id&&utiliseRev(r.id),autre=r.id==='autre';
+  return `<div class="evrow" data-id="${r.id||''}"><input class="rNom" value="${esc(r.label||'')}" placeholder="Nom du type" aria-label="Nom du type de revenu" maxlength="60">
+    <label class="chk"><input type="checkbox" class="rCour"${r.courant?' checked':''}> courant</label>
+    ${autre?'<span class="hint eMots">revenus non reconnus · toujours en dernier</span>':`<input class="rMots" value="${esc((r.mots||[]).join(', '))}" placeholder="mots-clés : mission, perdiem…" aria-label="Mots-clés">`}
+    <button type="button" class="mini danger" data-x ${used||autre?'disabled title="Type utilisé : impossible à supprimer"':''} aria-label="Supprimer le type">✕</button></div>`}
+function openEvt(){$('evtList').innerHTML=EVTS.length?EVTS.map(evtRow).join(''):'<div class="hint">Aucun événement pour l\'instant.</div>';$('revList').innerHTML=REVENUS.map(revRow).join('');evtDirty=false}
+const mots=v=>v.split(',').map(x=>x.trim()).filter(Boolean);
+['evtList','revList'].forEach(id=>{$(id).addEventListener('input',()=>{evtDirty=true});
+  $(id).addEventListener('click',ev=>{const b=ev.target.closest('[data-x]');if(!b||b.disabled)return;b.closest('.evrow').remove();evtDirty=true})});
+$('evtAdd').onclick=()=>{const l=$('evtList');if(!l.querySelector('.evrow'))l.innerHTML='';l.insertAdjacentHTML('beforeend',evtRow({type:'mariage',debut:today}));l.lastElementChild.querySelector('.eNom').focus();evtDirty=true};
+$('revAdd').onclick=()=>{const l=$('revList'),a=l.querySelector('.evrow[data-id="autre"]');a.insertAdjacentHTML('beforebegin',revRow({courant:false}));a.previousElementSibling.querySelector('.rNom').focus();evtDirty=true};
+$('evtSave').onclick=async()=>{
+  const pris=new Set(EVTS.map(x=>x.id)),out=[];
+  for(const r of $('evtList').querySelectorAll('.evrow')){const nom=r.querySelector('.eNom').value.trim();if(!nom)continue;
+    const b=r.querySelector('.eBud').value.trim(),bud=b?milliers(b):0;if(!(bud>=0)){$('evtMsg').textContent=`Budget invalide pour ${nom}.`;return}
+    out.push({id:r.dataset.id||nouvelId(nom,pris),nom,type:r.querySelector('.eType').value,debut:r.querySelector('.eDeb').value,fin:r.querySelector('.eFin').value,budget:bud,mots:mots(r.querySelector('.eMots').value)})}
+  try{await api.params({evenements:out});evtDirty=false;await charger();$('evtMsg').textContent='Événements enregistrés.'}catch(e){$('evtMsg').textContent=e.message}
+};
+$('revSave').onclick=async()=>{
+  const pris=new Set(REVENUS.map(x=>x.id)),out=[];
+  for(const r of $('revList').querySelectorAll('.evrow')){const label=r.querySelector('.rNom').value.trim();if(!label)continue;const m=r.querySelector('.rMots');
+    out.push({id:r.dataset.id||nouvelId(label,pris),label,courant:r.querySelector('.rCour').checked,mots:m?mots(m.value):[]})}
+  try{await api.params({revenus:out});evtDirty=false;await charger();$('revMsg').textContent='Types de revenus enregistrés.'}catch(e){$('revMsg').textContent=e.message}
+};
+
 /* ================= sauvegarde : exporter / importer (fichier JSON au format de donnees/carnet.json) ================= */
 $('savTexte').innerHTML=MODE_AUTONOME
   ?"Vos données n'existent <b>que dans cet appareil</b>. Exportez-les régulièrement (fichier <code>appya-AAAA-MM-JJ.json</code>, à garder dans un endroit sûr : Drive, ordinateur, envoi à vous-même) : sans ce fichier, désinstaller l'application ou changer de téléphone efface tout. Pour les retrouver sur un autre appareil, importez ce fichier."

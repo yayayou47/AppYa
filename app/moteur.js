@@ -22,6 +22,20 @@
     {id: 'autre', label: 'Autre', couleur: '#9a968c', mots: []},
   ];
   const COMPTES_DEFAUT = [{id: 'especes', nom: 'Espèces', type: 'especes', mots: ['espèces', 'especes', 'cash', 'liquide'], releves: []}];
+  // courant / exceptionnel : mêmes valeurs que REVENUS_DEFAUT et TYPES_EVENEMENT dans serveur.py
+  const REVENUS_DEFAUT = [
+    {id: 'salaire', label: 'Salaire', courant: true, mots: ['salaire', 'paie', 'traitement', 'salary']},
+    {id: 'prime', label: 'Primes et indemnités', courant: true, mots: ['prime', 'indemnité', 'indemnite']},
+    {id: 'interets', label: 'Intérêts', courant: true, mots: ['intérêt', 'interet', 'intérêts', 'interets']},
+    {id: 'mission', label: 'Frais de mission', courant: false, mots: ['frais de mission', 'mission', 'perdiem', 'per diem']},
+    {id: 'atelier', label: 'Ateliers, séminaires', courant: false, mots: ['atelier', 'séminaire', 'seminaire', 'colloque', 'formation']},
+    {id: 'consultance', label: 'Consultance, expertise', courant: false, mots: ['consultance', 'consultant', 'expertise', 'consultation']},
+    {id: 'enseignement', label: 'Enseignement, vacations', courant: false, mots: ['vacation', 'cours', 'enseignement', 'heures complémentaires']},
+    {id: 'jury', label: 'Jury, soutenance, correction', courant: false, mots: ['jury', 'soutenance', 'correction', 'surveillance']},
+    {id: 'autre', label: 'Autre revenu', courant: false, mots: []},
+  ];
+  const TYPES_EVENEMENT = ['mariage', 'bapteme', 'circoncision', 'funerailles', 'fete', 'voyage-tourisme', 'voyage-mission',
+                           'voyage-vacances', 'sante', 'projet', 'autre'];
   const NATURES = ['depense', 'revenu', 'virement', 'pret', 'remboursement', 'investissement'];
   const TYPES_COMPTE = ['especes', 'courant', 'epargne', 'carte', 'mobile'];
   const TYPES_BIEN = ['actif', 'passif'];
@@ -45,6 +59,7 @@
   const ids = (d, cle) => new Set(((d.parametres || {})[cle] || []).map(x => x.id));
   const idsPostes = d => { const s = ids(d, 'postes'); return s.size ? s : new Set(POSTES_DEFAUT.map(x => x.id)); };
   const biens = d => (d.parametres || {}).biens || [];
+  const idsRevenus = d => { const s = ids(d, 'revenus'); return s.size ? s : new Set(REVENUS_DEFAUT.map(x => x.id)); };
   const idsMaisons = d => biens(d).filter(b => b.maison).map(b => b.id);
   const idsVehicules = d => biens(d).filter(b => b.vehicule).map(b => b.id);
 
@@ -93,6 +108,11 @@
     } else if (nature === 'investissement') {
       if (!ids(d, 'biens').has(doc.bien)) erreur("Choisissez le bien concerné par l'investissement.");
       out.bien = doc.bien;
+    }
+    if (nature === 'revenu') out.cat_revenu = idsRevenus(d).has(doc.cat_revenu) ? doc.cat_revenu : 'autre';
+    if ((nature === 'depense' || nature === 'revenu') && doc.evenement) {
+      if (!ids(d, 'evenements').has(doc.evenement)) erreur('Événement inconnu : ' + doc.evenement);
+      out.evenement = doc.evenement;
     }
     if (nature === 'investissement' && idsMaisons(d).includes(out.bien))
       out.cat_maison = CAT_MAISON.includes(doc.cat_maison) ? doc.cat_maison : devinerCatMaison(libelle);
@@ -144,6 +164,36 @@
       out.push(dv);
     }
     if (!vus.has('XAF')) out.unshift({code: 'XAF', nom: 'Franc CFA', symbole: 'FCFA', taux: 1});
+    return out;
+  }
+  function nettoyerRevenus(liste) {
+    const out = [], vus = new Set(), noms = new Set();
+    for (const x of liste || []) {
+      const rid = String(x.id || '').trim(), label = texte(x.label, 60);
+      if (!RE_ID.test(rid)) erreur('Identifiant de type de revenu invalide : ' + rid);
+      if (!label) erreur('Chaque type de revenu doit avoir un nom.');
+      if (vus.has(rid) || noms.has(label.toLowerCase())) erreur('Deux types de revenus portent le même nom : ' + label);
+      vus.add(rid); noms.add(label.toLowerCase());
+      out.push({id: rid, label, courant: !!x.courant, mots: rid !== 'autre' ? nettoyerMots(x.mots) : []});
+    }
+    if (!vus.has('autre')) out.push(copie(REVENUS_DEFAUT[REVENUS_DEFAUT.length - 1]));
+    return out.filter(x => x.id !== 'autre').concat(out.filter(x => x.id === 'autre'));
+  }
+  function nettoyerEvenements(liste, d) {
+    const out = [], vus = new Set();
+    for (const x of liste || []) {
+      const eid = String(x.id || '').trim(), nom = texte(x.nom, 60);
+      if (!RE_ID.test(eid)) erreur("Identifiant d'événement invalide : " + eid);
+      if (!nom || vus.has(eid)) erreur('Chaque événement doit avoir un nom unique.');
+      vus.add(eid);
+      const ev = {id: eid, nom, type: TYPES_EVENEMENT.includes(x.type) ? x.type : 'autre',
+                  budget: montantPositif(x.budget || 0, 'Budget de ' + nom, true), mots: nettoyerMots(x.mots), note: texte(x.note, 300)};
+      for (const k of ['debut', 'fin']) { const v = String(x[k] || ''); if (v && !RE_DATE.test(v)) erreur('Date invalide pour ' + nom + '.'); ev[k] = v; }
+      if (ev.debut && ev.fin && ev.fin < ev.debut) erreur(nom + ' : la fin précède le début.');
+      out.push(ev);
+    }
+    const manquants = [...new Set(d.operations.map(o => o.evenement).filter(Boolean))].filter(e => !vus.has(e));
+    if (manquants.length) erreur('Impossible de supprimer un événement qui a des opérations : ' + manquants.sort().join(', '));
     return out;
   }
   function nettoyerComptes(liste, d) {
@@ -247,6 +297,13 @@
       }
       prm.budgets = budgets;
     } else prm.budgets = Object.fromEntries(Object.entries(prm.budgets || {}).filter(([k]) => lesIds.has(k)));
+    if ('revenus' in corps) {
+      prm.revenus = nettoyerRevenus(corps.revenus);
+      const rids = idsRevenus(d);
+      for (const x of d.operations)
+        if (x.nature === 'revenu' && x.cat_revenu && !rids.has(x.cat_revenu)) { x.cat_revenu = 'autre'; marquer(d, x); n++; }
+    }
+    if ('evenements' in corps) prm.evenements = nettoyerEvenements(corps.evenements, d);
     if ('comptes' in corps) prm.comptes = nettoyerComptes(corps.comptes, d);
     if ('biens' in corps) prm.biens = nettoyerBiens(corps.biens, d);
     if ('devises' in corps) prm.devises = nettoyerDevises(corps.devises);
@@ -278,5 +335,5 @@
     return d;
   }
 
-  window.AppYaMoteur = {vide, nettoyer, vidangeAuto, regler, reclasser, marquer, verifierImport, POSTES_DEFAUT, COMPTES_DEFAUT};
+  window.AppYaMoteur = {vide, nettoyer, vidangeAuto, regler, reclasser, marquer, verifierImport, POSTES_DEFAUT, COMPTES_DEFAUT, REVENUS_DEFAUT, TYPES_EVENEMENT};
 })();

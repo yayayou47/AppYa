@@ -94,6 +94,30 @@ COMPTES_DEFAUT = [{"id": "especes", "nom": "Espèces", "type": "especes",
                    "mots": ["espèces", "especes", "cash", "liquide"], "releves": []}]
 
 
+# ---------------------------------------------------------------- courant / exceptionnel (2026-11-14)
+# Types de revenus : « courant » (salaire, intérêts…) ou ponctuel (mission, atelier, jury…). Une opération (dépense ou
+# revenu) peut être rattachée à un événement (mariage, baptême, voyage…) : elle devient exceptionnelle. Les soldes des
+# comptes comptent tout ; seules les statistiques séparent le courant de l'exceptionnel.
+# MÊMES VALEURS que REVENUS_DEFAUT et TYPES_EVENEMENT dans app/moteur.js.
+REVENUS_DEFAUT = [
+    {"id": "salaire", "label": "Salaire", "courant": True, "mots": ["salaire", "paie", "traitement", "salary"]},
+    {"id": "prime", "label": "Primes et indemnités", "courant": True, "mots": ["prime", "indemnité", "indemnite"]},
+    {"id": "interets", "label": "Intérêts", "courant": True, "mots": ["intérêt", "interet", "intérêts", "interets"]},
+    {"id": "mission", "label": "Frais de mission", "courant": False, "mots": ["frais de mission", "mission", "perdiem", "per diem"]},
+    {"id": "atelier", "label": "Ateliers, séminaires", "courant": False, "mots": ["atelier", "séminaire", "seminaire", "colloque", "formation"]},
+    {"id": "consultance", "label": "Consultance, expertise", "courant": False, "mots": ["consultance", "consultant", "expertise", "consultation"]},
+    {"id": "enseignement", "label": "Enseignement, vacations", "courant": False, "mots": ["vacation", "cours", "enseignement", "heures complémentaires"]},
+    {"id": "jury", "label": "Jury, soutenance, correction", "courant": False, "mots": ["jury", "soutenance", "correction", "surveillance"]},
+    {"id": "autre", "label": "Autre revenu", "courant": False, "mots": []},
+]
+TYPES_EVENEMENT = ("mariage", "bapteme", "circoncision", "funerailles", "fete", "voyage-tourisme", "voyage-mission",
+                   "voyage-vacances", "sante", "projet", "autre")
+
+
+def ids_revenus(d):
+    return {x["id"] for x in d.get("parametres", {}).get("revenus", [])} or {x["id"] for x in REVENUS_DEFAUT}
+
+
 def ids_de(d, cle):
     return {x["id"] for x in d.get("parametres", {}).get(cle, [])}
 
@@ -446,6 +470,12 @@ def nettoyer(doc, d):
         if doc.get("bien") not in ids_de(d, "biens"):
             raise ValueError("Choisissez le bien concerné par l'investissement.")
         out["bien"] = doc["bien"]
+    if nature == "revenu":
+        out["cat_revenu"] = doc.get("cat_revenu") if doc.get("cat_revenu") in ids_revenus(d) else "autre"
+    if nature in ("depense", "revenu") and doc.get("evenement"):
+        if doc["evenement"] not in ids_de(d, "evenements"):
+            raise ValueError("Événement inconnu : %s" % doc["evenement"])
+        out["evenement"] = doc["evenement"]
     if nature == "investissement" and out.get("bien") in ids_maisons(d):
         out["cat_maison"] = doc.get("cat_maison") if doc.get("cat_maison") in CAT_MAISON else deviner_cat_maison(libelle)
     if nature in ("depense", "investissement") and doc.get("vehicule"):
@@ -507,6 +537,50 @@ def nettoyer_mots(liste):
         if m and m.lower() not in [k.lower() for k in mots]:
             mots.append(m)
     return mots
+
+
+def nettoyer_revenus(liste):
+    out, vus, noms = [], set(), set()
+    for x in liste or []:
+        rid, label = str(x.get("id", "")).strip(), texte(x.get("label"), 60)
+        if not RE_ID.match(rid):
+            raise ValueError("Identifiant de type de revenu invalide : %r" % rid)
+        if not label:
+            raise ValueError("Chaque type de revenu doit avoir un nom.")
+        if rid in vus or label.lower() in noms:
+            raise ValueError("Deux types de revenus portent le même nom : %s" % label)
+        vus.add(rid); noms.add(label.lower())
+        out.append({"id": rid, "label": label, "courant": bool(x.get("courant")),
+                    "mots": nettoyer_mots(x.get("mots")) if rid != "autre" else []})
+    if "autre" not in vus:
+        out.append(dict(REVENUS_DEFAUT[-1]))
+    return [x for x in out if x["id"] != "autre"] + [x for x in out if x["id"] == "autre"]
+
+
+def nettoyer_evenements(liste, d):
+    out, vus = [], set()
+    for x in liste or []:
+        eid, nom = str(x.get("id", "")).strip(), texte(x.get("nom"), 60)
+        if not RE_ID.match(eid):
+            raise ValueError("Identifiant d'événement invalide : %r" % eid)
+        if not nom or eid in vus:
+            raise ValueError("Chaque événement doit avoir un nom unique.")
+        vus.add(eid)
+        ev = {"id": eid, "nom": nom, "type": x.get("type") if x.get("type") in TYPES_EVENEMENT else "autre",
+              "budget": montant_positif(x.get("budget") or 0, "Budget de %s" % nom, zero=True),
+              "mots": nettoyer_mots(x.get("mots")), "note": texte(x.get("note"), 300)}
+        for k in ("debut", "fin"):
+            v = str(x.get(k) or "")
+            if v and not RE_DATE.match(v):
+                raise ValueError("Date invalide pour %s." % nom)
+            ev[k] = v
+        if ev["debut"] and ev["fin"] and ev["fin"] < ev["debut"]:
+            raise ValueError("%s : la fin précède le début." % nom)
+        out.append(ev)
+    manquants = {o.get("evenement") for o in d.get("operations", []) if o.get("evenement")} - vus
+    if manquants:
+        raise ValueError("Impossible de supprimer un événement qui a des opérations : %s" % ", ".join(sorted(manquants)))
+    return out
 
 
 def nettoyer_comptes(liste, d):
@@ -893,6 +967,16 @@ class Gestionnaire(SimpleHTTPRequestHandler):
                     prm["budgets"] = budgets
                 else:
                     prm["budgets"] = {k: v for k, v in (prm.get("budgets") or {}).items() if k in ids}
+                if "revenus" in corps:
+                    prm["revenus"] = nettoyer_revenus(corps.get("revenus"))
+                    rids = ids_revenus(d)
+                    for x in d["operations"]:   # type de revenu supprimé : ses lignes vont dans « Autre revenu »
+                        if x.get("nature") == "revenu" and x.get("cat_revenu") and x["cat_revenu"] not in rids:
+                            x["cat_revenu"] = "autre"
+                            marquer(d, x)
+                            n += 1
+                if "evenements" in corps:
+                    prm["evenements"] = nettoyer_evenements(corps.get("evenements"), d)
                 if "comptes" in corps:
                     prm["comptes"] = nettoyer_comptes(corps.get("comptes"), d)
                 if "biens" in corps:

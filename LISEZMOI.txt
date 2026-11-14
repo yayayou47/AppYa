@@ -69,6 +69,23 @@ bas), jaune (tranche du milieu, autour de la moyenne du plus bas et du plus
 haut), rouge (tranche du haut). Les bornes se mettent à jour avec chaque
 nouvelle dépense. Les virements (retraits, épargne) ne comptent pas.
 
+Courant et exceptionnel : Données et réglages › Événements et revenus.
+  - Un ÉVÉNEMENT (mariage, baptême, circoncision, funérailles, voyage de
+    tourisme, de mission ou de vacances, projet…) regroupe des dépenses ET
+    des revenus exceptionnels : par exemple, pour une mission, les frais de
+    mission reçus et l'hôtel, ce qui donne le bilan net de la mission.
+    Ses mots-clés rattachent les saisies (« hôtel dakar » → Voyage Dakar), ou
+    on le choisit dans le champ « Événement » d'une opération.
+  - Les TYPES DE REVENUS sont courants (salaire, primes, intérêts) ou
+    ponctuels (mission, atelier, consultance, enseignement, jury…).
+  - Les vues Mois et Année séparent les dépenses courantes (postes,
+    moyennes, couleurs des jours, statistiques) de la section
+    « Exceptionnel » (total par événement, avec son budget, et revenus
+    ponctuels). Le solde du mois et les soldes des comptes comptent TOUT.
+  - Une opération saisie affiche ce qui a été reconnu dans le libellé
+    (nature, poste, compte, type de revenu, événement), puis un résumé à
+    confirmer avant l'enregistrement.
+
 Montants masqués : dans la vue Patrimoine seulement, le patrimoine net, les
 soldes des comptes, la valeur des biens et les prêts s'affichent « ••••• »
 à chaque ouverture (et quand l'application passe en arrière-plan). Le bouton

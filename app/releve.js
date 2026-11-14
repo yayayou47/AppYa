@@ -130,7 +130,7 @@
       let sens;
       if (c) sens = Math.abs(a.c - c.deb) <= Math.abs(a.c - c.cre) ? 'debit' : 'credit';
       else sens = /(recu|versement|credit|vir\.? ?recu)/i.test(sansAccents(libMots.map(m => m.t).join(' '))) ? 'credit' : 'debit';
-      ops.push({date: d0, valeur, libelle: libMots.map(m => m.t).join(' ').replace(/\s+/g, ' ').trim(), montant: Math.round(a.v), sens, p: l.p, y: l.y});
+      ops.push({date: d0, valeur, libelle: libMots.map(m => m.t).join(' ').replace(/\s+/g, ' ').replace(/^[^\p{L}\p{N}]+/u, '').trim(), montant: Math.round(a.v), sens, p: l.p, y: l.y});
     }
     ops.forEach(o => { delete o.p; delete o.y; });
     if (!du && ops.length) du = ops.map(o => o.date).sort()[0];

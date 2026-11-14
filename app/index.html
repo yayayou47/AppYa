@@ -2525,7 +2525,7 @@ function devinerCompteReleve(texte){const T=normTxt(texte);
   return (c||COMPTES.find(c=>c.type==='courant')||COMPTES[0]).id}
 /* vocabulaire des banques → mots compris par la reconnaissance d'AppYa */
 function libelleLisible(lib){return String(lib).replace(/\bRET ?DAB\b|\bRETDAB\b/i,'retrait DAB').replace(/\bFACTURATIO ?PACKAGE\b/i,'facturation package')
-  .replace(/\bVIRT? RECU\b/i,'virement reçu').replace(/\bVIR EXT MO\b/i,'virement').replace(/\bPHCIE\b/i,'pharmacie').replace(/\bPMT\b/i,'paiement carte').replace(/\s+/g,' ').trim()}
+  .replace(/\bVIRT? RECU\b/i,'virement reçu').replace(/\bVIR ?EXT ?MO\b/i,'virement').replace(/\bPHCIE\b/i,'pharmacie').replace(/\bPMT\b/i,'paiement carte').replace(/\s+/g,' ').trim()}
 function proposition(g,cid){
   const lib=libelleLisible(g.libelle),L=normTxt(lib),base={date:g.date,montant:g.montant,libelle:lib,compte:cid,cree:''};
   if(g.sens==='credit'){const gr=guessOp(lib);return {...base,nature:'revenu',cat_revenu:gr.cat_revenu||guessCatR(lib),evenement:''}}

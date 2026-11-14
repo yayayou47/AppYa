@@ -132,8 +132,8 @@ le même journal. Chaque ligne est une opération ; sa NATURE se lit dans le
 libellé, sans signe + ou − :
 
     10 vivres le 02/10/26               dépense, payée en espèces
-    400 salaire banque le 27/10/26      revenu (salaire, prime, intérêts…) sur le compte Banque
-    300 retrait banque                  virement Banque → Espèces (pas une dépense)
+    200 salaire banque le 27/10/26      revenu (salaire, prime, intérêts…) sur le compte Banque
+    80 retrait banque                   virement Banque → Espèces (pas une dépense)
     100 épargne banque > mobile         virement entre deux comptes
     4 abonnement carte                  dépense payée avec le compte « carte »
     prêt 100 Ali échéance 30/07/26      prêt accordé : ouvre son compte de créance

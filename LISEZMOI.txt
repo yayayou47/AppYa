@@ -112,6 +112,17 @@ directe (pdf.js, inclus). PDF scanné ou photo : reconnaissance de texte
 (tesseract.js, environ 15 Mo téléchargés la première fois) ; vérifier alors
 les montants avec soin.
 
+Plusieurs engins, plusieurs maisons : dans Comptes et biens, chaque bien a
+un « Rôle » : bien simple, Engin (voiture, moto, camion, autre : rubrique
+My Car) ou Maison (rubrique House). Avec deux engins ou plus, My Car affiche
+une barre pour passer de l'un à l'autre (de même pour House). Chaque engin a
+son compteur, ses repères de vidange (Repères vidange › Engin) et son poste
+de frais d'usage ; une saisie qui cite son nom (« carburant yamaha ») va à
+cet engin, sinon à l'engin affiché. Vidange : en cochant « Nouvelle vidange »
+dans Une opération, la prochaine est proposée au compteur + l'intervalle
+(3 000 km par défaut) et reste modifiable ; dans Repères vidange, la
+prochaine se recalcule quand on change la dernière ou l'intervalle.
+
 Montants masqués : dans la vue Patrimoine seulement, le patrimoine net, les
 soldes des comptes, la valeur des biens et les prêts s'affichent « ••••• »
 à chaque ouverture (et quand l'application passe en arrière-plan). Le bouton

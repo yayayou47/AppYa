@@ -134,6 +134,7 @@ def ids_de(d, cle):
 # sont stockés dans le bien : vidange = {intervalle, dernier, prochain} (km).
 CAT_VEHICULE = ("carburant", "entretien", "reparation", "service", "achat", "investissement", "autre")
 VIDANGE_DEFAUT = {"intervalle": 3000, "dernier": 0, "prochain": 0}
+ENGINS = ("voiture", "moto", "camion", "autre")   # type d'un bien « vehicule » (rubrique My Car, plusieurs engins possibles)
 
 
 # ---------------------------------------------------------------- v4 : carnet de la maison
@@ -697,6 +698,7 @@ def nettoyer_biens(liste, d):
                 except (TypeError, ValueError):
                     raise ValueError("Repère de vidange invalide pour %s." % nom)
             biens[-1]["vehicule"] = True
+            biens[-1]["engin"] = x.get("engin") if x.get("engin") in ENGINS else "voiture"
             biens[-1]["vidange"] = {"intervalle": km("intervalle", 3000) or 3000, "dernier": km("dernier"), "prochain": km("prochain")}
         if x.get("maison"):
             pj = x.get("projet") or {}

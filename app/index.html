@@ -280,10 +280,12 @@ h1.titre{display:flex;align-items:center;gap:10px}
 :root{--road:#2b333d;--road-ink:#f2f3f1;--cv-carburant:#d98a0b;--cv-entretien:#2f8a57;--cv-achat:#3d6fa8;--cv-reparation:#c0392b;--cv-service:#7a5aa6;--cv-investissement:#1f8a8a;--cv-autre:#9a9890}
 @media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--road:#0c0f12;--road-ink:#e7e9ea;--cv-carburant:#f0a83a;--cv-entretien:#6cc08f;--cv-achat:#78a6dd;--cv-reparation:#ef7a6b;--cv-service:#b298d8;--cv-investissement:#5ec4c4;--cv-autre:#a8a69e}}
 :root[data-theme="dark"]{--road:#0c0f12;--road-ink:#e7e9ea;--cv-carburant:#f0a83a;--cv-entretien:#6cc08f;--cv-achat:#78a6dd;--cv-reparation:#ef7a6b;--cv-service:#b298d8;--cv-investissement:#5ec4c4;--cv-autre:#a8a69e}
-.dash{background:var(--road);color:var(--road-ink);border-radius:16px;padding:18px;display:flex;flex-direction:column;gap:14px}
+.dash{background:var(--road);color:var(--road-ink);border-radius:16px;padding:14px 16px;display:flex;flex-direction:column;gap:9px}
 .dash .label{color:var(--road-ink);opacity:.75}
-.odo{display:flex;flex-wrap:wrap;justify-content:space-between;align-items:flex-end;gap:12px}
-.odo .big{font-family:var(--f-display);font-size:3rem;line-height:1;letter-spacing:.02em}
+.odo{display:flex;flex-wrap:wrap;justify-content:space-between;align-items:center;gap:6px 12px}
+.odo2{display:flex;flex-wrap:wrap;align-items:baseline;justify-content:space-between;gap:4px 12px}
+.odo2 .big{font-family:var(--f-display);font-size:2.1rem;line-height:1;letter-spacing:.02em;white-space:nowrap}
+.odo2 .big small{font-size:1rem;margin-left:4px;opacity:.75}
 .odo .big small{font-size:1.1rem;margin-left:4px;opacity:.75}
 .kmnow{font-size:1.2rem}
 .gauge{height:12px;border-radius:6px;background:rgba(255,255,255,.18);overflow:hidden}
@@ -423,6 +425,7 @@ tr.sel td{background:var(--accent-soft)}
 tr.solde td{color:var(--muted)}
 .cbrow{display:grid;grid-template-columns:46.2px minmax(0,1.2fr) minmax(0,1fr) minmax(0,1.6fr) auto 35.7px;gap:6.3px;align-items:center;padding:6.3px 0;border-bottom:1px solid var(--line)}
 .cbrow.bien{grid-template-columns:minmax(0,1fr) 6.5em 9.5em 7em 35.7px}
+.cbrow.bien .bRole{grid-row:3;grid-column:1/3}
 .cbrow.bien .bPoste{grid-row:2;grid-column:1/3}.cbrow.bien .bMots{grid-row:2;grid-column:3/5}.cbrow.bien [data-x]{grid-row:1;grid-column:5}
 .cbhead{display:grid;gap:6.3px;font-size:.68rem;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);font-weight:600}
 #pretsList td:first-child{text-transform:none}
@@ -492,6 +495,8 @@ tr.solde td{color:var(--muted)}
   </nav>
   <div class="ctl subctl" id="subCtl">
     <div class="seg segic" role="group" aria-label="Vue de Mes finances" id="segFin"><button id="vMois" aria-pressed="true"><svg class="ic" aria-hidden="true" focusable="false"><use href="#i-mois"/></svg><span>Mois</span></button><button id="vAn" aria-pressed="false"><svg class="ic" aria-hidden="true" focusable="false"><use href="#i-annee"/></svg><span>Année</span></button><button id="vPat" aria-pressed="false"><svg class="ic" aria-hidden="true" focusable="false"><use href="#i-patrimoine"/></svg><span>Patrimoine</span></button><button id="vStats" aria-pressed="false"><svg class="ic" aria-hidden="true" focusable="false"><use href="#i-stats"/></svg><span>Statistiques</span></button></div>
+    <div class="seg" role="group" aria-label="Engin affiché" id="segEngins" hidden></div>
+    <div class="seg" role="group" aria-label="Maison affichée" id="segMaisons" hidden></div>
     <div class="seg" role="group" aria-label="Période du véhicule" id="segVeh" hidden><button id="vehAn" aria-pressed="true">Par année</button><button id="vehTout" aria-pressed="false">Toutes les années</button></div>
     <div class="seg" role="group" aria-label="Période de la maison" id="segMai" hidden><button id="maiAn" aria-pressed="false">Par année</button><button id="maiTout" aria-pressed="true">Depuis le début</button></div>
     <div class="nav" id="navBox"><button id="prev" aria-label="Période précédente">‹</button><span id="perLabel">—</span><button id="next" aria-label="Période suivante">›</button></div>
@@ -561,11 +566,11 @@ tr.solde td{color:var(--muted)}
 
   <section class="dash" aria-label="Vidange" id="vehDash" hidden>
     <div class="odo">
-      <div><div class="label"><span id="vehDashNom"></span> · avant la prochaine vidange</div><div class="big" id="kmLeft">—<small>km</small></div></div>
-      <div style="text-align:right"><div class="label">Compteur</div><div class="num kmnow" id="kmNow">—</div><span class="pill" id="vPill" hidden></span></div>
+      <div class="label"><span id="vehDashNom"></span></div><span class="pill" id="vPill" hidden></span>
     </div>
+    <div class="odo2"><span class="label">Prochaine vidange dans</span><span class="big" id="kmLeft">—<small>km</small></span></div>
     <div class="gauge" id="gauge" role="meter" aria-label="Avancement vers la prochaine vidange" aria-valuemin="0" aria-valuemax="100"><div style="width:0"></div></div>
-    <div class="ticks"><span id="tLast"></span><span id="tNext"></span></div>
+    <div class="ticks"><span id="tLast"></span><span>compteur <b class="num" id="kmNow">—</b></span><span id="tNext"></span></div>
   </section>
 
   <section class="panel" aria-label="Indicateurs du véhicule" id="vehStats" hidden>
@@ -654,10 +659,11 @@ tr.solde td{color:var(--muted)}
       <div class="field" id="wEch" hidden><label class="label" for="fEch">Échéance (facultatif)</label><input type="date" id="fEch"></div>
       <div class="field" id="wBien" hidden><label class="label" for="fBien">Bien</label><select id="fBien"></select></div>
       <fieldset class="full vehf" id="wVeh" hidden><legend class="label">Véhicule</legend>
+        <div class="field" id="wVehSel" hidden><label class="label" for="fVeh">Engin</label><select id="fVeh"></select></div>
         <div class="field"><label class="label" for="fCatV">Catégorie</label><select id="fCatV"></select></div>
         <div class="field"><label class="label" for="fKm">Compteur (km)</label><input id="fKm" inputmode="numeric" placeholder="110 882" autocomplete="off" aria-describedby="fKmHint"><span class="hint" id="fKmHint"></span></div>
         <div class="field"><label class="label" for="fQty">Quantité</label><div class="qty"><input id="fQty" inputmode="decimal" placeholder="35,71" autocomplete="off"><select id="fUnit" aria-label="Unité"><option value="L">litres</option><option value="u">unités</option></select></div></div>
-        <label class="check" id="vidBox" hidden><input type="checkbox" id="fVid" checked> <span>Nouvelle vidange : la prochaine sera à <b id="vidNext" class="num">—</b> km</span></label>
+        <div class="check vidbox" id="vidBox" hidden><label><input type="checkbox" id="fVid" checked> Nouvelle vidange</label><span>· prochaine à <input id="fVidNext" inputmode="numeric" aria-label="Prochaine vidange (km)" class="num" style="width:7.5em;display:inline-block"> km <span class="hint" id="vidInt"></span></span></div>
       </fieldset>
       <fieldset class="full vehf" id="wMai" hidden><legend class="label">Maison</legend>
         <div class="field"><label class="label" for="fCatM">Catégorie des travaux</label><select id="fCatM"></select></div>
@@ -708,7 +714,8 @@ tr.solde td{color:var(--muted)}
       <div class="row"><button class="btn ghost" type="button" id="addBien">+ Ajouter un bien</button><button class="btn" type="button" id="saveBien">Enregistrer les biens</button><span id="bienMsg" class="muted"></span></div>
     </div>
     <div id="vidPanel" hidden style="display:flex;flex-direction:column;gap:12px">
-      <div class="hint">Repères de vidange du véhicule <b id="vidVehNom"></b>, en kilomètres au compteur. Une vidange d'huile notée avec son kilométrage les met à jour (case à cocher dans « Une opération », automatiquement dans « Coller une liste »).</div>
+      <div class="row" id="vidChoix" hidden><label class="label" for="vidVeh">Engin</label><select id="vidVeh" style="width:auto"></select></div>
+      <div class="hint">Repères de vidange de <b id="vidVehNom"></b>, en kilomètres au compteur. Une vidange d'huile notée avec son kilométrage les met à jour (case à cocher dans « Une opération », automatiquement dans « Coller une liste »).</div>
       <form id="vidForm" class="vidform">
         <div class="field"><label class="label" for="sInt">Intervalle de vidange (km)</label><input id="sInt" inputmode="numeric"></div>
         <div class="field"><label class="label" for="sLast">Dernière vidange (km)</label><input id="sLast" inputmode="numeric"></div>
@@ -815,7 +822,7 @@ function setComptes(c){
 }
 let BIENS=[], BIEN={};
 function setBiens(b){
-  BIENS=(Array.isArray(b)?b:[]).map(x=>({id:x.id,nom:x.nom,type:x.type==='passif'?'passif':'actif',date_achat:x.date_achat||'',prix_achat:+x.prix_achat||0,poste:x.poste||'',mots:Array.isArray(x.mots)?x.mots:[],estimations:Array.isArray(x.estimations)?x.estimations:[],vehicule:!!x.vehicule,vidange:x.vidange||null,maison:!!x.maison,projet:x.projet||null}));
+  BIENS=(Array.isArray(b)?b:[]).map(x=>({id:x.id,nom:x.nom,type:x.type==='passif'?'passif':'actif',date_achat:x.date_achat||'',prix_achat:+x.prix_achat||0,poste:x.poste||'',mots:Array.isArray(x.mots)?x.mots:[],estimations:Array.isArray(x.estimations)?x.estimations:[],vehicule:!!x.vehicule,engin:x.engin||'voiture',vidange:x.vidange||null,maison:!!x.maison,projet:x.projet||null}));
   BIEN=Object.fromEntries(BIENS.map(b=>[b.id,b]));
 }
 /* Courant / exceptionnel : types de revenus (courants ou ponctuels) et événements (mariage, voyage…) ; une dépense ou un
@@ -1137,7 +1144,7 @@ function guessOp(lib){
   if(r.nature==='depense')r.categorie=guessCat(lib);
   // véhicule : dépense du poste du véhicule, ou investissement dans un bien véhicule.
   // Quelques mots désignent sans ambiguïté la voiture et passent avant l'ordre des postes (« vidange huile » ≠ huile du Foyer)
-  const v=VEH();
+  const v=enginDe(lib,r.nature==='depense'?r.categorie:'',r.nature==='investissement'?r.bien:'');
   if(v&&v.poste&&r.nature==='depense'&&MOTS_VEH_FORTS.some(k=>hasWord(L,k)))r.categorie=v.poste;
   if(v&&((r.nature==='depense'&&r.categorie===v.poste)||(r.nature==='investissement'&&BIEN[r.bien]&&BIEN[r.bien].vehicule))){
     r.vehicule=r.nature==='investissement'?r.bien:v.id;const c=guessCatV(lib);r.cat_vehicule=r.nature==='investissement'?(c==='achat'?'achat':'investissement'):c}
@@ -1185,6 +1192,10 @@ function render(){
   $('vMois').setAttribute('aria-pressed',isM);$('vAn').setAttribute('aria-pressed',isA);$('vPat').setAttribute('aria-pressed',isP);$('vStats').setAttribute('aria-pressed',isS);
   $('vehAn').setAttribute('aria-pressed',!vehAll);$('vehTout').setAttribute('aria-pressed',vehAll);
   $('segFin').hidden=!isF;$('segVeh').hidden=!isV;$('subCtl').hidden=isD;
+  {const lv=VEHS(),cv=VEH(),lm=MAISONS(),cm=MAISON();
+    $('segEngins').hidden=!isV||lv.length<2;$('segMaisons').hidden=!isH||lm.length<2;
+    if(isV&&lv.length>1)$('segEngins').innerHTML=lv.map(b=>`<button type="button" data-v="${b.id}" aria-pressed="${cv&&b.id===cv.id}">${esc(b.nom)}</button>`).join('');
+    if(isH&&lm.length>1)$('segMaisons').innerHTML=lm.map(b=>`<button type="button" data-h="${b.id}" aria-pressed="${cm&&b.id===cm.id}">${esc(b.nom)}</button>`).join('');}
   $('prev').hidden=$('next').hidden=!(isM||isA||sm==='mois'||sm==='annee'||(isV&&!vehAll)||(isH&&!maiAll));$('navBox').hidden=isD||(isV&&vehAll)||(isH&&maiAll);
   $('perLabel').textContent=isD?'':(isV||isH)?String(cur.y):isP?`au ${now.toLocaleDateString('fr-FR',{day:'numeric',month:'long',year:'numeric'})}`:(isM||sm==='mois')?new Date(cur.y,cur.m,1).toLocaleDateString('fr-FR',{month:'long',year:'numeric'}):(isA||sm==='annee')?String(cur.y):sm==='periode'?`du ${dmy(statsDu)} au ${dmy(statsAu)}`:"Tout l'historique";
   $('perLabel').style.textTransform=(sm==='periode'||sm==='tout')?'none':'';   // « du … au … » et « Tout l'historique » gardent leur casse
@@ -1429,6 +1440,8 @@ $('aMai').onclick=()=>{view='maison';render()};
 $('aDon').onclick=()=>{retourVue=null;view='donnees';render()};
 function openMonth(ev){const t=ev.target.closest('[data-m]');if(!t)return;cur.m=+t.dataset.m;view='mois';render();window.scrollTo({top:0,behavior:doux()})}
 $('chart').addEventListener('click',openMonth);$('yearTbl').addEventListener('click',openMonth);
+$('segEngins').addEventListener('click',ev=>{const b=ev.target.closest('[data-v]');if(!b)return;choisirEngin(b.dataset.v);render()});
+$('segMaisons').addEventListener('click',ev=>{const b=ev.target.closest('[data-h]');if(!b)return;choisirMaison(b.dataset.h);render()});
 $('bars').addEventListener('click',ev=>{const b=ev.target.closest('[data-c]');if(!b)return;filtre=filtre===b.dataset.c?'':b.dataset.c;render()});
 $('excList').addEventListener('click',ev=>{const b=ev.target.closest('[data-f]');if(!b)return;filtre=filtre===b.dataset.f?'':b.dataset.f;render()});
 let qT;$('q').addEventListener('input',()=>{clearTimeout(qT);qT=setTimeout(()=>{query=$('q').value.trim();render()},200)});
@@ -1446,14 +1459,31 @@ const MOTS_CATV=[['carburant',['essence','gasoil','gazoil','carburant','super','
   ['service',['diagnostic','visite','contrôle','controle','assurance','fiche technique','vignette','parking','électricien','electricien','main-d']],
   ['achat',['achat','pneu','batterie','amortisseur','couverture','pièce','piece','ampoule']],['investissement',['investissement','installation','gps','autoradio','radio']]];
 function guessCatV(lib){const L=String(lib||'').toLowerCase();if(/amende/.test(L))return 'autre';for(const [c,ms] of MOTS_CATV)if(ms.some(m=>L.includes(m)))return c;return 'autre'}
-const VEH=()=>BIENS.find(b=>b.vehicule)||null;
+/* Plusieurs engins (voitures, motos…) et plusieurs maisons : la rubrique affiche l'engin / la maison choisi(e) */
+const ENGINS={voiture:'Voiture',moto:'Moto',camion:'Camion',autre:'Autre engin'};
+const memo=(k,v)=>{try{if(v===undefined)return localStorage.getItem(k)||'';localStorage.setItem(k,v)}catch(e){return ''}};
+let vehSelId=memo('appya-engin'),maiSelId=memo('appya-maison');
+const VEHS=()=>BIENS.filter(b=>b.vehicule);
+const VEH=()=>{const l=VEHS();return l.find(b=>b.id===vehSelId)||l[0]||null};
+function choisirEngin(id){vehSelId=id;memo('appya-engin',id);vehSel=null}
+/* engin d'une saisie : bien investi, sinon nom propre de l'engin cité (« yamaha », « avante »), sinon l'engin affiché
+   s'il a ce poste, sinon un engin de ce poste, sinon l'engin affiché */
+const MOTS_GENERIQUES=new Set(['voiture','moto','camion','vehicule','engin','auto','bus']);
+function enginDe(lib,categorie,bien){
+  if(bien&&BIEN[bien]&&BIEN[bien].vehicule)return BIEN[bien];
+  const L=normTxt(lib),l=VEHS();
+  const cite=l.find(v=>normTxt(v.nom).split(/[^a-z0-9]+/).some(w=>w.length>=4&&!MOTS_GENERIQUES.has(w)&&hasWord(L,w)));
+  if(cite)return cite;
+  const cur=VEH();if(cur&&categorie&&cur.poste===categorie)return cur;
+  return l.find(v=>categorie&&v.poste===categorie)||cur;
+}
 const MOTS_VEH_FORTS=['vidange','carburant','essence','gasoil','gazoil','diesel','vulcanis','garage','mecanicien','pneu'];   // forme sans accents (normTxt)
 const vidangeDe=v=>({intervalle:3000,dernier:0,prochain:0,...((v&&v.vidange)||{})});
 const isVidange=e=>/vidange/i.test(e.libelle)&&!/bo[iî]te/i.test(e.libelle);
 const nb=(n,d=0)=>(+n).toLocaleString('fr-FR',{minimumFractionDigits:0,maximumFractionDigits:d});   // km, litres : jamais convertis en devise
 const colV=id=>`var(--cv-${CATV[id]?id:'autre'})`;
 let vehAll=false,vehSel=null,vehQ='',vehShown=60;   // plus d'étiquettes de catégorie (demande du 2026-11-13)
-function vehOps(){const v=VEH();return v?sorted(all.filter(e=>e.vehicule===v.id)):[]}
+function vehOps(v=VEH()){return v?sorted(all.filter(e=>e.vehicule===v.id)):[]}
 function chaineKm(list){let prev=null;return list.map(e=>{let diff=null;if(e.km){if(prev!=null)diff=e.km-prev;prev=e.km}return {...e,diff}})}
 function statsVeh(items){
   const total=sum(items),fuel=items.filter(e=>e.cat_vehicule==='carburant'),fuelTot=sum(fuel);
@@ -1462,11 +1492,11 @@ function statsVeh(items){
   let conso=null;if(fk.length>=2){const dist=fk[fk.length-1].km-fk[0].km,l=fk.slice(0,-1).reduce((a,e)=>a+e.quantite,0);if(dist>0)conso=l/dist*100}
   return {total,fuelTot,litres,prix:litres?cout/litres:null,km,conso,mois:new Set(items.map(e=>e.date.slice(0,7))).size,n:items.length,inv:ofNat(items,'investissement')};
 }
-function kmNow(){return Math.max(vidangeDe(VEH()).dernier||0,...vehOps().map(e=>e.km||0),0)}
+function kmNow(v=VEH()){return Math.max(vidangeDe(v).dernier||0,...vehOps(v).map(e=>e.km||0),0)}
 function renderVehicule(){
   const v=VEH();
   ['vehDash','vehRecap','vehVid','vehJournal'].forEach(i=>$(i).hidden=!v);
-  if(!v){$('vehHero').innerHTML='<div class="empty">Aucun véhicule. Dans Données et réglages › Repères vidange, le premier bien de type passif peut être déclaré véhicule.</div>';return}
+  if(!v){$('vehHero').innerHTML='<div class="empty">Aucun engin. Dans Données et réglages › Comptes et biens, ajoutez votre voiture ou votre moto et choisissez son rôle « Engin ».</div>';return}
   const vd=vidangeDe(v),list=chaineKm(vehOps()),k=kmNow();
   /* vidange */
   $('kmNow').textContent=k?nb(k)+' km':'—';
@@ -1476,8 +1506,8 @@ function renderVehicule(){
     $('gauge').setAttribute('aria-valuenow',Math.round(p));$('gauge').setAttribute('aria-valuetext',`${Math.round(p)} % de l'intervalle, ${nb(left)} km avant la vidange`);
     const pill=$('vPill');pill.hidden=false;pill.className='pill'+(warn?' warn':'');pill.textContent=left<=0?'Vidange dépassée':warn?'Vidange bientôt':Math.round(p)+' % de l\'intervalle';
   }else{$('kmLeft').innerHTML='—<small>km</small>';$('vPill').hidden=true}
-  $('tLast').textContent='dernière vidange '+(vd.dernier?nb(vd.dernier)+' km':'—');$('tNext').textContent='prochaine '+(vd.prochain?nb(vd.prochain)+' km':'—');
-  $('vehDashNom').textContent=v.nom;
+  $('tLast').textContent='dernière '+(vd.dernier?nb(vd.dernier)+' km':'—');$('tNext').textContent='prochaine '+(vd.prochain?nb(vd.prochain)+' km':'—');
+  $('vehDashNom').textContent=`${v.nom} · ${ENGINS[v.engin]||'Engin'}`;
   /* indicateurs de la période */
   const items=vehAll?list:list.filter(e=>e.date.startsWith(cur.y+'-')),st=statsVeh(items);
   $('vehTitre').textContent=`${v.nom} · ${vehAll?'toutes les années':cur.y}`;
@@ -1532,10 +1562,12 @@ $('vehAn').onclick=()=>{vehAll=false;vehSel=null;render()};
 $('vehTout').onclick=()=>{vehAll=true;vehSel=null;render()};
 
 /* repères de vidange (Données et réglages) */
-function openVidange(){const v=VEH(),vd=vidangeDe(v);$('vidVehNom').textContent=v?v.nom:'aucun véhicule';$('vidForm').hidden=!v;
+function openVidange(){const v=VEH(),vd=vidangeDe(v);$('vidVehNom').textContent=v?v.nom:'aucun engin (Comptes et biens › rôle « Engin »)';$('vidForm').hidden=!v;
+  $('vidChoix').hidden=VEHS().length<2;$('vidVeh').innerHTML=VEHS().map(b=>`<option value="${b.id}"${v&&b.id===v.id?' selected':''}>${esc(b.nom)}</option>`).join('');
   $('sInt').value=vd.intervalle||'';$('sLast').value=vd.dernier||'';$('sNext').value=vd.prochain||''}
 ['sInt','sLast'].forEach(i=>$(i).addEventListener('input',()=>{const a=num($('sInt').value),b=num($('sLast').value);if(a>0&&b>0)$('sNext').value=b+a}));
-async function enregistrerVidange(vd){const v=VEH();if(!v)return;await api.params({biens:BIENS.map(b=>b.id===v.id?{...b,vidange:vd}:b)})}
+$('vidVeh').addEventListener('change',()=>{choisirEngin($('vidVeh').value);openVidange();render()});
+async function enregistrerVidange(vd,v=VEH()){if(!v)return;await api.params({biens:BIENS.map(b=>b.id===v.id?{...b,vidange:vd}:b)})}
 $('vidForm').addEventListener('submit',async ev=>{ev.preventDefault();
   const vd={intervalle:Math.round(num($('sInt').value))||3000,dernier:Math.round(num($('sLast').value))||0,prochain:Math.round(num($('sNext').value))||0};
   try{await enregistrerVidange(vd);await charger();$('vidMsg').textContent='Repères enregistrés.'}catch(e){$('vidMsg').textContent=e.message}});
@@ -1552,14 +1584,16 @@ const MOTS_CATM=[['terrain',['achat terrain','bornage','lotissement']],['adminis
   ['maconnerie',['fondation','maçon','macon','brique','parpaing','béton','beton','dalle','mur','trou','fouille']],
   ['materiaux',['ciment','sable','gravier','fer ','tôle','tole','bois','planche','matériau','materiau']],['electricite',['électric','electric','câble','cable','solaire','panneau']]];
 function guessCatM(lib){const L=String(lib||'').toLowerCase();for(const [c,ms] of MOTS_CATM)if(ms.some(m=>L.includes(m)))return c;return 'autre'}
-const MAISON=()=>BIENS.find(b=>b.maison)||null;
+const MAISONS=()=>BIENS.filter(b=>b.maison);
+const MAISON=()=>{const l=MAISONS();return l.find(b=>b.id===maiSelId)||l[0]||null};
+function choisirMaison(id){maiSelId=id;memo('appya-maison',id);maiSel=null}
 const colM=id=>`var(--cm-${CATM[id]?id:'autre'})`;
 let maiAll=true,maiSel=null;   // plus d'étiquettes de catégorie (demande du 2026-11-13)
 function maiOps(){const m=MAISON();return m?sorted(all.filter(e=>e.nature==='investissement'&&e.bien===m.id)):[]}
 function renderMaison(){
   const m=MAISON();
   ['maiDash','maiRecap','maiPersp','maiJournal'].forEach(i=>$(i).hidden=!m);
-  if(!m){$('maiHero').innerHTML='<div class="empty">Aucun bien « maison ». Dans Données et réglages › Projet maison, choisissez le bien à suivre.</div>';return}
+  if(!m){$('maiHero').innerHTML='<div class="empty">Aucune maison. Dans Données et réglages › Comptes et biens, ajoutez le terrain ou la maison et choisissez son rôle « Maison ».</div>';return}
   const s=etatBien(m),ops=maiOps(),pj={budget:0,echeance:'',note:'',...(m.projet||{})};
   /* bandeau : coût et valeur */
   $('maiNom').textContent=m.nom;
@@ -1626,7 +1660,8 @@ $('maiTout').onclick=()=>{maiAll=true;maiSel=null;render()};
 
 /* projet maison (Données et réglages) */
 function openProjet(){const m=MAISON();
-  $('pjBien').innerHTML=BIENS.filter(b=>b.type==='actif').map(b=>`<option value="${b.id}"${m&&b.id===m.id?' selected':''}>${esc(b.nom)}</option>`).join('')||'<option value="">aucun bien actif</option>';
+  const l=MAISONS().length?MAISONS():BIENS.filter(b=>b.type==='actif');
+  $('pjBien').innerHTML=l.map(b=>`<option value="${b.id}"${m&&b.id===m.id?' selected':''}>${esc(b.nom)}</option>`).join('')||'<option value="">aucune maison (Comptes et biens › rôle « Maison »)</option>';
   const pj={budget:0,echeance:'',note:'',...((m&&m.projet)||{})};$('pjBudget').value=pj.budget?kStr(pj.budget):'';/* champ en milliers stricts : milliers() */$('pjEch').value=pj.echeance;$('pjNote').value=pj.note;pjHint()}
 function pjHint(){const v=milliers($('pjBudget').value);$('pjBudgetH').textContent=$('pjBudget').value.trim()&&isFinite(v)?`= ${fmtC(v)} FCFA`:'en milliers : 5000 = 5 000 000 FCFA'}
 $('pjBudget').addEventListener('input',pjHint);
@@ -1634,7 +1669,8 @@ $('pjForm').addEventListener('submit',async ev=>{ev.preventDefault();
   const id=$('pjBien').value,budget=$('pjBudget').value.trim()?milliers($('pjBudget').value):0;
   if(!id){$('pjMsg').textContent='Aucun bien actif à suivre.';return}if(!isFinite(budget)){$('pjMsg').textContent='Budget invalide (en milliers).';return}
   const projet={budget,echeance:$('pjEch').value,note:$('pjNote').value.trim()};
-  try{await api.params({biens:BIENS.map(b=>b.id===id?{...b,maison:true,projet}:(b.maison?{...b,maison:false}:b))});await charger();$('pjMsg').textContent='Projet enregistré.'}catch(e){$('pjMsg').textContent=e.message}});
+  try{await api.params({biens:BIENS.map(b=>b.id===id?{...b,maison:true,projet}:b)});choisirMaison(id);await charger();$('pjMsg').textContent='Projet enregistré.'}catch(e){$('pjMsg').textContent=e.message}});
+$('pjBien').addEventListener('change',()=>{const b=BIEN[$('pjBien').value];if(b&&b.maison){choisirMaison(b.id);openProjet()}});
 
 /* ================= saisie d'une opération ================= */
 let touched={};  // champs réglés à la main : la reconnaissance du libellé ne les écrase plus
@@ -1647,6 +1683,7 @@ function fillSelects(){
   const cm=$('fCatM').value;$('fCatM').innerHTML=CATS_M.map(c=>`<option value="${c.id}"${c.id===cm?' selected':''}>${esc(c.l)}</option>`).join('');
   const cr=$('fCatR').value;$('fCatR').innerHTML=REVENUS.map(r=>`<option value="${r.id}"${r.id===cr?' selected':''}>${esc(r.label)} (${r.courant?'courant':'ponctuel'})</option>`).join('');
   const ce=$('fEvt').value;$('fEvt').innerHTML='<option value="">— aucun : opération courante —</option>'+[...EVTS].sort((a,b)=>(b.debut||'').localeCompare(a.debut||'')).map(x=>`<option value="${x.id}"${x.id===ce?' selected':''}>★ ${esc(x.nom)}</option>`).join('');
+  const ve=$('fVeh').value;$('fVeh').innerHTML=VEHS().map(b=>`<option value="${b.id}"${b.id===ve?' selected':''}>${esc(b.nom)}</option>`).join('');
   const cv=$('fCatV').value;$('fCatV').innerHTML=CATS_V.map(c=>`<option value="${c.id}"${c.id===cv?' selected':''}>${c.l}</option>`).join('');
   if(!editId&&!touched.nat)deviner();majChamps();
 }
@@ -1656,11 +1693,15 @@ function majChamps(){
   $('wEch').hidden=n!=='pret';$('wBien').hidden=n!=='investissement';
   $('wRev').hidden=n!=='revenu';$('wEvt').hidden=!((n==='depense'||n==='revenu')&&EVTS.length);
   // champs du véhicule : dépense du poste du véhicule, ou investissement dans un bien véhicule
-  const v=VEH(),ctx=v&&((n==='depense'&&$('fCat').value===v.poste)||(n==='investissement'&&BIEN[$('fBien').value]&&BIEN[$('fBien').value].vehicule));
-  $('wVeh').hidden=!ctx;
+  const bInv=n==='investissement'&&BIEN[$('fBien').value]&&BIEN[$('fBien').value].vehicule?BIEN[$('fBien').value]:null;
+  const ctx=VEHS().length>0&&(bInv||(n==='depense'&&VEHS().some(b=>b.poste===$('fCat').value)));
+  if(ctx&&!bInv&&!touched.veh){const g=enginDe($('fLib').value,$('fCat').value,'');if(g)$('fVeh').value=g.id}
+  const v=bInv||BIEN[$('fVeh').value]||VEH();
+  $('wVeh').hidden=!ctx;$('wVehSel').hidden=!!bInv||VEHS().length<2;
   $('wMai').hidden=!(n==='investissement'&&BIEN[$('fBien').value]&&BIEN[$('fBien').value].maison);
-  if(ctx){const k=kmNow(),km=num($('fKm').value),vd=vidangeDe(v);$('fKmHint').textContent=k?`Dernier relevé : ${nb(k)} km`:'';
-    const vid=$('fCatV').value==='entretien'&&isVidange({libelle:$('fLib').value})&&km>0;$('vidBox').hidden=!vid;if(vid)$('vidNext').textContent=nb(km+vd.intervalle)}
+  if(ctx){const k=kmNow(v),km=num($('fKm').value),vd=vidangeDe(v);$('fKmHint').textContent=k?`Dernier relevé (${v.nom}) : ${nb(k)} km`:'';
+    const vid=$('fCatV').value==='entretien'&&isVidange({libelle:$('fLib').value})&&km>0;$('vidBox').hidden=!vid;
+    if(vid){if(!touched.vidnext)$('fVidNext').value=Math.round(km+vd.intervalle);$('vidInt').textContent=`(km + intervalle de ${nb(vd.intervalle)}, modifiable)`}}
   $('fCptLab').textContent={revenu:'Reçu sur',remboursement:'Reçu sur',virement:'Depuis le compte'}[n]||'Payé avec';
 }
 function deviner(){
@@ -1694,8 +1735,9 @@ const AMT_HINT='10 = 10 000 CFA · 0,5 = 500 CFA · 1750 = 1 750 000';
 function amtHint(){const v=cfa($('fAmt').value);$('fAmtHint').textContent=v>0?`= ${fmtC(v)} FCFA`:($('fAmt').value.trim()?'Montant non reconnu':AMT_HINT)}
 $('fAmt').addEventListener('input',amtHint);
 ['input','change','compositionend'].forEach(t=>$('fLib').addEventListener(t,deviner));   // claviers de téléphone : la saisie prédictive n'émet pas toujours « input »
-[['fNat','nat'],['fCpt','cpt'],['fCat','cat'],['fVers','vers'],['fBien','bien'],['fPers','pers'],['fCatV','catv'],['fCatM','catm'],['fCatR','rev'],['fEvt','evt']].forEach(([i,k])=>$(i).addEventListener(i==='fPers'?'input':'change',()=>{touched[k]=true;majChamps()}));
+[['fNat','nat'],['fCpt','cpt'],['fCat','cat'],['fVers','vers'],['fBien','bien'],['fPers','pers'],['fCatV','catv'],['fCatM','catm'],['fCatR','rev'],['fEvt','evt'],['fVeh','veh']].forEach(([i,k])=>$(i).addEventListener(i==='fPers'?'input':'change',()=>{touched[k]=true;majChamps()}));
 $('fKm').addEventListener('input',majChamps);
+$('fVidNext').addEventListener('input',()=>{touched.vidnext=true});
 const tabs=[['tOne','oneForm'],['tPaste','pasteBox'],['tPostes','posteBox'],['tCB','cbBox'],['tEvt','evtBox'],['tProg','progBox'],['tRel','relBox'],['tVid','vidPanel'],['tMai','maiPanel'],['tPar','paritesBox'],['tSav','savBox']];
 function showTab(t,focus){tabs.forEach(([tt,p])=>{const on=tt===t;$(tt).setAttribute('aria-selected',on);$(tt).tabIndex=on?0:-1;$(p).hidden=!on});if(focus)$(t).focus()}
 tabs.forEach(([t,p])=>{$(t).setAttribute('aria-controls',p);$(t).type='button';$(p).setAttribute('role','tabpanel');$(p).setAttribute('aria-labelledby',t)});
@@ -1704,7 +1746,7 @@ document.querySelector('.tabs').addEventListener('keydown',ev=>{
   const j={ArrowRight:i+1,ArrowLeft:i-1,Home:0,End:tabs.length-1}[ev.key];if(j===undefined)return;
   ev.preventDefault();showTab(tabs[(j+tabs.length)%tabs.length][0],true)});
 tabs.forEach(([t])=>$(t).onclick=()=>{if(t==='tEvt'&&!evtDirty)openEvt();if(t==='tProg'&&!progDirty)openProg();if(t==='tRel')initReleve();showTab(t)});showTab('tOne');
-function resetForm(){['fAmt','fLib','fRem','fPers','fEch','fKm','fQty'].forEach(i=>$(i).value='');$('fLibHint').textContent='';$('fUnit').value='L';$('fVid').checked=true;touched={};$('fNat').value='depense';$('fCpt').value='especes';$('fCat').value='autre';$('fEvt').value='';editId=null;$('editBar').hidden=true;$('addBtn').textContent='Ajouter';majChamps();amtHint();render()}
+function resetForm(){['fAmt','fLib','fRem','fPers','fEch','fKm','fQty'].forEach(i=>$(i).value='');$('fLibHint').textContent='';$('fUnit').value='L';$('fVid').checked=true;touched={};$('fVidNext').value='';$('fNat').value='depense';$('fCpt').value='especes';$('fCat').value='autre';$('fEvt').value='';editId=null;$('editBar').hidden=true;$('addBtn').textContent='Ajouter';majChamps();amtHint();render()}
 /* fenêtre de confirmation : résumé lisible de l'opération avant l'enregistrement (Échap ou « Modifier » = annuler) */
 /* fenêtre de confirmation générique (titre, lignes [libellé, valeur], note) */
 function dialogue(titre,lignes,note){
@@ -1737,7 +1779,7 @@ function confirmerOp(doc,opt={}){
   if(doc.remarque)lignes.push(['Remarque',doc.remarque]);
   $('dlgTitre').textContent=opt.edition?'Enregistrer ces modifications ?':'Ajouter cette opération ?';
   $('dlgResume').innerHTML=lignes.map(([k,v,c])=>`<dt>${k}</dt><dd${c?` class="${c}"`:''}>${esc(v)}</dd>`).join('');
-  $('dlgNote').textContent=opt.vidange?`Le repère de vidange passera à ${nb(opt.vidange)} km.`:'';
+  $('dlgNote').textContent=opt.vidange?`Prochaine vidange : ${nb(opt.vidange)} km.`:'';
   $('dlgNote').hidden=!opt.vidange;
   if(typeof dlg.showModal!=='function')return Promise.resolve(confirm(lignes.map(([k,v])=>k+' : '+v).join('\n')));
   return new Promise(res=>{
@@ -1758,7 +1800,8 @@ function startEdit(id){
   $('fCat').value=e.categorie||'autre';$('fVers').value=e.vers;$('fPers').value=e.personne;$('fEch').value=e.echeance;$('fBien').value=e.bien;$('fRem').value=e.remarque;
   $('fCatM').value=e.cat_maison||guessCatM(e.libelle);$('fCatV').value=e.cat_vehicule||guessCatV(e.libelle);$('fKm').value=e.km||'';$('fQty').value=e.quantite?String(e.quantite).replace('.',','):'';$('fUnit').value=e.unite==='u'?'u':'L';$('fVid').checked=false;
   $('fCatR').value=e.nature==='revenu'?catRev(e):'autre';$('fEvt').value=e.evenement||'';
-  touched={nat:1,cpt:1,cat:1,vers:1,pers:1,bien:1,catv:1,catm:1,rev:1,evt:1};majChamps();
+  if(e.vehicule&&BIEN[e.vehicule])$('fVeh').value=e.vehicule;
+  touched={nat:1,cpt:1,cat:1,vers:1,pers:1,bien:1,catv:1,catm:1,rev:1,evt:1,veh:1};majChamps();
   $('editBar').hidden=false;$('editWhat').textContent=`${e.libelle}, ${fmtC(e.montant)} FCFA`;
   $('addBtn').textContent='Enregistrer les modifications';$('addMsg').textContent='';amtHint();render();
   window.scrollTo({top:0,behavior:doux()});
@@ -1794,16 +1837,18 @@ $('oneForm').addEventListener('submit',async ev=>{
     const old=editId?all.find(x=>x.id===editId):null;
     const doc=docOp({date:$('fDate').value,montant,libelle,nature,compte:$('fCpt').value,categorie:$('fCat').value,vers:$('fVers').value,
       personne:nature==='pret'||nature==='remboursement'?personneConnue($('fPers').value.trim()):'',echeance:$('fEch').value,bien:$('fBien').value,
-      vehicule:avecVeh?(nature==='investissement'?$('fBien').value:VEH().id):'',cat_maison:$('wMai').hidden?'':$('fCatM').value,cat_vehicule:$('fCatV').value,km,quantite:qte,unite:$('fUnit').value,
+      vehicule:avecVeh?(nature==='investissement'?$('fBien').value:($('fVeh').value||VEH().id)):'',cat_maison:$('wMai').hidden?'':$('fCatM').value,cat_vehicule:$('fCatV').value,km,quantite:qte,unite:$('fUnit').value,
       cat_revenu:$('fCatR').value,evenement:$('wEvt').hidden?'':$('fEvt').value,
       remarque:$('fRem').value.trim(),cree:old?old.cree:new Date().toISOString()});
-    const nouvVid=avecVeh&&!$('vidBox').hidden&&$('fVid').checked&&km>0;
-    if(!await confirmerOp(doc,{edition:!!editId,vidange:nouvVid?km+vidangeDe(VEH()).intervalle:0})){$('addMsg').textContent='Rien n\'a été enregistré : corrigez puis validez à nouveau.';$('addBtn').disabled=false;return}
+    const nouvVid=avecVeh&&!$('vidBox').hidden&&$('fVid').checked&&km>0,vehOp=BIEN[doc.vehicule];
+    const prochVid=nouvVid?Math.round(num($('fVidNext').value))||km+vidangeDe(vehOp).intervalle:0;
+    if(nouvVid&&prochVid<=km){$('addMsg').textContent='La prochaine vidange doit être au-delà du compteur.';$('addBtn').disabled=false;return}
+    if(!await confirmerOp(doc,{edition:!!editId,vidange:prochVid})){$('addMsg').textContent='Rien n\'a été enregistré : corrigez puis validez à nouveau.';$('addBtn').disabled=false;return}
     if(editId){await api.put(editId,doc);$('addMsg').textContent='Modifications enregistrées.'}
     else{await api.add(doc);$('addMsg').textContent=`Ajouté : ${NAT[nature].l.toLowerCase()}, ${fmtC(montant)} FCFA, ${libelle}`}
     const [y,m]=doc.date.split('-').map(Number);const vr=retourVue||view;if(vr==='mois')cur={y,m:m-1};else if(vr==='annee'||vr==='vehicule'||vr==='maison')cur.y=y;
     if(nouvVid&&MODE_SYNC)$('addMsg').textContent+=' Le repère de vidange sera mis à jour à la synchronisation.';
-    else if(nouvVid){const vd=vidangeDe(VEH());await enregistrerVidange({...vd,dernier:km,prochain:km+vd.intervalle});await charger(true);$('addMsg').textContent+=` Vidange : prochaine à ${nb(km+vd.intervalle)} km.`}
+    else if(nouvVid){const vd=vidangeDe(vehOp);await enregistrerVidange({...vd,dernier:km,prochain:prochVid},vehOp);await charger(true);$('addMsg').textContent+=` Vidange (${vehOp.nom}) : prochaine à ${nb(prochVid)} km.`}
     const keepDate=doc.date,etaitEdition=!!editId;resetForm();fillSelects();$('fDate').value=keepDate;if(etaitEdition)revenir();else $('fAmt').focus();
   }catch(e){$('addMsg').textContent=e.message||"L'enregistrement a échoué. Réessayez."}
   $('addBtn').disabled=false;
@@ -1857,7 +1902,7 @@ function parseList(text,fallback){
     if(!r)continue;
     let g=guessOp(r.libelle);
     // un kilométrage relevé désigne le véhicule, quel que soit le libellé
-    if(!g.vehicule&&km&&VEH()&&g.nature==='depense'){const v=VEH();g={...g,categorie:v.poste||g.categorie,vehicule:v.id,cat_vehicule:guessCatV(r.libelle)}}
+    if(!g.vehicule&&km&&VEHS().length&&g.nature==='depense'){const v=enginDe(r.libelle,g.categorie,'');g={...g,categorie:v.poste||g.categorie,vehicule:v.id,cat_vehicule:guessCatV(r.libelle)}}
     if(!g.vehicule){km=0;qte=0;unite='';r=montantLibelle(line);if(!r)continue;g=guessOp(r.libelle)}
     if(!(r.montant>0))continue;
     out.push({date,montant:r.montant,libelle:r.libelle,...g,echeance:g.nature==='pret'?ech:'',km,quantite:qte,unite:qte?(unite||'L'):''});
@@ -1909,9 +1954,9 @@ $('importBtn').onclick=async()=>{
   const base=Date.now();const docs=parsed.map((e,i)=>docOp({...e,personne:e.personne?personneConnue(e.personne):'',cree:new Date(base+i).toISOString()}));
   try{await api.addMany(docs);let msg=`${docs.length} opérations importées.`;
     // une vidange d'huile avec kilométrage plus récent que le repère le met à jour
-    const v=VEH(),vd=vidangeDe(v),vid=docs.filter(d=>d.vehicule&&d.km>vd.dernier&&isVidange({libelle:d.libelle})).sort((a,b)=>b.km-a.km)[0];
-    if(vid&&MODE_SYNC)msg+=` Vidange à ${nb(vid.km)} km : le repère sera mis à jour à la synchronisation.`;
-    else if(vid){await enregistrerVidange({...vd,dernier:vid.km,prochain:vid.km+vd.intervalle});await charger(true);msg+=` Vidange à ${nb(vid.km)} km : prochaine à ${nb(vid.km+vd.intervalle)} km.`}
+    for(const v of VEHS()){const vd=vidangeDe(v),vid=docs.filter(d=>d.vehicule===v.id&&d.km>vd.dernier&&isVidange({libelle:d.libelle})).sort((a,b)=>b.km-a.km)[0];if(!vid)continue;
+      if(MODE_SYNC)msg+=` Vidange ${v.nom} à ${nb(vid.km)} km : le repère sera mis à jour à la synchronisation.`;
+      else{await enregistrerVidange({...vd,dernier:vid.km,prochain:vid.km+vd.intervalle},v);await charger(true);msg+=` Vidange ${v.nom} à ${nb(vid.km)} km : prochaine à ${nb(vid.km+vd.intervalle)} km.`}}
     $('pvMsg').textContent=msg;$('pasteText').value='';$('pastePreview').hidden=true;
     const [y,m]=docs[0].date.split('-').map(Number);cur={y,m:m-1};parsed=[];fillSelects();render()}
   catch(e){$('pvMsg').textContent=`Import refusé : ${e.message}. Aucune ligne n'a été ajoutée.`}
@@ -2046,6 +2091,7 @@ function bienRow(b){const used=all.some(e=>e.nature==='investissement'&&e.bien==
     <input class="bPrix" inputmode="decimal" value="${b.prix_achat?kStr(b.prix_achat):''}" placeholder="prix (milliers)" aria-label="Prix d'achat en milliers">
     <select class="bPoste" aria-label="Poste des frais d'usage"><option value="">— pas de frais d'usage —</option>${CATS.filter(c=>c.id!=='autre').map(c=>`<option value="${c.id}"${c.id===b.poste?' selected':''}>${esc(c.label)}</option>`).join('')}</select>
     <input class="bMots" value="${esc((b.mots||[]).join(', '))}" placeholder="mots-clés d'investissement" aria-label="Mots-clés d'investissement">
+    <select class="bRole" aria-label="Rôle du bien"><option value="">Rôle : bien simple</option>${Object.entries(ENGINS).map(([k,l])=>`<option value="v:${k}"${b.vehicule&&(b.engin||'voiture')===k?' selected':''}>Engin : ${l.toLowerCase()} (My Car)</option>`).join('')}<option value="maison"${b.maison?' selected':''}>Maison, construction (House)</option></select>
     <button type="button" class="mini danger" data-x ${used?'disabled title="Bien avec investissements : impossible à supprimer"':''} aria-label="Supprimer le bien">✕</button></div>`}
 function openCB(){$('cptEdit').innerHTML=COMPTES.map(cptRow).join('');$('bienEdit').innerHTML=BIENS.map(bienRow).join('');cbDirty=false}
 $('cbBox').addEventListener('input',()=>{cbDirty=true});
@@ -2073,7 +2119,9 @@ $('saveBien').onclick=async()=>{
     const old=BIEN[r.dataset.id];
     out.push({id:old?old.id:nouvelId(nom,pris),nom,type:r.querySelector('.bType').value,date_achat:r.querySelector('.bDate').value,prix_achat:prix,
       poste:r.querySelector('.bPoste').value,mots:listeMots(r.querySelector('.bMots').value),estimations:old?old.estimations:[],
-      ...(old&&old.vehicule?{vehicule:true,vidange:old.vidange||{}}:{}),...(old&&old.maison?{maison:true,projet:old.projet||{}}:{})});
+      ...(()=>{const ro=r.querySelector('.bRole').value;
+        if(ro.startsWith('v:'))return {vehicule:true,engin:ro.slice(2),vidange:(old&&old.vidange)||{intervalle:3000,dernier:0,prochain:0}};
+        if(ro==='maison')return {maison:true,projet:(old&&old.projet)||{budget:0,echeance:'',note:''}};return {}})()});
   }
   $('saveBien').disabled=true;
   try{await api.params({biens:out});cbDirty=false;await charger();$('bienMsg').textContent='Biens enregistrés.'}catch(e){$('bienMsg').textContent=e.message}

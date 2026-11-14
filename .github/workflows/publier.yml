@@ -28,7 +28,7 @@ jobs:
           if [ "$GITHUB_REF_TYPE" = tag ]; then V="${GITHUB_REF_NAME#v}"; else V="0.0.$GITHUB_RUN_NUMBER"; fi
           IFS=. read -r MA MI PA <<< "$V"
           echo "VERSION=$V" >> "$GITHUB_ENV"
-          # numéro interne Android toujours croissant (la v3.3.0 avait 30300 ; Ousnou 1.0.0 repart à 1.0.0)
+          # numéro interne Android toujours croissant
           echo "CODE=$(( 100000 + GITHUB_RUN_NUMBER ))" >> "$GITHUB_ENV"
           echo "NOMVER=$(sed -n 's/^VERSION_NOM = "\(.*\)".*/\1/p' serveur.py)" >> "$GITHUB_ENV"
       - name: Version ordinateur (zip Ubuntu)

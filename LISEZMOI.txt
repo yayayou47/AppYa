@@ -375,7 +375,7 @@ Mettre à jour : décompressez la nouvelle version et relancez
 « bash installer.sh » ; vos données ne sont jamais écrasées.
 Une mise à jour n'ouvre pas de nouvel onglet : rechargez l'onglet AppYa
 déjà ouvert (F5).
-AppYa 3.3 ne lit que le format de données actuel (version 5) : les
+AppYa ne lit que le format de données actuel (version 5) : les
 conversions des anciens formats et la reprise des anciennes applications
 (Suivi financier, Carnet du véhicule) ont été retirées le 14/11/2026, une
 fois toutes les données converties.

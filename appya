@@ -85,7 +85,7 @@ case "${1:-ouvrir}" in
     set -- $(rappel_onglet)
     if [ "${1:-0}" -gt 0 ]; then
       # l'onglet affiche sa propre notification si l'utilisateur l'a autorisée ; sinon on prévient ici
-      [ "${2:-0}" = 1 ] || { command -v notify-send >/dev/null && notify-send -i "$DIR/app/icone-192.png" "Daftar" "Daftar est déjà ouvert dans un onglet du navigateur (titre « ● Daftar est ouvert ici »)."; }
+      [ "${2:-0}" = 1 ] || { command -v notify-send >/dev/null && notify-send -i "$DIR/app/daftar-192.png" "Daftar" "Daftar est déjà ouvert dans un onglet du navigateur (titre « ● Daftar est ouvert ici »)."; }
       echo "Daftar est déjà ouvert dans un onglet. Pour en ouvrir un autre : daftar nouvel-onglet"
     else
       xdg-open "$(adresse)" >/dev/null 2>&1 &

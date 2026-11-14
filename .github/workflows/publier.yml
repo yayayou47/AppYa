@@ -28,7 +28,9 @@ jobs:
           if [ "$GITHUB_REF_TYPE" = tag ]; then V="${GITHUB_REF_NAME#v}"; else V="0.0.$GITHUB_RUN_NUMBER"; fi
           IFS=. read -r MA MI PA <<< "$V"
           echo "VERSION=$V" >> "$GITHUB_ENV"
-          echo "CODE=$(( ${MA:-0} * 10000 + ${MI:-0} * 100 + ${PA:-0} ))" >> "$GITHUB_ENV"
+          # numéro interne Android toujours croissant (la v3.3.0 avait 30300 ; Ousnou 1.0.0 repart à 1.0.0)
+          echo "CODE=$(( 100000 + GITHUB_RUN_NUMBER ))" >> "$GITHUB_ENV"
+          echo "NOMVER=$(sed -n 's/^VERSION_NOM = "\(.*\)".*/\1/p' serveur.py)" >> "$GITHUB_ENV"
       - name: Version ordinateur (zip Ubuntu)
         run: |
           mkdir -p dist/AppYa/donnees
@@ -73,10 +75,10 @@ jobs:
         run: |
           ls dist/AppYa-"$VERSION".apk >/dev/null || { echo "::error::APK signé absent : secrets ANDROID_KEYSTORE* à définir."; exit 1; }
           cat > notes.md <<NOTES
-          **AppYa $VERSION** : suivi financier, véhicule et maison. Aucune donnée n'est incluse : chaque personne commence avec un carnet vide.
+          **AppYa $NOMVER $VERSION** : suivi financier, véhicule et maison. Aucune donnée n'est incluse : chaque personne commence avec un carnet vide.
 
           - **Android** : \`AppYa-$VERSION.apk\` (autoriser l'installation depuis cette source la première fois). Les données restent dans le téléphone : pensez à *Données et réglages › Sauvegarde*.
           - **Ordinateur Ubuntu** : \`AppYa-ubuntu-$VERSION.zip\`, décompresser puis \`bash installer.sh\`.
           - **Lien web** (sans installation) : https://yayayou47.github.io/AppYa/
           NOTES
-          gh release create "$GITHUB_REF_NAME" dist/* --title "AppYa $VERSION" --notes-file notes.md
+          gh release create "$GITHUB_REF_NAME" dist/* --title "AppYa $NOMVER $VERSION" --notes-file notes.md

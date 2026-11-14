@@ -28,6 +28,11 @@
 *{box-sizing:border-box}
 [hidden]{display:none!important}
 dialog.confirm{border:1px solid var(--line);border-radius:14px;padding:18px 20px;width:min(440px,calc(100vw - 32px));background:var(--surface);color:var(--ink);box-shadow:0 12px 40px rgba(0,0,0,.25)}
+.toast{position:fixed;left:50%;bottom:16px;transform:translateX(-50%);z-index:50;display:flex;align-items:center;gap:10px;max-width:calc(100vw - 32px);
+  padding:10px 12px 10px 16px;border-radius:12px;background:var(--ink);color:var(--surface);box-shadow:0 8px 28px rgba(0,0,0,.3)}
+.toast .btn{background:transparent;color:inherit;border-color:currentColor;padding:6px 12px}
+.toast .mini{background:transparent;color:inherit;border:0}
+.histrow{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:6px 12px;padding:8px 10px;border:1px solid var(--line);border-radius:10px}
 dialog.confirm.large{width:min(640px,calc(100vw - 32px))}
 .accueil h2{margin:0 0 6px}.accueil p{margin:0 0 8px}
 .accetapes{margin:0 0 12px;padding-left:1.3em;display:flex;flex-direction:column;gap:6px}
@@ -659,7 +664,7 @@ tr.solde td{color:var(--muted)}
       <button role="tab" id="tVid" aria-selected="false"><svg class="ic" aria-hidden="true" focusable="false"><use href="#i-huile"/></svg><span>Repères vidange</span></button>
       <button role="tab" id="tMai" aria-selected="false"><svg class="ic" aria-hidden="true" focusable="false"><use href="#i-chantier"/></svg><span>Projet maison</span></button>
       <button role="tab" id="tPar" aria-selected="false"><svg class="ic" aria-hidden="true" focusable="false"><use href="#i-change"/></svg><span>Parités</span></button>
-      <button role="tab" id="tSav" aria-selected="false"><svg class="ic" aria-hidden="true" focusable="false"><use href="#i-sauve"/></svg><span>Sauvegarde</span></button>
+      <button role="tab" id="tSav" aria-selected="false"><svg class="ic" aria-hidden="true" focusable="false"><use href="#i-sauve"/></svg><span>Sauvegarde et retour</span></button>
     </div>
 
     <form id="oneForm">
@@ -781,6 +786,10 @@ tr.solde td{color:var(--muted)}
     <div class="phead"><h3 class="sub">Sauvegarde de vos données</h3></div>
     <div class="hint" id="savTexte"></div>
     <div class="row"><button class="btn" type="button" id="savExport">Exporter mes données</button><span id="savMsg" class="muted" role="status"></span></div>
+    <div class="phead"><h3 class="sub">Retour en arrière</h3><span class="hint">Les 20 derniers changements de réglages</span></div>
+    <div class="hint">Avant chaque changement de réglages (postes, comptes, biens, événements, types de revenus, opérations programmées, parités), AppYa garde l'état d'avant. « Rétablir » y revient, y compris le classement des lignes déplacées ; un retour se défait comme un autre changement. Les opérations du journal ne sont pas concernées : une opération supprimée se rétablit avec « Annuler » juste après.</div>
+    <div id="histList" class="evlist"></div>
+    <div class="row"><button class="btn ghost" type="button" id="origineBtn">Revenir aux réglages d'origine</button><span id="histMsg" class="muted" role="status"></span></div>
     <div id="savImportBox" hidden style="display:flex;flex-direction:column;gap:8px">
       <label class="label" for="savFichier">Importer une sauvegarde (fichier appya-….json) : elle <b>remplace</b> toutes les données de cet appareil</label>
       <input type="file" id="savFichier" accept=".json,application/json">
@@ -805,7 +814,7 @@ tr.solde td{color:var(--muted)}
     <span class="hint">Touchez une ligne pour la modifier.</span>
   </section>
 
-  <footer><span id="footTxt">AppYa · suivi financier, véhicule et maison · version locale, les données restent sur cet ordinateur.</span><span id="footFile"></span></footer>
+  <footer><span><b id="footVer"></b></span><span id="footTxt">AppYa · suivi financier, engins et maison · version locale, les données restent sur cet ordinateur.</span><span id="footFile"></span></footer>
 </main>
 <dialog id="dlgProg" class="confirm large" aria-labelledby="dlgProgTitre">
   <h3 id="dlgProgTitre">Opérations programmées à confirmer</h3>
@@ -813,6 +822,7 @@ tr.solde td{color:var(--muted)}
   <div id="dlgProgList" class="evlist"></div>
   <div class="row"><button class="btn" id="dlgProgOk" type="button">Enregistrer les cochées</button><button class="btn ghost" id="dlgProgIgn" type="button">Ignorer les cochées</button><button class="btn ghost" id="dlgProgNon" type="button">Plus tard</button><span id="dlgProgMsg" class="muted" role="status"></span></div>
 </dialog>
+<div class="toast" id="toast" role="status" aria-live="polite" hidden><span id="toastTxt"></span><button type="button" class="btn ghost" id="toastBtn">Annuler</button><button type="button" class="mini" id="toastX" aria-label="Fermer">✕</button></div>
 <dialog id="dlgEngin" class="confirm" aria-labelledby="dlgEnginTitre">
   <h3 id="dlgEnginTitre">Ajouter un engin</h3>
   <form id="enginForm" class="vidform" style="grid-template-columns:1fr 1fr">
@@ -876,6 +886,7 @@ function setProgrammees(l){PROGS=(Array.isArray(l)?l:[]).map(x=>({...x,ignorees:
 const PERIODES={1:'chaque mois',2:'tous les 2 mois',3:'chaque trimestre',6:'chaque semestre',12:'chaque année'};
 const TYPES_EVT={mariage:'Mariage',bapteme:'Baptême',circoncision:'Circoncision',funerailles:'Funérailles',fete:'Fête','voyage-tourisme':'Voyage (tourisme)','voyage-mission':'Voyage (mission)','voyage-vacances':'Voyage (vacances)',sante:'Santé',projet:'Projet',autre:'Autre'};
 /* Nature d'une opération : s = sens sur le compte (+1 entrée, −1 sortie, 0 virement) */
+const VERSION_APP='Ousnou 1.0.0';   // nom et numéro de version (même valeur que VERSION / VERSION_NOM dans serveur.py)
 const NAT={depense:{l:'Dépense',s:-1},revenu:{l:'Revenu',s:1},virement:{l:'Virement',s:0},pret:{l:'Prêt accordé',s:-1},remboursement:{l:'Remboursement reçu',s:1},investissement:{l:'Investissement',s:-1}};
 const TYPES_CPT={especes:'Espèces',courant:'Compte courant',epargne:'Épargne',carte:'Carte prépayée',mobile:'Mobile money'};
 const MOTS_REVENU=['salaire','salary','prime','revenu','interet','honoraire','indemnite','bourse','vacation','perdiem','per diem','prodes','frais de mission','consultance','jury','soutenance','seminaire','atelier'];
@@ -1072,7 +1083,7 @@ const api={
   async addMany(docs){const xs=await req('POST','/api/operations',docs);xs.forEach(x=>all.push(norm(x)));return xs},
   async put(id,doc){const x=await req('PUT','/api/operations/'+encodeURIComponent(id),doc);all=all.map(e=>e.id===id?norm(x):e);return x},
   async del(id){await req('DELETE','/api/operations/'+encodeURIComponent(id));all=all.filter(e=>e.id!==id)},
-  async params(body){return req('PUT','/api/parametres',body)},
+  async params(body){const r=await req('PUT','/api/parametres',body);if(!MODE_SYNC)annulable('Réglages enregistrés.',annulerDernierReglage);return r},
   async reclasser(changements){return req('POST','/api/reclasser',{changements})}
 };
 function status(msg,err){const s=$('status');s.hidden=!msg;s.setAttribute('role',err?'alert':'status');if(msg){s.textContent=msg;s.className='note'+(err?' err':'')}}
@@ -1081,7 +1092,7 @@ async function charger(silencieux){
     const d=await req('GET','/api/donnees');
     const p=d.parametres||{};
     setPostes(p.postes);setComptes(p.comptes);setBiens(p.biens);setRevenus(p.revenus);setEvenements(p.evenements);setProgrammees(p.programmees);setDevises(p.devises);DEBUT_SUIVI=p.debut_suivi||'';
-    all=(d.operations||[]).map(norm).filter(e=>e.date);
+    all=(d.operations||[]).map(norm).filter(e=>e.date);HIST=Array.isArray(d.historique)?d.historique:null;if(!$('savBox').hidden)renderHistorique();
     budgets=p.budgets||{};
     if(!ready){ready=true;
       // au premier chargement, se placer sur le dernier mois saisi si le mois courant est vide
@@ -1807,9 +1818,22 @@ document.querySelector('.tabs').addEventListener('keydown',ev=>{
   const i=tabs.findIndex(([t])=>t===ev.target.id);if(i<0)return;
   const j={ArrowRight:i+1,ArrowLeft:i-1,Home:0,End:tabs.length-1}[ev.key];if(j===undefined)return;
   ev.preventDefault();showTab(tabs[(j+tabs.length)%tabs.length][0],true)});
-tabs.forEach(([t])=>$(t).onclick=()=>{if(t==='tEvt'&&!evtDirty)openEvt();if(t==='tProg'&&!progDirty)openProg();if(t==='tRel')initReleve();showTab(t)});showTab('tOne');
+tabs.forEach(([t])=>$(t).onclick=()=>{if(t==='tSav')renderHistorique();if(t==='tEvt'&&!evtDirty)openEvt();if(t==='tProg'&&!progDirty)openProg();if(t==='tRel')initReleve();showTab(t)});showTab('tOne');
 function resetForm(){['fAmt','fLib','fRem','fPers','fEch','fKm','fQty'].forEach(i=>$(i).value='');$('fLibHint').textContent='';$('fUnit').value='L';$('fVid').checked=true;touched={};$('fVidNext').value='';$('fNat').value='depense';$('fCpt').value='especes';$('fCat').value='autre';$('fEvt').value='';editId=null;$('editBar').hidden=true;$('addBtn').textContent='Ajouter';majChamps();amtHint();render()}
 /* fenêtre de confirmation : résumé lisible de l'opération avant l'enregistrement (Échap ou « Modifier » = annuler) */
+/* ================= annuler : message en bas de l'écran, 10 secondes ================= */
+let toastT=null,HIST=null;
+function annulable(msg,annuler){
+  clearTimeout(toastT);$('toastTxt').textContent=msg;$('toastBtn').hidden=!annuler;$('toast').hidden=false;
+  $('toastBtn').onclick=async()=>{$('toast').hidden=true;try{await annuler();status('Annulé.')}catch(e){status(e.message||"L'annulation a échoué.",true)}};
+  toastT=setTimeout(()=>{$('toast').hidden=true},10000);
+}
+$('toastX').onclick=()=>{$('toast').hidden=true};
+/* une ligne d'une liste de réglages retirée (pas encore enregistrée) peut revenir à sa place */
+function retirerLigne(row,quoi,salir,fem){const parent=row.parentNode,next=row.nextSibling;row.remove();salir();
+  annulable(`${quoi} retiré${fem?'e':''} (pas encore enregistré${fem?'e':''})`,()=>{parent.insertBefore(row,next);salir()})}
+/* annuler le dernier changement de réglages = revenir au point de restauration le plus récent */
+async function annulerDernierReglage(){if(!HIST||!HIST.length)throw new Error('Aucun changement à annuler.');await req('PUT','/api/parametres',{restaurer:HIST.length-1});await charger()}
 /* fenêtre de confirmation générique (titre, lignes [libellé, valeur], note) */
 function dialogue(titre,lignes,note){
   const dlg=$('dlgOp');$('dlgTitre').textContent=titre;
@@ -1920,7 +1944,8 @@ async function clicJournal(ev){
   if(b){ev.stopPropagation();
     if(!b.classList.contains('armed')){desarmer();b.classList.add('armed');b.textContent='Supprimer ?';b.dataset.lab=b.getAttribute('aria-label');b.setAttribute('aria-label','Confirmer : '+b.dataset.lab.toLowerCase());return}
     b.disabled=true;
-    try{const id=b.dataset.del;await api.del(id);if(editId===id)resetForm();else render()}catch(e){status(e.message||'La suppression a échoué.',true);b.disabled=false}
+    try{const id=b.dataset.del,e=all.find(x=>x.id===id);await api.del(id);if(editId===id)resetForm();else render();
+      if(e)annulable(`« ${e.libelle} » supprimée.`,async()=>{await api.add(docOp(e));render()})}catch(e){status(e.message||'La suppression a échoué.',true);b.disabled=false}
     return}
   const it=ev.target.closest('.item');if(it)startEdit(it.dataset.id);
 }
@@ -2157,7 +2182,7 @@ function bienRow(b){const used=all.some(e=>e.nature==='investissement'&&e.bien==
     <button type="button" class="mini danger" data-x ${used?'disabled title="Bien avec investissements : impossible à supprimer"':''} aria-label="Supprimer le bien">✕</button></div>`}
 function openCB(){$('cptEdit').innerHTML=COMPTES.map(cptRow).join('');$('bienEdit').innerHTML=BIENS.map(bienRow).join('');cbDirty=false}
 $('cbBox').addEventListener('input',()=>{cbDirty=true});
-$('cbBox').addEventListener('click',ev=>{const b=ev.target.closest('[data-x]');if(b){b.closest('.cbrow').remove();cbDirty=true}});
+$('cbBox').addEventListener('click',ev=>{const b=ev.target.closest('[data-x]');if(b&&!b.disabled){const r=b.closest('.cbrow');retirerLigne(r,r.classList.contains('bien')?'Bien':'Compte',()=>{cbDirty=true})}});
 $('addCpt').onclick=()=>{$('cptEdit').insertAdjacentHTML('beforeend',cptRow({id:'',nom:'',type:'mobile',mots:[]}));cbDirty=true;$('cptEdit').lastElementChild.querySelector('.cNom').focus()};
 $('addBien').onclick=()=>{$('bienEdit').insertAdjacentHTML('beforeend',bienRow({id:'',nom:'',type:'actif',mots:[]}));cbDirty=true;$('bienEdit').lastElementChild.querySelector('.bNom').focus()};
 const listeMots=s=>s.split(/[,;\n]/).map(x=>x.trim()).filter(Boolean);
@@ -2219,7 +2244,7 @@ const parRow=d=>{const ref=d.code==='XAF';return `<div class="parrow" data-code=
 function openParites(){$('parList').innerHTML=DEVISES.map(parRow).join('');devDirty=false}
 
 $('parList').addEventListener('input',ev=>{devDirty=true;if(ev.target.classList.contains('dTaux')){const r=ev.target.closest('.parrow').querySelector('.dMaj');if(r)r.value=today}});
-$('parList').addEventListener('click',ev=>{const b=ev.target.closest('[data-x]');if(b&&!b.disabled){b.closest('.parrow').remove();devDirty=true}});
+$('parList').addEventListener('click',ev=>{const b=ev.target.closest('[data-x]');if(b&&!b.disabled){retirerLigne(b.closest('.parrow'),'Devise',()=>{devDirty=true},true)}});
 $('addDev').onclick=()=>{$('parList').insertAdjacentHTML('beforeend',parRow({code:'',nom:'',symbole:'',taux:'',maj:today}));devDirty=true;$('parList').lastElementChild.querySelector('.dCode').focus()};
 $('saveDev').onclick=async()=>{
   const out=[];
@@ -2800,7 +2825,7 @@ $('progList').addEventListener('change',ev=>{progDirty=true;const t=ev.target;if
   if(t.matches('.pMode')&&p.mode==='interets'){p.nature='revenu';p.cat_revenu='interets';const c=CPT[p.compte];if(c&&c.periode)p.periode=[1,2,3,6,12].includes(+c.periode)?+c.periode:p.periode}
   if(t.matches('.pNat')){p.categorie=p.categorie||'autre';p.cat_revenu=p.cat_revenu||'autre'}
   r.outerHTML=progRow(p)});
-$('progList').addEventListener('click',ev=>{const b=ev.target.closest('[data-x]');if(!b)return;b.closest('.evrow').remove();progDirty=true});
+$('progList').addEventListener('click',ev=>{const b=ev.target.closest('[data-x]');if(!b)return;retirerLigne(b.closest('.evrow'),'Opération programmée',()=>{progDirty=true},true)});
 function ajouterProg(p){const l=$('progList');if(!l.querySelector('.evrow'))l.innerHTML='';l.insertAdjacentHTML('beforeend',progRow(p));l.lastElementChild.querySelector('.pLib').focus();progDirty=true}
 $('progAdd').onclick=()=>ajouterProg({nature:'depense',mode:'fixe',compte:(COMPTES.find(c=>c.type==='courant')||COMPTES[0]).id,categorie:'autre',periode:1,jour:30,debut:today});
 $('progAddInt').onclick=()=>{const c=COMPTES.find(c=>c.taux!=null);if(!c){$('progMsg').textContent="Aucun compte n'a de taux d'intérêt : réglez-le d'abord dans Comptes et biens.";return}
@@ -2829,7 +2854,7 @@ function revRow(r){const used=r.id&&utiliseRev(r.id),autre=r.id==='autre';
 function openEvt(){$('evtList').innerHTML=EVTS.length?EVTS.map(evtRow).join(''):'<div class="hint">Aucun événement pour l\'instant.</div>';$('revList').innerHTML=REVENUS.map(revRow).join('');evtDirty=false}
 const mots=v=>v.split(',').map(x=>x.trim()).filter(Boolean);
 ['evtList','revList'].forEach(id=>{$(id).addEventListener('input',()=>{evtDirty=true});
-  $(id).addEventListener('click',ev=>{const b=ev.target.closest('[data-x]');if(!b||b.disabled)return;b.closest('.evrow').remove();evtDirty=true})});
+  $(id).addEventListener('click',ev=>{const b=ev.target.closest('[data-x]');if(!b||b.disabled)return;retirerLigne(b.closest('.evrow'),id==='evtList'?'Événement':'Type de revenu',()=>{evtDirty=true})})});
 $('evtAdd').onclick=()=>{const l=$('evtList');if(!l.querySelector('.evrow'))l.innerHTML='';l.insertAdjacentHTML('beforeend',evtRow({type:'mariage',debut:today}));l.lastElementChild.querySelector('.eNom').focus();evtDirty=true};
 $('revAdd').onclick=()=>{const l=$('revList'),a=l.querySelector('.evrow[data-id="autre"]');a.insertAdjacentHTML('beforebegin',revRow({courant:false}));a.previousElementSibling.querySelector('.rNom').focus();evtDirty=true};
 $('evtSave').onclick=async()=>{
@@ -2845,6 +2870,21 @@ $('revSave').onclick=async()=>{
     out.push({id:r.dataset.id||nouvelId(label,pris),label,courant:r.querySelector('.rCour').checked,mots:m?mots(m.value):[]})}
   try{await api.params({revenus:out});evtDirty=false;await charger();$('revMsg').textContent='Types de revenus enregistrés.'}catch(e){$('revMsg').textContent=e.message}
 };
+
+/* ================= retour en arrière (historique des réglages) ================= */
+const quand=d=>{const x=new Date(d);return isNaN(x)?String(d):x.toLocaleDateString('fr-FR',{day:'2-digit',month:'2-digit',year:'2-digit'})+' à '+x.toLocaleTimeString('fr-FR',{hour:'2-digit',minute:'2-digit'})};
+function renderHistorique(){
+  if(!HIST){$('histList').innerHTML='<p class="hint">Disponible sur l\'ordinateur (ou dans la version autonome).</p>';$('origineBtn').disabled=true;return}
+  $('origineBtn').disabled=false;
+  $('histList').innerHTML=HIST.length?HIST.map((h,i)=>({h,i})).reverse().map(({h,i})=>`<div class="histrow"><span><b>${esc(h.resume||'réglages')}</b> <span class="hint">le ${quand(h.date)}${Object.keys(h.ops||{}).length?` · ${Object.keys(h.ops).length} ligne(s) reclassée(s)`:''}</span></span><button type="button" class="btn ghost" data-h="${i}">Rétablir l'état d'avant</button></div>`).join('')
+    :'<p class="hint">Aucun changement de réglages pour l\'instant.</p>';
+}
+$('histList').addEventListener('click',async ev=>{const b=ev.target.closest('[data-h]');if(!b)return;const h=HIST[+b.dataset.h];
+  if(!await dialogue("Rétablir l'état d'avant ce changement ?",[['Changement',h.resume||'réglages'],['Date',quand(h.date)]],'Les réglages reviennent à cet état ; ce retour pourra lui-même être annulé.'))return;
+  try{await req('PUT','/api/parametres',{restaurer:+b.dataset.h});await charger();renderHistorique();$('histMsg').textContent='État rétabli.';annulable('Réglages rétablis.',annulerDernierReglage)}catch(e){$('histMsg').textContent=e.message}});
+$('origineBtn').onclick=async()=>{
+  if(!await dialogue("Revenir aux réglages d'origine ?",[['Remis à l\'origine','postes et mots-clés, budgets, types de revenus, parités'],['Gardés','opérations, comptes, biens, engins, maisons, événements, opérations programmées']],"Les lignes des postes retirés vont dans « Autre ». Tout se rétablit ensuite depuis la liste ci-dessus."))return;
+  try{await req('PUT','/api/parametres',{origine:true});await charger();renderHistorique();$('histMsg').textContent="Réglages d'origine rétablis.";annulable("Réglages d'origine rétablis.",annulerDernierReglage)}catch(e){$('histMsg').textContent=e.message}};
 
 /* ================= sauvegarde : exporter / importer (fichier JSON au format de donnees/carnet.json) ================= */
 $('savTexte').innerHTML=MODE_AUTONOME
@@ -2898,10 +2938,11 @@ if(MODE_SYNC||MODE_AUTONOME){
 if(MODE_SYNC){
   setInterval(()=>synchroniser(),120000);addEventListener('online',()=>synchroniser());majSync();
 }
+$('footVer').textContent='AppYa '+VERSION_APP;
 req('GET','/api/info').then(i=>{$('footFile').innerHTML=MODE_AUTONOME?`Données : <b>${esc(i.fichier)}</b> · copies de sécurité : <b>${esc(i.sauvegardes)}</b>`:`Fichier de données : <code>${esc(i.fichier)}</code> · sauvegarde automatique chaque jour dans <code>${esc(i.sauvegardes)}</code>`}).catch(()=>{});
 if(!MODE_DEMO)$('footFile').insertAdjacentHTML('afterend',' <a href="?demo" style="color:var(--accent)">Voir la démo</a>');
 if(MODE_DEMO)$('footTxt').textContent='AppYa · version de démonstration · données simulées, rangées à part de vos données.';
-else if(MODE_AUTONOME)$('footTxt').textContent='AppYa · suivi financier, véhicule et maison · version autonome : vos données restent dans cet appareil.';
+else if(MODE_AUTONOME)$('footTxt').textContent='AppYa · suivi financier, engins et maison · version autonome : vos données restent dans cet appareil.';
 if(window.matchMedia){const mq=matchMedia('(prefers-color-scheme: dark)');const f=()=>render();mq.addEventListener?mq.addEventListener('change',f):mq.addListener(f)}
 document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='visible'&&ready&&!editId){if(MODE_SYNC)synchroniser();else charger(true)}});
 </script>

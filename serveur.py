@@ -39,7 +39,8 @@ from http.cookies import SimpleCookie
 from http.server import SimpleHTTPRequestHandler, ThreadingHTTPServer
 from urllib.parse import parse_qs, urlparse
 
-VERSION = "3.3"
+VERSION = "1.0.0"
+VERSION_NOM = "Ousnou"   # nom de la version (même valeur que VERSION_APP dans app/index.html)
 RACINE = os.path.dirname(os.path.abspath(__file__))
 APP = os.path.join(RACINE, "app")
 DONNEES = os.path.join(RACINE, "donnees")
@@ -715,6 +716,133 @@ def nettoyer_biens(liste, d):
     return biens
 
 
+# ---------------------------------------------------------------- réglages et retour en arrière
+# Chaque changement de réglages garde l'état d'AVANT dans d["historique"] (20 derniers), avec les opérations qu'il a
+# reclassées. {"restaurer": i} revient à l'état d'avant le changement i ; {"origine": true} remet les réglages
+# d'origine (postes, types de revenus, budgets, parités) sans toucher aux opérations, comptes, biens, événements
+# et opérations programmées. Restaurer est lui-même un changement : on peut donc l'annuler.
+SECTIONS_REGLAGES = ("postes", "budgets", "revenus", "evenements", "programmees", "comptes", "biens", "devises")
+NOMS_SECTIONS = {"postes": "postes", "budgets": "budgets", "revenus": "types de revenus", "evenements": "événements",
+                 "programmees": "opérations programmées", "comptes": "comptes", "biens": "biens", "devises": "parités"}
+GARDER_HISTORIQUE = 20
+
+
+def regler(d, corps, resume=None):
+    if corps.get("origine"):
+        return regler(d, {"postes": json.loads(json.dumps(POSTES_DEFAUT)), "budgets": {},
+                          "revenus": json.loads(json.dumps(REVENUS_DEFAUT)), "devises": None}, "retour aux réglages d'origine")
+    if corps.get("restaurer") is not None:
+        h = d.get("historique") or []
+        try:
+            e = h[int(corps["restaurer"])]
+        except (TypeError, ValueError, IndexError):
+            raise ValueError("Point de restauration introuvable.")
+        snap = e.get("parametres") or {}
+        defauts = {"postes": POSTES_DEFAUT, "budgets": {}, "revenus": REVENUS_DEFAUT, "evenements": [], "programmees": [],
+                   "comptes": COMPTES_DEFAUT, "biens": [], "devises": None}
+        c2 = {k: json.loads(json.dumps(snap[k] if k in snap else defauts[k])) for k in SECTIONS_REGLAGES}
+        c2["retablir"] = e.get("ops") or {}
+        return regler(d, c2, "retour en arrière")
+    prm = d.setdefault("parametres", {})
+    avant = json.loads(json.dumps({k: v for k, v in prm.items() if k != "rev"}))
+    modifs = {}   # opérations reclassées par ce changement : {id: {champ: ancienne valeur}}, pour pouvoir revenir en arrière
+    def noter(x, champ):
+        modifs.setdefault(x.get("id"), {}).setdefault(champ, x.get(champ))
+    if "postes" in corps:
+        postes, vus, noms = [], set(), set()
+        for x in corps.get("postes") or []:
+            pid = str(x.get("id", "")).strip()
+            label = str(x.get("label", "")).strip()[:60]
+            if not RE_ID.match(pid):
+                raise ValueError("Identifiant de poste invalide : %r" % pid)
+            if not label:
+                raise ValueError("Chaque poste doit avoir un nom.")
+            if pid in vus or label.lower() in noms:
+                raise ValueError("Deux postes portent le même nom : %s" % label)
+            vus.add(pid); noms.add(label.lower())
+            coul = str(x.get("couleur", "#9a968c"))
+            postes.append({"id": pid, "label": label,
+                           "couleur": coul if RE_COULEUR.match(coul) else "#9a968c",
+                           "mots": nettoyer_mots(x.get("mots")) if pid != "autre" else []})
+        if "autre" not in vus:
+            postes.append(dict(POSTES_DEFAUT[-1]))
+        else:  # « Autre » reste toujours en dernier
+            postes = [x for x in postes if x["id"] != "autre"] + [x for x in postes if x["id"] == "autre"]
+        prm["postes"] = postes
+    ids = ids_postes(d)
+    # déplacement des lignes des postes supprimés : {"ancien": "nouveau"}
+    deplacer = {str(k): str(v) for k, v in (corps.get("deplacer") or {}).items()}
+    n = 0
+    for x in d["operations"]:
+        if x.get("nature") != "depense":
+            continue
+        c = x.get("categorie")
+        cible = deplacer.get(c, c)
+        if cible not in ids:
+            cible = "autre"
+        if cible != c:
+            noter(x, "categorie")
+            x["categorie"] = cible
+            marquer(d, x)
+            n += 1
+    if "budgets" in corps:
+        budgets = {}
+        for k, v in (corps.get("budgets") or {}).items():
+            if k not in ids:
+                continue
+            try:
+                v = int(round(float(v)))
+            except (TypeError, ValueError):
+                raise ValueError("Budget invalide pour %s." % k)
+            if v > 0:
+                budgets[k] = v
+        prm["budgets"] = budgets
+    else:
+        prm["budgets"] = {k: v for k, v in (prm.get("budgets") or {}).items() if k in ids}
+    if "revenus" in corps:
+        prm["revenus"] = nettoyer_revenus(corps.get("revenus"))
+        rids = ids_revenus(d)
+        for x in d["operations"]:   # type de revenu supprimé : ses lignes vont dans « Autre revenu »
+            if x.get("nature") == "revenu" and x.get("cat_revenu") and x["cat_revenu"] not in rids:
+                noter(x, "cat_revenu")
+                x["cat_revenu"] = "autre"
+                marquer(d, x)
+                n += 1
+    if "evenements" in corps:
+        prm["evenements"] = nettoyer_evenements(corps.get("evenements"), d)
+    if "programmees" in corps:
+        prm["programmees"] = nettoyer_programmees(corps.get("programmees"), d)
+    if "comptes" in corps:
+        prm["comptes"] = nettoyer_comptes(corps.get("comptes"), d)
+    if "biens" in corps:
+        prm["biens"] = nettoyer_biens(corps.get("biens"), d)
+    if "devises" in corps:
+        if corps["devises"] is None:   # parités par défaut de l'application
+            prm.pop("devises", None)
+        else:
+            prm["devises"] = nettoyer_devises(corps.get("devises"))
+    for b in prm.get("biens", []):  # un poste supprimé ne reste pas lié à un bien
+        if b.get("poste") and b["poste"] not in ids:
+            b["poste"] = ""
+    # retour en arrière : les lignes reclassées par le changement annulé retrouvent leur poste / type de revenu
+    for oid, vals in (corps.get("retablir") or {}).items():
+        x = next((o for o in d["operations"] if o.get("id") == oid), None)
+        if not x:
+            continue
+        if x.get("nature") == "depense" and vals.get("categorie") in ids_postes(d) and x.get("categorie") != vals["categorie"]:
+            x["categorie"] = vals["categorie"]
+            marquer(d, x)
+        if x.get("nature") == "revenu" and "cat_revenu" in vals and (vals["cat_revenu"] in ids_revenus(d) or not vals["cat_revenu"]):
+            x["cat_revenu"] = vals["cat_revenu"] or "autre"
+            marquer(d, x)
+    marquer_parametres(d)
+    h = d.setdefault("historique", [])
+    h.append({"date": horodatage(), "resume": resume or ", ".join(NOMS_SECTIONS[k] for k in SECTIONS_REGLAGES if k in corps) or "réglages",
+              "parametres": avant, "ops": modifs})
+    del h[:-GARDER_HISTORIQUE]
+    return {"parametres": prm, "deplacees": n}
+
+
 # ---------------------------------------------------------------- HTTP
 # ---------------------------------------------------------------- onglets ouverts sur l'ordinateur
 # Chaque onglet AppYa de l'ordinateur garde une connexion /api/onglet ouverte (flux d'événements). Le lanceur
@@ -828,7 +956,7 @@ class Gestionnaire(SimpleHTTPRequestHandler):
                 d = lire()
             return self._json(200, d)
         if p == "/api/info":
-            return self._json(200, {"version": VERSION, "fichier": FICHIER, "sauvegardes": SAUVEGARDES, "app": APP_ID,
+            return self._json(200, {"version": VERSION, "nom": VERSION_NOM, "fichier": FICHIER, "sauvegardes": SAUVEGARDES, "app": APP_ID,
                                     "reseau": RESEAU})
         if p == "/api/onglet" and self._client_local():
             q = parse_qs(urlparse(self.path).query)
@@ -963,82 +1091,7 @@ class Gestionnaire(SimpleHTTPRequestHandler):
                 raise KeyError(ident)
             return self._ecriture(remplacer)
         if p == "/api/parametres":
-            def regler(d):
-                prm = d.setdefault("parametres", {})
-                if "postes" in corps:
-                    postes, vus, noms = [], set(), set()
-                    for x in corps.get("postes") or []:
-                        pid = str(x.get("id", "")).strip()
-                        label = str(x.get("label", "")).strip()[:60]
-                        if not RE_ID.match(pid):
-                            raise ValueError("Identifiant de poste invalide : %r" % pid)
-                        if not label:
-                            raise ValueError("Chaque poste doit avoir un nom.")
-                        if pid in vus or label.lower() in noms:
-                            raise ValueError("Deux postes portent le même nom : %s" % label)
-                        vus.add(pid); noms.add(label.lower())
-                        coul = str(x.get("couleur", "#9a968c"))
-                        postes.append({"id": pid, "label": label,
-                                       "couleur": coul if RE_COULEUR.match(coul) else "#9a968c",
-                                       "mots": nettoyer_mots(x.get("mots")) if pid != "autre" else []})
-                    if "autre" not in vus:
-                        postes.append(dict(POSTES_DEFAUT[-1]))
-                    else:  # « Autre » reste toujours en dernier
-                        postes = [x for x in postes if x["id"] != "autre"] + [x for x in postes if x["id"] == "autre"]
-                    prm["postes"] = postes
-                ids = ids_postes(d)
-                # déplacement des lignes des postes supprimés : {"ancien": "nouveau"}
-                deplacer = {str(k): str(v) for k, v in (corps.get("deplacer") or {}).items()}
-                n = 0
-                for x in d["operations"]:
-                    if x.get("nature") != "depense":
-                        continue
-                    c = x.get("categorie")
-                    cible = deplacer.get(c, c)
-                    if cible not in ids:
-                        cible = "autre"
-                    if cible != c:
-                        x["categorie"] = cible
-                        marquer(d, x)
-                        n += 1
-                if "budgets" in corps:
-                    budgets = {}
-                    for k, v in (corps.get("budgets") or {}).items():
-                        if k not in ids:
-                            continue
-                        try:
-                            v = int(round(float(v)))
-                        except (TypeError, ValueError):
-                            raise ValueError("Budget invalide pour %s." % k)
-                        if v > 0:
-                            budgets[k] = v
-                    prm["budgets"] = budgets
-                else:
-                    prm["budgets"] = {k: v for k, v in (prm.get("budgets") or {}).items() if k in ids}
-                if "revenus" in corps:
-                    prm["revenus"] = nettoyer_revenus(corps.get("revenus"))
-                    rids = ids_revenus(d)
-                    for x in d["operations"]:   # type de revenu supprimé : ses lignes vont dans « Autre revenu »
-                        if x.get("nature") == "revenu" and x.get("cat_revenu") and x["cat_revenu"] not in rids:
-                            x["cat_revenu"] = "autre"
-                            marquer(d, x)
-                            n += 1
-                if "evenements" in corps:
-                    prm["evenements"] = nettoyer_evenements(corps.get("evenements"), d)
-                if "programmees" in corps:
-                    prm["programmees"] = nettoyer_programmees(corps.get("programmees"), d)
-                if "comptes" in corps:
-                    prm["comptes"] = nettoyer_comptes(corps.get("comptes"), d)
-                if "biens" in corps:
-                    prm["biens"] = nettoyer_biens(corps.get("biens"), d)
-                if "devises" in corps:
-                    prm["devises"] = nettoyer_devises(corps.get("devises"))
-                for b in prm.get("biens", []):  # un poste supprimé ne reste pas lié à un bien
-                    if b.get("poste") and b["poste"] not in ids:
-                        b["poste"] = ""
-                marquer_parametres(d)
-                return {"parametres": prm, "deplacees": n}
-            return self._ecriture(regler)
+            return self._ecriture(lambda d: regler(d, corps))
         return self._json(404, {"erreur": "Adresse inconnue."})
 
     def do_DELETE(self):
@@ -1103,7 +1156,7 @@ def main():
     d = lire()
     if d.get("version") != 5 or not isinstance(d.get("operations"), list):
         sys.exit("Format de données non reconnu (version %s) dans %s : AppYa %s ne lit que le format 5."
-                 % (d.get("version"), FICHIER, VERSION))
+                 % (d.get("version"), FICHIER, VERSION_NOM + " " + VERSION))
 
     with VERROU:
         copier_miroir()   # au démarrage : rattrape les écritures faites pendant que le disque miroir était absent
@@ -1126,7 +1179,7 @@ def main():
     url = "http://localhost:%d" % port
 
     print("")
-    print("  AppYa %s" % VERSION)
+    print("  AppYa %s %s" % (VERSION_NOM, VERSION))
     print("  Ouvert sur        : %s" % url)
     if a.reseau:
         ip = ip_locale()

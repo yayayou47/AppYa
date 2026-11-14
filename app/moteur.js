@@ -293,8 +293,26 @@
     return out;
   }
 
-  function regler(d, corps) {
+  // réglages et retour en arrière : mêmes règles que regler() dans serveur.py (historique des 20 derniers changements)
+  const SECTIONS_REGLAGES = ['postes', 'budgets', 'revenus', 'evenements', 'programmees', 'comptes', 'biens', 'devises'];
+  const NOMS_SECTIONS = {postes: 'postes', budgets: 'budgets', revenus: 'types de revenus', evenements: 'événements',
+                         programmees: 'opérations programmées', comptes: 'comptes', biens: 'biens', devises: 'parités'};
+  const GARDER_HISTORIQUE = 20;
+  function regler(d, corps, resume) {
+    if (corps.origine)
+      return regler(d, {postes: copie(POSTES_DEFAUT), budgets: {}, revenus: copie(REVENUS_DEFAUT), devises: null}, "retour aux réglages d'origine");
+    if (corps.restaurer !== undefined && corps.restaurer !== null) {
+      const e = (d.historique || [])[parseInt(corps.restaurer, 10)];
+      if (!e) erreur('Point de restauration introuvable.');
+      const snap = e.parametres || {}, defauts = {postes: POSTES_DEFAUT, budgets: {}, revenus: REVENUS_DEFAUT, evenements: [], programmees: [],
+                                                  comptes: COMPTES_DEFAUT, biens: [], devises: null};
+      const c2 = {}; for (const k of SECTIONS_REGLAGES) c2[k] = copie(k in snap ? snap[k] : defauts[k]);
+      c2.retablir = e.ops || {};
+      return regler(d, c2, 'retour en arrière');
+    }
     const prm = d.parametres = d.parametres || {};
+    const avant = copie(Object.fromEntries(Object.entries(prm).filter(([k]) => k !== 'rev')));
+    const modifs = {}, noter = (x, champ) => { const m = modifs[x.id] = modifs[x.id] || {}; if (!(champ in m)) m[champ] = x[champ]; };
     if ('postes' in corps) {
       let postes = []; const vus = new Set(), noms = new Set();
       for (const x of corps.postes || []) {
@@ -316,7 +334,7 @@
       if (x.nature !== 'depense') continue;
       const c = x.categorie; let cible = c in deplacer ? String(deplacer[c]) : c;
       if (!lesIds.has(cible)) cible = 'autre';
-      if (cible !== c) { x.categorie = cible; marquer(d, x); n++; }
+      if (cible !== c) { noter(x, 'categorie'); x.categorie = cible; marquer(d, x); n++; }
     }
     if ('budgets' in corps) {
       const budgets = {};
@@ -332,15 +350,23 @@
       prm.revenus = nettoyerRevenus(corps.revenus);
       const rids = idsRevenus(d);
       for (const x of d.operations)
-        if (x.nature === 'revenu' && x.cat_revenu && !rids.has(x.cat_revenu)) { x.cat_revenu = 'autre'; marquer(d, x); n++; }
+        if (x.nature === 'revenu' && x.cat_revenu && !rids.has(x.cat_revenu)) { noter(x, 'cat_revenu'); x.cat_revenu = 'autre'; marquer(d, x); n++; }
     }
     if ('evenements' in corps) prm.evenements = nettoyerEvenements(corps.evenements, d);
     if ('programmees' in corps) prm.programmees = nettoyerProgrammees(corps.programmees, d);
     if ('comptes' in corps) prm.comptes = nettoyerComptes(corps.comptes, d);
     if ('biens' in corps) prm.biens = nettoyerBiens(corps.biens, d);
-    if ('devises' in corps) prm.devises = nettoyerDevises(corps.devises);
+    if ('devises' in corps) { if (corps.devises === null) delete prm.devises; else prm.devises = nettoyerDevises(corps.devises); }
     for (const b of prm.biens || []) if (b.poste && !lesIds.has(b.poste)) b.poste = '';
+    for (const [oid, vals] of Object.entries(corps.retablir || {})) {
+      const x = d.operations.find(o => o.id === oid); if (!x) continue;
+      if (x.nature === 'depense' && idsPostes(d).has(vals.categorie) && x.categorie !== vals.categorie) { x.categorie = vals.categorie; marquer(d, x); }
+      if (x.nature === 'revenu' && 'cat_revenu' in vals && (!vals.cat_revenu || idsRevenus(d).has(vals.cat_revenu))) { x.cat_revenu = vals.cat_revenu || 'autre'; marquer(d, x); }
+    }
     marquerParametres(d);
+    const h = d.historique = d.historique || [];
+    h.push({date: horodatage(), resume: resume || SECTIONS_REGLAGES.filter(k => k in corps).map(k => NOMS_SECTIONS[k]).join(', ') || 'réglages', parametres: avant, ops: modifs});
+    h.splice(0, Math.max(0, h.length - GARDER_HISTORIQUE));
     return {parametres: prm, deplacees: n};
   }
 

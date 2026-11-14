@@ -1,5 +1,5 @@
-APPYA — SUIVI FINANCIER, VÉHICULE ET MAISON — VERSION UBUNTU
-==============================================================
+APPYA OUSNOU 1.0.0 — SUIVI FINANCIER, ENGINS ET MAISON — VERSION UBUNTU
+======================================================================
 
 Une application qui tourne dans votre navigateur, sur votre ordinateur
 (http://localhost:8780), sans internet. Vos données restent chez vous,
@@ -138,6 +138,18 @@ construction d'une villa, mariage, mission, baptême, prêts, frais bancaires).
 Elles sont rangées à part : vos propres données ne sont ni lues ni modifiées.
 « Recréer les données de démo » les remet à zéro ; « Quitter la démo » ramène
 à votre carnet.
+
+Annuler et revenir en arrière :
+  - Supprimer une opération, retirer un compte, un bien, un événement, un type
+    de revenu, une opération programmée ou une devise affiche « Annuler »
+    pendant 10 secondes en bas de l'écran.
+  - Chaque changement de réglages enregistré affiche aussi « Annuler ».
+  - Données et réglages › Sauvegarde et retour › Retour en arrière : les 20
+    derniers changements de réglages ; « Rétablir l'état d'avant » y revient
+    (les lignes déplacées retrouvent leur poste). « Revenir aux réglages
+    d'origine » remet postes, budgets, types de revenus et parités comme à
+    l'installation, sans toucher aux opérations, comptes, biens, engins,
+    maisons, événements et opérations programmées ; ce retour s'annule aussi.
 
 Montants masqués : dans la vue Patrimoine seulement, le patrimoine net, les
 soldes des comptes, la valeur des biens et les prêts s'affichent « ••••• »
@@ -377,7 +389,7 @@ il agit toujours sur l'installation réelle. Avant tout retrait, il recopie
 une dernière fois les données dans la copie miroir (disque branché). Il
 ne supprime jamais le dossier d'origine.
 
-Contenu : serveur.py (AppYa 3.3, Python, bibliothèque standard), app/index.html,
+Contenu : serveur.py (AppYa Ousnou 1.0.0, Python, bibliothèque standard), app/index.html,
 app/moteur.js et app/mode.js (version autonome), app/releve.js et
 app/pdf.min.js + app/pdf.worker.min.js (pdf.js 3.11.174, Mozilla, licence
 Apache 2.0 : app/LICENCE-pdfjs.txt ; lecture des relevés), app/sw.js et

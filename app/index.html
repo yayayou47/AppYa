@@ -262,9 +262,9 @@ header .ctl>.btn,header .ctl>.devsel,header .ctl .expmenu>.btn{height:44px;displ
 }
 /* logo */
 h1.titre{display:flex;align-items:center;gap:10px}
-.logo{width:40px;height:40px;border-radius:999px;flex:none}
-/* nom de l'application : logo collé au nom en lettres dorées, ensemble dans une pastille arrondie aux couleurs du logo (identique en mode sombre) */
-.nomapp{display:inline-flex;align-items:center;gap:8px;padding:3px 18px 3px 3px;border-radius:999px;background:linear-gradient(180deg,#26598a,#1f4e79);color:#f2b93f;font-weight:700;letter-spacing:.03em;line-height:1.25;box-shadow:inset 0 0 0 1.5px #c98a1c,0 1px 3px rgba(0,0,0,.18)}
+.motd{height:1.04em;width:auto;flex:none;margin-right:.02em;vertical-align:-.14em;overflow:visible}
+/* mot-symbole « Daftar » : le D monogramme (D + livre + trait du $) suivi de « aftar » en lettres dorées, dans une pastille arrondie aux couleurs du logo (identique en mode sombre). L'icône, elle, est le monogramme seul. */
+.nomapp{display:inline-block;white-space:nowrap;font-size:1.3em;padding:2px 18px 4px 12px;border-radius:999px;background:linear-gradient(180deg,#26598a,#1f4e79);color:#f2b93f;font-weight:700;letter-spacing:.03em;line-height:1.25;box-shadow:inset 0 0 0 1.5px #c98a1c,0 1px 3px rgba(0,0,0,.18)}
 /* journal : niveau de dépense de chaque jour (vert bas, jaune moyen, rouge élevé), écrit en plus de la couleur */
 :root{--jb:#256940;--jb-bg:#e7f3eb;--jm:#8a5600;--jm-bg:#fbf0d6;--jh:#b4362b;--jh-bg:#f9e2de}
 @media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--jb:#6cc08f;--jb-bg:#1d3326;--jm:#e0b058;--jm-bg:#3a3020;--jh:#ef7a6b;--jh-bg:#3e2420}}
@@ -480,7 +480,7 @@ tr.solde td{color:var(--muted)}
 
 <main class="wrap" id="contenu">
   <header>
-    <h1 class="titre"><span class="nomapp"><img src="daftar-192.png" alt="" class="logo" width="40" height="40">Daftar</span></h1>
+    <h1 class="titre"><span class="nomapp" role="img" aria-label="Daftar"><svg class="motd" viewBox="16 6 36 52" aria-hidden="true" focusable="false"><path d="M17 14h15a18 18 0 0 1 0 36H17z" fill="#f2b93f"/><path d="M29.5 24.6c2.8-1.5 5.6-1.5 7.5 0v14.6c-1.9-1.3-4.7-1.3-7.5 0zM37 24.6c1.9-1.5 4.7-1.5 7.5 0v14.6c-2.8-1.3-5.6-1.3-7.5 0z" fill="#1f4e79"/><path d="M31 28.6h4M31 32h4M31 35.4h3M39 28.6h4M39 32h4M39 35.4h3" stroke="#f2b93f" stroke-width="1.2" stroke-linecap="round"/><rect x="20" y="7" width="5" height="50" rx="2.5" fill="#f5f3ee"/></svg><span aria-hidden="true">aftar</span></span></h1>
     <div class="ctl">
       <button id="syncBtn" class="btn ghost syncpill" type="button" hidden aria-live="polite"></button>
       <select id="devise" class="devsel" aria-label="Devise d'affichage" title="Devise d'affichage"></select>
@@ -902,7 +902,7 @@ function setProgrammees(l){PROGS=(Array.isArray(l)?l:[]).map(x=>({...x,ignorees:
 const PERIODES={1:'chaque mois',2:'tous les 2 mois',3:'chaque trimestre',6:'chaque semestre',12:'chaque année'};
 const TYPES_EVT={mariage:'Mariage',bapteme:'Baptême',circoncision:'Circoncision',funerailles:'Funérailles',fete:'Fête','voyage-tourisme':'Voyage (tourisme)','voyage-mission':'Voyage (mission)','voyage-vacances':'Voyage (vacances)',sante:'Santé',projet:'Projet',autre:'Autre'};
 /* Nature d'une opération : s = sens sur le compte (+1 entrée, −1 sortie, 0 virement) */
-const VERSION_APP='Ousnou 1.1.3';   // nom et numéro de version (même valeur que VERSION / VERSION_NOM dans serveur.py)
+const VERSION_APP='Ousnou 1.2.0';   // nom et numéro de version (même valeur que VERSION / VERSION_NOM dans serveur.py)
 const NAT={depense:{l:'Dépense',s:-1},revenu:{l:'Revenu',s:1},virement:{l:'Virement',s:0},pret:{l:'Prêt accordé',s:-1},remboursement:{l:'Remboursement reçu',s:1},investissement:{l:'Investissement',s:-1}};
 const TYPES_CPT={especes:'Espèces',courant:'Compte courant',epargne:'Épargne',carte:'Carte prépayée',mobile:'Mobile money'};
 const MOTS_REVENU=['salaire','salary','prime','revenu','interet','honoraire','indemnite','bourse','vacation','perdiem','per diem','prodes','frais de mission','consultance','jury','soutenance','seminaire','atelier'];

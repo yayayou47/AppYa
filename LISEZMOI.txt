@@ -1,4 +1,4 @@
-DAFTAR OUSNOU 1.1.3 — SUIVI FINANCIER, ENGINS ET MAISON — VERSION UBUNTU
+DAFTAR OUSNOU 1.2.0 — SUIVI FINANCIER, ENGINS ET MAISON — VERSION UBUNTU
 ======================================================================
 
 Une application qui tourne dans votre navigateur, sur votre ordinateur
@@ -398,7 +398,7 @@ il agit toujours sur l'installation réelle. Avant tout retrait, il recopie
 une dernière fois les données dans la copie miroir (disque branché). Il
 ne supprime jamais le dossier d'origine.
 
-Contenu : serveur.py (Daftar Ousnou 1.1.3, Python, bibliothèque standard), app/index.html,
+Contenu : serveur.py (Daftar Ousnou 1.2.0, Python, bibliothèque standard), app/index.html,
 app/moteur.js et app/mode.js (version autonome), app/releve.js et
 app/pdf.min.js + app/pdf.worker.min.js (pdf.js 3.11.174, Mozilla, licence
 Apache 2.0 : app/LICENCE-pdfjs.txt ; lecture des relevés), app/sw.js et

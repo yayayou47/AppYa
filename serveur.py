@@ -134,7 +134,7 @@ def ids_de(d, cle):
 # sont stockés dans le bien : vidange = {intervalle, dernier, prochain} (km).
 CAT_VEHICULE = ("carburant", "entretien", "reparation", "service", "achat", "investissement", "autre")
 VIDANGE_DEFAUT = {"intervalle": 3000, "dernier": 0, "prochain": 0}
-ENGINS = ("voiture", "moto", "camion", "autre")   # type d'un bien « vehicule » (rubrique My Car, plusieurs engins possibles)
+ENGINS = ("voiture", "moto", "bus", "camion", "groupe", "autre")   # type d'un bien « vehicule » (rubrique My Car, plusieurs engins possibles)
 
 
 # ---------------------------------------------------------------- v4 : carnet de la maison

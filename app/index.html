@@ -472,7 +472,7 @@ tr.solde td{color:var(--muted)}
         <div class="menu" id="exportMenu" role="menu" aria-label="Que voulez-vous exporter ?" hidden>
           <button type="button" role="menuitem" data-x="tout">Tout <span class="hint">toutes les rubriques</span><span class="cour hint"></span></button>
           <button type="button" role="menuitem" data-x="fin">Mes finances <span class="hint">journal de la période, postes, comptes, prêts, biens</span><span class="cour hint"></span></button>
-          <button type="button" role="menuitem" data-x="veh">My Car <span class="hint">journal, récapitulatif mensuel, vidanges</span><span class="cour hint"></span></button>
+          <button type="button" role="menuitem" data-x="veh">Engins <span class="hint">journal, récapitulatif mensuel, vidanges</span><span class="cour hint"></span></button>
           <button type="button" role="menuitem" data-x="mai">House <span class="hint">travaux, récapitulatif par année, projet</span><span class="cour hint"></span></button>
         </div>
       </div>
@@ -489,7 +489,7 @@ tr.solde td{color:var(--muted)}
   </div>
   <nav class="apptabs" aria-label="Rubriques">
     <button type="button" id="aFin" aria-pressed="true"><svg class="ic" aria-hidden="true" focusable="false"><use href="#i-finances"/></svg><span>Mes finances</span></button>
-    <button type="button" id="aVeh" aria-pressed="false"><svg class="ic" aria-hidden="true" focusable="false"><use href="#i-car"/></svg><span>My Car</span></button>
+    <button type="button" id="aVeh" aria-pressed="false"><svg class="ic" aria-hidden="true" focusable="false"><use href="#i-car"/></svg><span>Engins</span></button>
     <button type="button" id="aMai" aria-pressed="false"><svg class="ic" aria-hidden="true" focusable="false"><use href="#i-house"/></svg><span>House</span></button>
     <button type="button" id="aDon" aria-pressed="false"><svg class="ic" aria-hidden="true" focusable="false"><use href="#i-reglages"/></svg><span>Données et réglages</span></button>
   </nav>
@@ -663,7 +663,7 @@ tr.solde td{color:var(--muted)}
         <div class="field"><label class="label" for="fCatV">Catégorie</label><select id="fCatV"></select></div>
         <div class="field"><label class="label" for="fKm">Compteur (km)</label><input id="fKm" inputmode="numeric" placeholder="110 882" autocomplete="off" aria-describedby="fKmHint"><span class="hint" id="fKmHint"></span></div>
         <div class="field"><label class="label" for="fQty">Quantité</label><div class="qty"><input id="fQty" inputmode="decimal" placeholder="35,71" autocomplete="off"><select id="fUnit" aria-label="Unité"><option value="L">litres</option><option value="u">unités</option></select></div></div>
-        <div class="check vidbox" id="vidBox" hidden><label><input type="checkbox" id="fVid" checked> Nouvelle vidange</label><span>· prochaine à <input id="fVidNext" inputmode="numeric" aria-label="Prochaine vidange (km)" class="num" style="width:7.5em;display:inline-block"> km <span class="hint" id="vidInt"></span></span></div>
+        <div class="check vidbox" id="vidBox" hidden><label><input type="checkbox" id="fVid" checked> Nouvelle vidange</label><span>· prochaine à <input id="fVidNext" inputmode="numeric" aria-label="Prochaine vidange (km)" class="num" style="width:7.5em;display:inline-block"> km <span class="hint" id="fVidInt"></span></span></div>
       </fieldset>
       <fieldset class="full vehf" id="wMai" hidden><legend class="label">Maison</legend>
         <div class="field"><label class="label" for="fCatM">Catégorie des travaux</label><select id="fCatM"></select></div>
@@ -1206,7 +1206,7 @@ function render(){
   $('statsBox').hidden=!isS;$('saisie').hidden=!isD;if(!isS)cacherTip();
   ['vehDash','vehStats','vehRecap','vehVid','vehJournal'].forEach(i=>$(i).hidden=!isV);
   ['maiDash','maiStats','maiRecap','maiPersp','maiJournal'].forEach(i=>$(i).hidden=!isH);
-  document.title=(isD?'Données et réglages':isH?'House':isV?'My Car · '+(vehAll?'toutes les années':cur.y):isP?'Patrimoine':(isS?'Statistiques · ':'')+$('perLabel').textContent.replace(/^./,c=>c.toUpperCase()))+' · AppYa';
+  document.title=(isD?'Données et réglages':isH?'House':isV?'Engins · '+(vehAll?'toutes les années':cur.y):isP?'Patrimoine':(isS?'Statistiques · ':'')+$('perLabel').textContent.replace(/^./,c=>c.toUpperCase()))+' · AppYa';
   if(isV){renderVehicule();return}
   if(isH){renderMaison();return}
   if(isD){openVidange();openProjet();return}
@@ -1460,7 +1460,7 @@ const MOTS_CATV=[['carburant',['essence','gasoil','gazoil','carburant','super','
   ['achat',['achat','pneu','batterie','amortisseur','couverture','pièce','piece','ampoule']],['investissement',['investissement','installation','gps','autoradio','radio']]];
 function guessCatV(lib){const L=String(lib||'').toLowerCase();if(/amende/.test(L))return 'autre';for(const [c,ms] of MOTS_CATV)if(ms.some(m=>L.includes(m)))return c;return 'autre'}
 /* Plusieurs engins (voitures, motos…) et plusieurs maisons : la rubrique affiche l'engin / la maison choisi(e) */
-const ENGINS={voiture:'Voiture',moto:'Moto',camion:'Camion',autre:'Autre engin'};
+const ENGINS={voiture:'Voiture',moto:'Moto',bus:'Bus',camion:'Camion',groupe:'Groupe électrogène',autre:'Autre engin'};
 const memo=(k,v)=>{try{if(v===undefined)return localStorage.getItem(k)||'';localStorage.setItem(k,v)}catch(e){return ''}};
 let vehSelId=memo('appya-engin'),maiSelId=memo('appya-maison');
 const VEHS=()=>BIENS.filter(b=>b.vehicule);
@@ -1701,7 +1701,7 @@ function majChamps(){
   $('wMai').hidden=!(n==='investissement'&&BIEN[$('fBien').value]&&BIEN[$('fBien').value].maison);
   if(ctx){const k=kmNow(v),km=num($('fKm').value),vd=vidangeDe(v);$('fKmHint').textContent=k?`Dernier relevé (${v.nom}) : ${nb(k)} km`:'';
     const vid=$('fCatV').value==='entretien'&&isVidange({libelle:$('fLib').value})&&km>0;$('vidBox').hidden=!vid;
-    if(vid){if(!touched.vidnext)$('fVidNext').value=Math.round(km+vd.intervalle);$('vidInt').textContent=`(km + intervalle de ${nb(vd.intervalle)}, modifiable)`}}
+    if(vid){if(!touched.vidnext)$('fVidNext').value=Math.round(km+vd.intervalle);$('fVidInt').textContent=`(compteur + intervalle de ${nb(vd.intervalle)}, modifiable)`}}
   $('fCptLab').textContent={revenu:'Reçu sur',remboursement:'Reçu sur',virement:'Depuis le compte'}[n]||'Payé avec';
 }
 function deviner(){
@@ -2091,7 +2091,7 @@ function bienRow(b){const used=all.some(e=>e.nature==='investissement'&&e.bien==
     <input class="bPrix" inputmode="decimal" value="${b.prix_achat?kStr(b.prix_achat):''}" placeholder="prix (milliers)" aria-label="Prix d'achat en milliers">
     <select class="bPoste" aria-label="Poste des frais d'usage"><option value="">— pas de frais d'usage —</option>${CATS.filter(c=>c.id!=='autre').map(c=>`<option value="${c.id}"${c.id===b.poste?' selected':''}>${esc(c.label)}</option>`).join('')}</select>
     <input class="bMots" value="${esc((b.mots||[]).join(', '))}" placeholder="mots-clés d'investissement" aria-label="Mots-clés d'investissement">
-    <select class="bRole" aria-label="Rôle du bien"><option value="">Rôle : bien simple</option>${Object.entries(ENGINS).map(([k,l])=>`<option value="v:${k}"${b.vehicule&&(b.engin||'voiture')===k?' selected':''}>Engin : ${l.toLowerCase()} (My Car)</option>`).join('')}<option value="maison"${b.maison?' selected':''}>Maison, construction (House)</option></select>
+    <select class="bRole" aria-label="Rôle du bien"><option value="">Rôle : bien simple</option>${Object.entries(ENGINS).map(([k,l])=>`<option value="v:${k}"${b.vehicule&&(b.engin||'voiture')===k?' selected':''}>Engin : ${l.toLowerCase()} (Engins)</option>`).join('')}<option value="maison"${b.maison?' selected':''}>Maison, construction (House)</option></select>
     <button type="button" class="mini danger" data-x ${used?'disabled title="Bien avec investissements : impossible à supprimer"':''} aria-label="Supprimer le bien">✕</button></div>`}
 function openCB(){$('cptEdit').innerHTML=COMPTES.map(cptRow).join('');$('bienEdit').innerHTML=BIENS.map(bienRow).join('');cbDirty=false}
 $('cbBox').addEventListener('input',()=>{cbDirty=true});
@@ -2526,7 +2526,7 @@ function feuillesMaison(X){
     const ws=F[F.length-1][1];if(ws.B10&&typeof ws.B10.v==='number')ws.B10.z='0.0%'}
   return {feuilles:F,nom:'maison'};
 }
-const EXPORTS={tout:{l:'Tout (toutes les rubriques)'},fin:{l:'Mes finances',f:feuillesFinancier},veh:{l:'My Car',f:feuillesVehicule},mai:{l:'House',f:feuillesMaison}};
+const EXPORTS={tout:{l:'Tout (toutes les rubriques)'},fin:{l:'Mes finances',f:feuillesFinancier},veh:{l:'Engins',f:feuillesVehicule},mai:{l:'House',f:feuillesMaison}};
 async function exporter(choix){
   const btn=$('exportBtn'),lab=btn.innerHTML;btn.disabled=true;btn.setAttribute('aria-busy','true');
   try{

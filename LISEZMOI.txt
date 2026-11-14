@@ -113,8 +113,8 @@ directe (pdf.js, inclus). PDF scanné ou photo : reconnaissance de texte
 les montants avec soin.
 
 Plusieurs engins, plusieurs maisons : dans Comptes et biens, chaque bien a
-un « Rôle » : bien simple, Engin (voiture, moto, camion, autre : rubrique
-My Car) ou Maison (rubrique House). Avec deux engins ou plus, My Car affiche
+un « Rôle » : bien simple, Engin (voiture, moto, bus, camion, groupe
+électrogène, autre : rubrique Engins) ou Maison (rubrique House). Avec deux engins ou plus, Engins affiche
 une barre pour passer de l'un à l'autre (de même pour House). Chaque engin a
 son compteur, ses repères de vidange (Repères vidange › Engin) et son poste
 de frais d'usage ; une saisie qui cite son nom (« carburant yamaha ») va à

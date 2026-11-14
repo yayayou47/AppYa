@@ -276,7 +276,7 @@
         const vg = x.vidange || {};
         const km = (k, defaut = 0) => { const v = Number(vg[k] || defaut); if (!Number.isFinite(v)) erreur('Repère de vidange invalide pour ' + nom + '.'); return Math.max(0, Math.trunc(v)); };
         b.vehicule = true;
-        b.engin = ['voiture', 'moto', 'camion', 'autre'].includes(x.engin) ? x.engin : 'voiture';
+        b.engin = ['voiture', 'moto', 'bus', 'camion', 'groupe', 'autre'].includes(x.engin) ? x.engin : 'voiture';
         b.vidange = {intervalle: km('intervalle', 3000) || 3000, dernier: km('dernier'), prochain: km('prochain')};
       }
       if (x.maison) {

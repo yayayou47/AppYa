@@ -9,11 +9,11 @@
    figée au jour de l'installation : hors ligne, le téléphone montrait une vieille version (sans les icônes).
    Si l'ordinateur ne répond pas (éteint, Tailscale coupé), on n'attend pas plus de DELAI ms avant de
    servir le cache (la page) ; les icônes et le tableur sont servis du cache sans attendre. La réponse du réseau, si elle arrive plus tard, met quand même le cache à jour. */
-const CACHE = 'appya-v3';
+const CACHE = 'appya-v4';
 const DELAI = 3000;
 // chemins relatifs au dossier du service : '/' sur l'ordinateur, '/AppYa/' sur GitHub Pages
 const BASE = new URL('./', self.location).pathname;
-const FICHIERS = ['index.html', 'mode.js', 'moteur.js', 'xlsx.full.min.js', 'icone.svg', 'manifest.webmanifest', 'icone-192.png', 'icone-512.png', 'icone-512-masque.png'].map(f => BASE + f);
+const FICHIERS = ['index.html', 'mode.js', 'moteur.js', 'releve.js', 'pdf.min.js', 'pdf.worker.min.js', 'xlsx.full.min.js', 'icone.svg', 'manifest.webmanifest', 'icone-192.png', 'icone-512.png', 'icone-512-masque.png'].map(f => BASE + f);
 
 function cle(req) {
   const url = new URL(req.url);

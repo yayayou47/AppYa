@@ -29,7 +29,15 @@
 [hidden]{display:none!important}
 dialog.confirm{border:1px solid var(--line);border-radius:14px;padding:18px 20px;width:min(440px,calc(100vw - 32px));background:var(--surface);color:var(--ink);box-shadow:0 12px 40px rgba(0,0,0,.25)}
 dialog.confirm.large{width:min(640px,calc(100vw - 32px))}
+.relsec{margin:6px 0 2px;font-size:.95rem}
+.relrow{display:flex;flex-wrap:wrap;gap:6px 10px;align-items:center;padding:7px 9px;border:1px solid var(--line);border-radius:10px;margin-bottom:6px}
+.relrow input[type=checkbox]{width:auto;flex:0 0 auto;margin:0}
+.relrow .rmt{font-variant-numeric:tabular-nums;font-weight:600;min-width:7em;text-align:right}
+.relrow .rmt.in{color:var(--ok)}
+.relrow input.rlib{flex:2 1 14em;width:auto;min-width:0}.relrow select{width:auto;flex:0 1 auto}
+.relrow .rinfo{flex:1 1 100%;font-size:.85rem;color:var(--muted)}
 .pgrow{display:grid;grid-template-columns:auto 1fr;gap:4px 10px;align-items:center;padding:8px;border:1px solid var(--line);border-radius:10px}
+.pgrow input[type=checkbox]{width:auto;margin:0}
 .pgrow .pgl{font-weight:600}.pgrow .pgf{display:flex;flex-wrap:wrap;gap:6px;grid-column:2}
 .pgrow .pgf input{width:auto;flex:1 1 8em;min-width:0}
 dialog.confirm::backdrop{background:rgba(20,24,32,.5)}
@@ -441,6 +449,7 @@ tr.solde td{color:var(--muted)}
     <symbol id="i-annee" viewBox="0 0 24 24"><rect x="3.5" y="5" width="17" height="15.5" rx="2"/><path d="M3.5 10h17M8 3v4M16 3v4M9.2 10v10.5M14.8 10v10.5M3.5 15.2h17"/></symbol>
     <symbol id="i-patrimoine" viewBox="0 0 24 24"><ellipse cx="12" cy="6.5" rx="7" ry="2.5"/><path d="M5 6.5v4c0 1.4 3.1 2.5 7 2.5s7-1.1 7-2.5v-4"/><path d="M5 10.5v4c0 1.4 3.1 2.5 7 2.5s7-1.1 7-2.5v-4"/><path d="M5 14.5v3c0 1.4 3.1 2.5 7 2.5s7-1.1 7-2.5v-3"/></symbol>
     <symbol id="i-stats" viewBox="0 0 24 24"><path d="M4 20h16"/><path d="M7.5 20v-6M12 20V7.5M16.5 20v-9.5"/></symbol>
+    <symbol id="i-releve" viewBox="0 0 24 24"><path d="M6 3h9l4 4v14H6z"/><path d="M15 3v4h4M9 11h7M9 14.5h7M9 18h4"/></symbol>
     <symbol id="i-cycle" viewBox="0 0 24 24"><path d="M20 11a8 8 0 0 0-14.5-4.6M4 13a8 8 0 0 0 14.5 4.6"/><path d="M5 3v4h4M19 21v-4h-4"/></symbol>
     <symbol id="i-etoile" viewBox="0 0 24 24"><path d="M12 3.5l2.6 5.3 5.8.8-4.2 4.1 1 5.8-5.2-2.7-5.2 2.7 1-5.8-4.2-4.1 5.8-.8z"/></symbol>
     <symbol id="i-sauve" viewBox="0 0 24 24"><path d="M12 3v11M7.5 9.5 12 14l4.5-4.5"/><path d="M4 15v3.5A2.5 2.5 0 0 0 6.5 21h11a2.5 2.5 0 0 0 2.5-2.5V15"/></symbol>
@@ -622,6 +631,7 @@ tr.solde td{color:var(--muted)}
       <button role="tab" id="tPostes" aria-selected="false"><svg class="ic" aria-hidden="true" focusable="false"><use href="#i-tag"/></svg><span>Postes et libellés</span></button>
       <button role="tab" id="tCB" aria-selected="false"><svg class="ic" aria-hidden="true" focusable="false"><use href="#i-banque"/></svg><span>Comptes et biens</span></button>
       <button role="tab" id="tEvt" aria-selected="false"><svg class="ic" aria-hidden="true" focusable="false"><use href="#i-etoile"/></svg><span>Événements et revenus</span></button>
+      <button role="tab" id="tRel" aria-selected="false"><svg class="ic" aria-hidden="true" focusable="false"><use href="#i-releve"/></svg><span>Relevé bancaire</span></button>
       <button role="tab" id="tProg" aria-selected="false"><svg class="ic" aria-hidden="true" focusable="false"><use href="#i-cycle"/></svg><span>Programmées</span></button>
       <button role="tab" id="tVid" aria-selected="false"><svg class="ic" aria-hidden="true" focusable="false"><use href="#i-huile"/></svg><span>Repères vidange</span></button>
       <button role="tab" id="tMai" aria-selected="false"><svg class="ic" aria-hidden="true" focusable="false"><use href="#i-chantier"/></svg><span>Projet maison</span></button>
@@ -716,6 +726,16 @@ tr.solde td{color:var(--muted)}
         <div class="row full"><button class="btn" type="submit">Enregistrer le projet</button><span id="pjMsg" class="muted"></span></div>
       </form>
     </div>
+    <div id="relBox" hidden style="display:flex;flex-direction:column;gap:12px">
+    <div class="phead"><h3 class="sub">Relevé bancaire</h3><span class="hint">PDF ou photo · comparé au carnet, rien n'est modifié sans votre accord</span></div>
+    <div class="hint">Le relevé est lu <b>dans cet appareil</b> (rien n'est envoyé). PDF du site de la banque : lecture directe. PDF scanné ou photo : reconnaissance de texte (OCR), dont le module (≈ 15 Mo) se télécharge la première fois. Ensuite : ✓ lignes déjà notées, ✎ montants ou dates à corriger, ➕ lignes absentes du carnet à ajouter, ⚠ lignes du carnet absentes du relevé.</div>
+    <div class="row"><label class="label" for="relFichier">Fichier du relevé</label><input type="file" id="relFichier" accept="application/pdf,.pdf,image/*"></div>
+    <div class="row"><label class="label" for="relCpt">Compte</label><select id="relCpt" style="width:auto"></select>
+      <label class="label" for="relDepuis">Comparer à partir du</label><input type="date" id="relDepuis" style="width:auto">
+      <button class="btn" type="button" id="relGo">Analyser</button><span id="relMsg" class="muted" role="status"></span></div>
+    <div id="relRes"></div>
+    <div class="row" id="relActions" hidden><button class="btn" type="button" id="relAppliquer">Appliquer la sélection</button><span id="relMsg2" class="muted" role="status"></span></div>
+    </div>
     <div id="progBox" hidden style="display:flex;flex-direction:column;gap:12px">
     <div class="phead"><h3 class="sub">Opérations programmées</h3><span class="hint">Frais de tenue de compte, abonnements, intérêts</span></div>
     <div class="hint">Chaque échéance passée est <b>proposée à confirmer</b> (bandeau en haut de l'écran), jamais enregistrée seule. Le jour 30 ou 31 devient le dernier jour des mois plus courts. « Intérêts du compte » propose le solde du compte à l'échéance × son taux (réglé dans Comptes et biens) ; vous corrigez avec le montant du relevé.</div>
@@ -777,6 +797,7 @@ tr.solde td{color:var(--muted)}
 
 <script src="mode.js"></script>
 <script src="moteur.js"></script>
+<script src="releve.js"></script>
 <script>
 /* ================= référentiels : postes, comptes, biens (chargés depuis parametres) ================= */
 let CATS=[{id:'autre',label:'Autre',couleur:'#9a968c',mots:[]}], CAT={autre:CATS[0]};
@@ -1675,16 +1696,29 @@ $('fAmt').addEventListener('input',amtHint);
 ['input','change','compositionend'].forEach(t=>$('fLib').addEventListener(t,deviner));   // claviers de téléphone : la saisie prédictive n'émet pas toujours « input »
 [['fNat','nat'],['fCpt','cpt'],['fCat','cat'],['fVers','vers'],['fBien','bien'],['fPers','pers'],['fCatV','catv'],['fCatM','catm'],['fCatR','rev'],['fEvt','evt']].forEach(([i,k])=>$(i).addEventListener(i==='fPers'?'input':'change',()=>{touched[k]=true;majChamps()}));
 $('fKm').addEventListener('input',majChamps);
-const tabs=[['tOne','oneForm'],['tPaste','pasteBox'],['tPostes','posteBox'],['tCB','cbBox'],['tEvt','evtBox'],['tProg','progBox'],['tVid','vidPanel'],['tMai','maiPanel'],['tPar','paritesBox'],['tSav','savBox']];
+const tabs=[['tOne','oneForm'],['tPaste','pasteBox'],['tPostes','posteBox'],['tCB','cbBox'],['tEvt','evtBox'],['tProg','progBox'],['tRel','relBox'],['tVid','vidPanel'],['tMai','maiPanel'],['tPar','paritesBox'],['tSav','savBox']];
 function showTab(t,focus){tabs.forEach(([tt,p])=>{const on=tt===t;$(tt).setAttribute('aria-selected',on);$(tt).tabIndex=on?0:-1;$(p).hidden=!on});if(focus)$(t).focus()}
 tabs.forEach(([t,p])=>{$(t).setAttribute('aria-controls',p);$(t).type='button';$(p).setAttribute('role','tabpanel');$(p).setAttribute('aria-labelledby',t)});
 document.querySelector('.tabs').addEventListener('keydown',ev=>{
   const i=tabs.findIndex(([t])=>t===ev.target.id);if(i<0)return;
   const j={ArrowRight:i+1,ArrowLeft:i-1,Home:0,End:tabs.length-1}[ev.key];if(j===undefined)return;
   ev.preventDefault();showTab(tabs[(j+tabs.length)%tabs.length][0],true)});
-tabs.forEach(([t])=>$(t).onclick=()=>{if(t==='tEvt'&&!evtDirty)openEvt();if(t==='tProg'&&!progDirty)openProg();showTab(t)});showTab('tOne');
+tabs.forEach(([t])=>$(t).onclick=()=>{if(t==='tEvt'&&!evtDirty)openEvt();if(t==='tProg'&&!progDirty)openProg();if(t==='tRel')initReleve();showTab(t)});showTab('tOne');
 function resetForm(){['fAmt','fLib','fRem','fPers','fEch','fKm','fQty'].forEach(i=>$(i).value='');$('fLibHint').textContent='';$('fUnit').value='L';$('fVid').checked=true;touched={};$('fNat').value='depense';$('fCpt').value='especes';$('fCat').value='autre';$('fEvt').value='';editId=null;$('editBar').hidden=true;$('addBtn').textContent='Ajouter';majChamps();amtHint();render()}
 /* fenêtre de confirmation : résumé lisible de l'opération avant l'enregistrement (Échap ou « Modifier » = annuler) */
+/* fenêtre de confirmation générique (titre, lignes [libellé, valeur], note) */
+function dialogue(titre,lignes,note){
+  const dlg=$('dlgOp');$('dlgTitre').textContent=titre;
+  $('dlgResume').innerHTML=lignes.map(([k,v,c])=>`<dt>${k}</dt><dd${c?` class="${c}"`:''}>${esc(v)}</dd>`).join('');
+  $('dlgNote').textContent=note||'';$('dlgNote').hidden=!note;
+  if(typeof dlg.showModal!=='function')return Promise.resolve(confirm(titre+'\n'+lignes.map(([k,v])=>k+' : '+v).join('\n')));
+  return new Promise(res=>{
+    const fin=v=>{dlg.removeEventListener('cancel',annul);$('dlgOk').onclick=$('dlgNon').onclick=null;if(dlg.open)dlg.close();res(v)};
+    const annul=ev=>{ev.preventDefault();fin(false)};
+    dlg.addEventListener('cancel',annul);$('dlgOk').onclick=()=>fin(true);$('dlgNon').onclick=()=>fin(false);
+    dlg.showModal();$('dlgOk').focus();
+  });
+}
 function confirmerOp(doc,opt={}){
   const dlg=$('dlgOp');
   const lignes=[['Date',new Date(doc.date+'T12:00').toLocaleDateString('fr-FR',{weekday:'long',day:'numeric',month:'long',year:'numeric'})],
@@ -2482,6 +2516,109 @@ async function enregistrerFichier(nom,blob){
   }
   const url=URL.createObjectURL(blob);const a=document.createElement('a');a.href=url;a.download=nom;document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),4000);
 }
+/* ================= relevé bancaire : lecture, comparaison avec le carnet, ajouts et corrections à valider ================= */
+let REL=null;   // {r: relevé lu, cpt, depuis, groupes, ok, corr, ajout, absents}
+const TOL_J=5;  // écart de date toléré entre le relevé et le carnet (jours)
+const ecartJ=(a,b)=>Math.abs(nbJ(a,b)-1);
+function devinerCompteReleve(texte){const T=normTxt(texte);
+  const c=COMPTES.filter(c=>c.id!=='especes').find(c=>[c.nom,...c.mots].some(m=>{const k=normTxt(m);return k.length>2&&T.includes(k)}));
+  return (c||COMPTES.find(c=>c.type==='courant')||COMPTES[0]).id}
+/* vocabulaire des banques → mots compris par la reconnaissance d'AppYa */
+function libelleLisible(lib){return String(lib).replace(/\bRET ?DAB\b|\bRETDAB\b/i,'retrait DAB').replace(/\bFACTURATIO ?PACKAGE\b/i,'facturation package')
+  .replace(/\bVIRT? RECU\b/i,'virement reçu').replace(/\bVIR EXT MO\b/i,'virement').replace(/\bPHCIE\b/i,'pharmacie').replace(/\bPMT\b/i,'paiement carte').replace(/\s+/g,' ').trim()}
+function proposition(g,cid){
+  const lib=libelleLisible(g.libelle),L=normTxt(lib),base={date:g.date,montant:g.montant,libelle:lib,compte:cid,cree:''};
+  if(g.sens==='credit'){const gr=guessOp(lib);return {...base,nature:'revenu',cat_revenu:gr.cat_revenu||guessCatR(lib),evenement:''}}
+  if(hasWord(L,'retrait')&&!hasWord(L,'frais'))return {...base,nature:'virement',vers:'especes'};
+  const go=guessOp(lib+' '+nomCpt(cid));
+  if(go.nature==='virement'&&go.vers&&go.vers!==cid)return {...base,nature:'virement',vers:go.vers};
+  // frais fixes : rattachés à l'opération programmée de même montant, sur ce compte, si une échéance est proche
+  const pr=PROGS.find(p=>p.compte===cid&&p.mode==='fixe'&&p.montant===g.montant&&echeances(p,addJ(g.date,TOL_J)).some(d=>ecartJ(d,g.date)<=TOL_J));
+  if(pr){const d=echeances(pr,addJ(g.date,TOL_J)).filter(d=>ecartJ(d,g.date)<=TOL_J).pop();return {...base,libelle:pr.libelle,nature:'depense',categorie:pr.categorie||'autre',prog:pr.id,prog_date:d}}
+  return {...base,nature:'depense',categorie:guessCat(lib)}
+}
+function comparerReleve(r,cid,depuis){
+  const au=r.au||today,lignes=r.lignes.filter(l=>l.date>=depuis&&l.date<=au);
+  // une carte débite souvent deux lignes (montant + commission) même jour, même libellé : on les regroupe
+  const groupes=[];for(const l of lignes){const g=groupes.find(x=>x.date===l.date&&x.libelle===l.libelle&&x.sens===l.sens);
+    if(g){g.montant+=l.montant;g.parts.push(l.montant)}else groupes.push({...l,parts:[l.montant]})}
+  const sg=g=>g.sens==='credit'?1:-1;
+  const carnet=all.filter(e=>e.date>=addJ(depuis,-TOL_J)&&e.date<=addJ(au,TOL_J)&&effet(e,cid)!==0);
+  const pris=new Set(),ok=[],corr=[],ajout=[];
+  const chercher=(g,montant,tol)=>carnet.filter(e=>!pris.has(e.id)&&Math.sign(effet(e,cid))===sg(g)&&ecartJ(e.date,g.date)<=tol&&(montant?Math.abs(e.montant)===montant:true))
+    .sort((a,b)=>ecartJ(a.date,g.date)-ecartJ(b.date,g.date));
+  const reste=[];
+  for(const g of groupes){   // 1) montant exact (le groupe, sinon une de ses lignes seule)
+    let e=chercher(g,g.montant,TOL_J)[0];
+    if(!e&&g.parts.length>1)e=g.parts.map(m=>chercher(g,m,TOL_J)[0]).find(Boolean);
+    if(e){pris.add(e.id);ok.push({g,e})}else reste.push(g)}
+  for(const g of reste){   // 2) montant voisin (±15 %) et date proche : correction proposée
+    const e=chercher(g,0,TOL_J).filter(e=>Math.abs(e.montant-g.montant)<=.15*g.montant)[0];
+    if(e){pris.add(e.id);corr.push({g,e,choix:true})}else ajout.push({g,p:proposition(g,cid),choix:true})}
+  const absents=carnet.filter(e=>!pris.has(e.id)&&e.date>=depuis&&e.date<=au);
+  return {r,cpt:cid,depuis,groupes,ok,corr,ajout,absents,solde:r.solde!=null?{date:r.au||today,solde:r.solde,choix:true}:null};
+}
+function detailProp(p,i){
+  if(p.nature==='depense')return `<select data-a="${i}" data-k="categorie" aria-label="Poste">${optsPostes(p.categorie)}</select>`;
+  if(p.nature==='virement')return `→ <select data-a="${i}" data-k="vers" aria-label="Vers le compte">${optsComptes(p.vers,p.compte)}</select>`;
+  if(p.nature==='revenu')return `<select data-a="${i}" data-k="cat_revenu" aria-label="Type de revenu">${REVENUS.map(r=>`<option value="${r.id}"${r.id===p.cat_revenu?' selected':''}>${esc(r.label)}</option>`).join('')}</select>`;
+  return '';
+}
+function renderReleve(){
+  const R=REL;if(!R){$('relRes').innerHTML='';$('relActions').hidden=true;return}
+  const mt=(g)=>`<span class="rmt${g.sens==='credit'?' in':''}">${g.sens==='credit'?'+':'−'}${fmtC(g.montant)}</span>`;
+  const avant=R.r.lignes.filter(l=>l.date<R.depuis).length;
+  let h=`<p class="hint">${R.r.source==='ocr'?'Lu par OCR (vérifiez bien les montants) · ':''}Relevé du ${dmy(R.r.du)} au ${dmy(R.r.au)} · ${R.r.lignes.length} lignes${avant?` (dont ${avant} avant le ${dmy(R.depuis)}, non comparées)`:''} · compte ${esc(nomCpt(R.cpt))}.</p>`;
+  if(R.solde){const s=etatCompte(CPT[R.cpt]),att=soldeAu(CPT[R.cpt],R.solde.date);
+    h+=`<div class="relrow"><input type="checkbox" data-s ${R.solde.choix?'checked':''} aria-label="Noter le solde"><span>Noter le solde du relevé : <b>${fmtC(R.solde.solde)} FCFA</b> au ${dmy(R.solde.date)}</span><span class="rinfo">Solde calculé par AppYa à cette date : ${fmtC(att)} FCFA${att!==R.solde.solde?` · écart ${sgnM(R.solde.solde-att)} (lignes manquantes ou en trop)`:' · identique'}</span></div>`}
+  h+=`<h4 class="relsec">➕ À ajouter au carnet (${R.ajout.length})</h4>`+(R.ajout.length?R.ajout.map((x,i)=>`<div class="relrow"><input type="checkbox" data-c="${i}" ${x.choix?'checked':''} aria-label="Ajouter"><span>${dmy(x.g.date)}</span>${mt(x.g)}
+    <input class="rlib" data-a="${i}" data-k="libelle" value="${esc(x.p.libelle)}" aria-label="Libellé"><select data-a="${i}" data-k="nature" aria-label="Nature">${optsNat(x.p.nature)}</select>${detailProp(x.p,i)}
+    <span class="rinfo">Relevé : ${esc(x.g.libelle)}${x.g.parts.length>1?` · ${x.g.parts.map(fmtC).join(' + ')} (montant + frais)`:''}${x.p.prog?' · rattachée à l\'opération programmée':''}</span></div>`).join(''):'<p class="hint">Aucune.</p>');
+  h+=`<h4 class="relsec">✎ À corriger dans le carnet (${R.corr.length})</h4>`+(R.corr.length?R.corr.map((x,i)=>`<div class="relrow"><input type="checkbox" data-k2="${i}" ${x.choix?'checked':''} aria-label="Corriger"><span>${esc(x.e.libelle)}</span>
+    <span class="rinfo">Carnet : ${dmy(x.e.date)} · ${fmtC(x.e.montant)} FCFA → relevé : ${dmy(x.g.date)} · <b>${fmtC(x.g.montant)} FCFA</b> (${esc(x.g.libelle)})</span></div>`).join(''):'<p class="hint">Aucune.</p>');
+  h+=`<h4 class="relsec">⚠ Dans le carnet mais pas dans le relevé (${R.absents.length})</h4>`+(R.absents.length?`<p class="hint">À vérifier : ligne notée sur le mauvais compte, en double, ou pas encore passée en banque. Rien n'est modifié.</p>`+R.absents.map(e=>`<div class="relrow"><span>${dmy(e.date)}</span><span class="rmt">${fmtC(e.montant)}</span><span>${esc(e.libelle)}</span></div>`).join(''):'<p class="hint">Aucune.</p>');
+  h+=`<details><summary class="hint">✓ Déjà dans le carnet (${R.ok.length})</summary>${R.ok.map(x=>`<div class="relrow"><span>${dmy(x.g.date)}</span>${mt(x.g)}<span>${esc(x.g.libelle)}</span><span class="rinfo">= ${esc(x.e.libelle)} du ${dmy(x.e.date)}</span></div>`).join('')}</details>`;
+  $('relRes').innerHTML=h;$('relActions').hidden=!(R.ajout.length||R.corr.length||R.solde);
+}
+function initReleve(){const v=$('relCpt').value;$('relCpt').innerHTML=optsComptes(v||devinerCompteReleve(''));if(!$('relDepuis').value)$('relDepuis').value=DEBUT_SUIVI||''}
+let relLu=null;
+$('relFichier').onchange=async ev=>{const f=ev.target.files[0];REL=null;renderReleve();if(!f)return;
+  $('relMsg').textContent='Lecture du relevé…';
+  try{relLu=await window.AppYaReleve.lire(f,p=>{$('relMsg').textContent=`Lecture du texte (OCR) : ${Math.round(p*100)} %`});
+    if(!relLu.lignes.length){$('relMsg').textContent="Aucune opération reconnue dans ce fichier.";return}
+    $('relCpt').innerHTML=optsComptes(devinerCompteReleve(relLu.texte));
+    $('relDepuis').value=[relLu.du,DEBUT_SUIVI].filter(Boolean).sort().pop()||relLu.du;
+    $('relMsg').textContent=`${relLu.lignes.length} opérations lues (${dmy(relLu.du)} → ${dmy(relLu.au)}). Vérifiez le compte, puis « Analyser ».`}
+  catch(e){$('relMsg').textContent='Lecture impossible : '+(e.message||e)}};
+$('relGo').onclick=()=>{if(!relLu){$('relMsg').textContent="Choisissez d'abord le fichier du relevé.";return}
+  REL=comparerReleve(relLu,$('relCpt').value,$('relDepuis').value||relLu.du);renderReleve();
+  $('relMsg').textContent=`${REL.ok.length} déjà notées · ${REL.corr.length} à corriger · ${REL.ajout.length} à ajouter · ${REL.absents.length} à vérifier.`};
+$('relRes').addEventListener('change',ev=>{const t=ev.target;if(!REL)return;
+  if(t.dataset.s!==undefined){REL.solde.choix=t.checked;return}
+  if(t.dataset.c!==undefined){REL.ajout[+t.dataset.c].choix=t.checked;return}
+  if(t.dataset.k2!==undefined){REL.corr[+t.dataset.k2].choix=t.checked;return}
+  if(t.dataset.a!==undefined){const x=REL.ajout[+t.dataset.a],k=t.dataset.k;x.p[k]=t.value;
+    if(k==='nature'){if(x.p.nature==='virement'&&!x.p.vers)x.p.vers='especes';if(x.p.nature==='depense'&&!x.p.categorie)x.p.categorie=guessCat(x.p.libelle);if(x.p.nature==='revenu'&&!x.p.cat_revenu)x.p.cat_revenu=guessCatR(x.p.libelle);
+      if(['pret','remboursement','investissement'].includes(x.p.nature)){x.p.nature='depense';$('relMsg2').textContent='Prêts et investissements : ajoutez-les par « Une opération ».'}renderReleve()}}});
+$('relRes').addEventListener('input',ev=>{const t=ev.target;if(REL&&t.dataset.a!==undefined&&t.dataset.k==='libelle')REL.ajout[+t.dataset.a].p.libelle=t.value});
+$('relAppliquer').onclick=async()=>{const R=REL;if(!R)return;
+  const aj=R.ajout.filter(x=>x.choix),co=R.corr.filter(x=>x.choix),so=R.solde&&R.solde.choix?R.solde:null;
+  if(!aj.length&&!co.length&&!so){$('relMsg2').textContent='Rien de coché.';return}
+  const lignes=[];if(aj.length)lignes.push(['Ajouts',`${aj.length} opération${aj.length>1?'s':''} · ${fmtC(sum(aj.map(x=>x.g)))} FCFA`]);
+  if(co.length)lignes.push(['Corrections',co.map(x=>`${x.e.libelle} : ${fmtC(x.e.montant)} → ${fmtC(x.g.montant)}`).join(' ; ')]);
+  if(so)lignes.push(['Solde noté',`${fmtC(so.solde)} FCFA au ${dmy(so.date)} (${nomCpt(R.cpt)})`]);
+  if(!await dialogue('Appliquer le relevé au carnet ?',lignes,'Les opérations ajoutées portent la remarque « relevé ».'))return;
+  $('relAppliquer').disabled=true;
+  try{const base=Date.now();
+    if(aj.length)await api.addMany(aj.map((x,i)=>docOp({...x.p,remarque:'relevé '+nomCpt(R.cpt),cree:new Date(base+i).toISOString()})));
+    for(const x of co){const e=x.e;await api.put(e.id,docOp({...e,date:x.g.date,montant:x.g.montant,remarque:(e.remarque?e.remarque+' · ':'')+'corrigé d\'après le relevé'}))}
+    if(so){await api.params({comptes:COMPTES.map(c=>c.id!==R.cpt?c:{...c,releves:c.releves.filter(r=>r.date!==so.date).concat([{date:so.date,solde:so.solde}])})})}
+    await charger();REL=comparerReleve(relLu,R.cpt,R.depuis);renderReleve();
+    $('relMsg2').textContent=`Fait : ${aj.length} ajout${aj.length>1?'s':''}, ${co.length} correction${co.length>1?'s':''}${so?', solde noté':''}.`}
+  catch(e){$('relMsg2').textContent=e.message}
+  $('relAppliquer').disabled=false;
+};
+
 /* ================= opérations programmées : échéances à confirmer ================= */
 const finMois=(y,m)=>new Date(y,m+1,0).getDate();
 function echeances(p,jusqua){

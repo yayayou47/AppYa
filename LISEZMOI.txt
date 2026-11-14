@@ -94,6 +94,24 @@ on corrige la date ou le montant d'après le relevé, puis « Enregistrer » ;
 « Ignorer » écarte une échéance non prélevée. Rien n'est enregistré seul.
 Le 30 ou le 31 devient le dernier jour des mois plus courts.
 
+Relevé bancaire : Données et réglages › Relevé bancaire. Choisir le PDF
+(ou une photo) du relevé, vérifier le compte et la date « Comparer à partir
+du » (début du suivi par défaut), puis « Analyser ». AppYa range chaque ligne :
+  ✓ déjà notée (même montant, date à ±5 jours) ;
+  ✎ à corriger (montant proche à ±15 % : par exemple salaire 400 000 noté,
+    400 091 versé) ;
+  ➕ à ajouter (nature et poste proposés, modifiables ; un paiement par
+    carte et sa commission, même jour et même libellé, forment une seule
+    ligne ; les frais fixes se rattachent à leur opération programmée) ;
+  ⚠ notée dans le carnet mais absente du relevé (à vérifier, rien n'est
+    modifié).
+On coche ce qu'on accepte, « Appliquer la sélection » montre un résumé à
+confirmer ; le solde du relevé peut être noté sur le compte. Le relevé est
+lu dans l'appareil et n'est envoyé nulle part. PDF de la banque : lecture
+directe (pdf.js, inclus). PDF scanné ou photo : reconnaissance de texte
+(tesseract.js, environ 15 Mo téléchargés la première fois) ; vérifier alors
+les montants avec soin.
+
 Montants masqués : dans la vue Patrimoine seulement, le patrimoine net, les
 soldes des comptes, la valeur des biens et les prêts s'affichent « ••••• »
 à chaque ouverture (et quand l'application passe en arrière-plan). Le bouton
@@ -333,7 +351,9 @@ une dernière fois les données dans la copie miroir (disque branché). Il
 ne supprime jamais le dossier d'origine.
 
 Contenu : serveur.py (AppYa 3.3, Python, bibliothèque standard), app/index.html,
-app/moteur.js et app/mode.js (version autonome), app/sw.js et
+app/moteur.js et app/mode.js (version autonome), app/releve.js et
+app/pdf.min.js + app/pdf.worker.min.js (pdf.js 3.11.174, Mozilla, licence
+Apache 2.0 : app/LICENCE-pdfjs.txt ; lecture des relevés), app/sw.js et
 app/manifest.webmanifest (téléphone), app/xlsx.full.min.js
 (SheetJS 0.18.5, licence Apache 2.0), appya, installer.sh, desinstaller.sh,
 donnees/ (copie miroir de vos données, voir la partie 7).

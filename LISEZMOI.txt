@@ -1,4 +1,4 @@
-APPYA OUSNOU 1.0.1 — SUIVI FINANCIER, ENGINS ET MAISON — VERSION UBUNTU
+APPYA OUSNOU 1.0.2 — SUIVI FINANCIER, ENGINS ET MAISON — VERSION UBUNTU
 ======================================================================
 
 Une application qui tourne dans votre navigateur, sur votre ordinateur
@@ -143,7 +143,8 @@ simulées (comptes, salaire, dépenses, voiture, moto, groupe électrogène,
 construction d'une villa, mariage, mission, baptême, prêts, frais bancaires).
 Elles sont rangées à part : vos propres données ne sont ni lues ni modifiées.
 « Recréer les données de démo » les remet à zéro ; « Quitter la démo » ramène
-à votre carnet.
+à votre carnet : c'est la seule façon d'en sortir, le bouton « précédent »
+du navigateur ou du téléphone laisse dans la démo.
 
 Annuler et revenir en arrière :
   - Supprimer une opération, retirer un compte, un bien, un événement, un type
@@ -395,7 +396,7 @@ il agit toujours sur l'installation réelle. Avant tout retrait, il recopie
 une dernière fois les données dans la copie miroir (disque branché). Il
 ne supprime jamais le dossier d'origine.
 
-Contenu : serveur.py (AppYa Ousnou 1.0.1, Python, bibliothèque standard), app/index.html,
+Contenu : serveur.py (AppYa Ousnou 1.0.2, Python, bibliothèque standard), app/index.html,
 app/moteur.js et app/mode.js (version autonome), app/releve.js et
 app/pdf.min.js + app/pdf.worker.min.js (pdf.js 3.11.174, Mozilla, licence
 Apache 2.0 : app/LICENCE-pdfjs.txt ; lecture des relevés), app/sw.js et

@@ -900,7 +900,7 @@ function setProgrammees(l){PROGS=(Array.isArray(l)?l:[]).map(x=>({...x,ignorees:
 const PERIODES={1:'chaque mois',2:'tous les 2 mois',3:'chaque trimestre',6:'chaque semestre',12:'chaque année'};
 const TYPES_EVT={mariage:'Mariage',bapteme:'Baptême',circoncision:'Circoncision',funerailles:'Funérailles',fete:'Fête','voyage-tourisme':'Voyage (tourisme)','voyage-mission':'Voyage (mission)','voyage-vacances':'Voyage (vacances)',sante:'Santé',projet:'Projet',autre:'Autre'};
 /* Nature d'une opération : s = sens sur le compte (+1 entrée, −1 sortie, 0 virement) */
-const VERSION_APP='Ousnou 1.0.1';   // nom et numéro de version (même valeur que VERSION / VERSION_NOM dans serveur.py)
+const VERSION_APP='Ousnou 1.0.2';   // nom et numéro de version (même valeur que VERSION / VERSION_NOM dans serveur.py)
 const NAT={depense:{l:'Dépense',s:-1},revenu:{l:'Revenu',s:1},virement:{l:'Virement',s:0},pret:{l:'Prêt accordé',s:-1},remboursement:{l:'Remboursement reçu',s:1},investissement:{l:'Investissement',s:-1}};
 const TYPES_CPT={especes:'Espèces',courant:'Compte courant',epargne:'Épargne',carte:'Carte prépayée',mobile:'Mobile money'};
 const MOTS_REVENU=['salaire','salary','prime','revenu','interet','honoraire','indemnite','bourse','vacation','perdiem','per diem','prodes','frais de mission','consultance','jury','soutenance','seminaire','atelier'];
@@ -2962,6 +2962,18 @@ $('footVer').textContent='AppYa '+VERSION_APP;
 req('GET','/api/info').then(i=>{$('footFile').innerHTML=MODE_AUTONOME?`Données : <b>${esc(i.fichier)}</b> · copies de sécurité : <b>${esc(i.sauvegardes)}</b>`:`Fichier de données : <code>${esc(i.fichier)}</code> · sauvegarde automatique chaque jour dans <code>${esc(i.sauvegardes)}</code>`}).catch(()=>{});
 if(!MODE_DEMO)$('footFile').insertAdjacentHTML('afterend',' <a href="?demo" style="color:var(--accent)">Voir la démo</a>');
 if(MODE_DEMO)$('footTxt').textContent='AppYa · version de démonstration · données simulées, rangées à part de vos données.';
+/* démo : le bouton « précédent » (navigateur, téléphone) ne fait pas sortir de la démo ; seul « Quitter la démo » en sort */
+if(MODE_DEMO&&window.history&&history.pushState){
+  let sortie=false;
+  history.replaceState({appyaDemo:1},'');history.pushState({appyaDemo:2},'');
+  window.addEventListener('popstate',()=>{
+    if(sortie){location.replace('./');return}
+    history.pushState({appyaDemo:2},'');
+    status('Vous êtes dans la démo : touchez « Quitter la démo » pour en sortir.');
+    $('demoBandeau').scrollIntoView({behavior:doux(),block:'center'});
+  });
+  $('demoQuitter').addEventListener('click',ev=>{ev.preventDefault();sortie=true;history.back()});
+}
 else if(MODE_AUTONOME)$('footTxt').textContent='AppYa · suivi financier, engins et maison · version autonome : vos données restent dans cet appareil.';
 if(window.matchMedia){const mq=matchMedia('(prefers-color-scheme: dark)');const f=()=>render();mq.addEventListener?mq.addEventListener('change',f):mq.addListener(f)}
 document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='visible'&&ready&&!editId){if(MODE_SYNC)synchroniser();else charger(true)}});

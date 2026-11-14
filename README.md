@@ -35,3 +35,8 @@ Le dossier `donnees/` n'est jamais versionné (`.gitignore`, contrôle `outils/v
 Bibliothèques incluses : SheetJS 0.18.5 (`app/xlsx.full.min.js`) et pdf.js 3.11.174 (`app/pdf.min.js`,
 `app/pdf.worker.min.js`), toutes deux sous licence Apache 2.0. L'OCR des relevés photographiés
 utilise tesseract.js 5.1.1, téléchargé à la demande.
+
+## Licence
+
+Code d'AppYa sous licence MIT (fichier `LICENSE`) : chacun peut l'utiliser, le modifier et le
+redistribuer, en gardant la mention de licence ; il est fourni sans garantie.

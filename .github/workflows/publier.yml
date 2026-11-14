@@ -50,6 +50,10 @@ jobs:
           ANDROID_KEYSTORE: ${{ secrets.ANDROID_KEYSTORE }}
           ANDROID_KEYSTORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
         run: |
+          if [ -z "$ANDROID_KEYSTORE" ]; then
+            echo "::warning::Secret ANDROID_KEYSTORE absent : APK non signé (test seulement, non installable)."
+            cp android/app/build/outputs/apk/release/app-release-unsigned.apk "dist/AppYa-$VERSION-non-signe.apk"; exit 0
+          fi
           echo "$ANDROID_KEYSTORE" | base64 -d > "$RUNNER_TEMP/appya.jks"
           BT="$(ls -d "$ANDROID_HOME"/build-tools/* | sort -V | tail -n1)"
           "$BT/zipalign" -p -f 4 android/app/build/outputs/apk/release/app-release-unsigned.apk "$RUNNER_TEMP/aligne.apk"
@@ -67,6 +71,7 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
+          ls dist/AppYa-"$VERSION".apk >/dev/null || { echo "::error::APK signé absent : secrets ANDROID_KEYSTORE* à définir."; exit 1; }
           cat > notes.md <<NOTES
           **AppYa $VERSION** : suivi financier, véhicule et maison. Aucune donnée n'est incluse : chaque personne commence avec un carnet vide.
 

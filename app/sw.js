@@ -9,7 +9,7 @@
    figée au jour de l'installation : hors ligne, le téléphone montrait une vieille version (sans les icônes).
    Si l'ordinateur ne répond pas (éteint, Tailscale coupé), on n'attend pas plus de DELAI ms avant de
    servir le cache (la page) ; les icônes et le tableur sont servis du cache sans attendre. La réponse du réseau, si elle arrive plus tard, met quand même le cache à jour. */
-const CACHE = 'appya-v12';
+const CACHE = 'appya-v13';
 const DELAI = 3000;
 // chemins relatifs au dossier du service : '/' sur l'ordinateur, '/Daftar/' sur GitHub Pages
 const BASE = new URL('./', self.location).pathname;

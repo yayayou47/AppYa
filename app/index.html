@@ -248,7 +248,7 @@ header .ctl>.btn,header .ctl>.devsel,header .ctl .expmenu>.btn{height:44px;displ
 .compteshint code{font-family:var(--f-num);background:var(--bg);padding:1px 5px;border-radius:5px}
 /* téléphone : rubriques en barre d'icônes, libellé dessous */
 @media (max-width:567px){
-  nav.apptabs{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:2px}
+  nav.apptabs{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:2px}
   nav.apptabs button{flex-direction:column;justify-content:flex-start;gap:3px;font-size:.72rem;padding:8px 2px;text-align:center;line-height:1.15;min-width:0}
   .apptabs .ic{width:1.6em;height:1.6em}
 }
@@ -292,6 +292,7 @@ h1.titre{display:flex;align-items:center;gap:10px}
 .apptabs{display:flex;flex-wrap:wrap;gap:6px;border-bottom:2px solid var(--line);padding-bottom:0}
 .apptabs button{border:0;background:transparent;padding:10px 14px;font-weight:600;font-size:1rem;color:var(--muted);border-bottom:3px solid transparent;margin-bottom:-2px;border-radius:8px 8px 0 0}
 .apptabs button[aria-pressed="true"]{color:var(--ink);border-bottom-color:var(--accent);background:var(--surface)}
+.apptabs .asaisir{color:var(--accent)}   /* « Saisir » : raccourci vers Données et réglages › Une opération, toujours visible */
 .subctl{margin-top:-6px}
 .partiel{grid-column:1/-1;font-size:.82rem;color:var(--muted);background:var(--bg);border:1px dashed var(--line);border-radius:8px;padding:6px 10px}
 /* carnet du véhicule (repris de l'ancienne application ; px à l'échelle 1,05) */
@@ -520,6 +521,7 @@ tr.solde td{color:var(--muted)}
       <button class="btn ghost" type="button" id="ongletFermer">Plus tard</button></div></div>
   </div>
   <nav class="apptabs" aria-label="Rubriques">
+    <button type="button" id="aSaisir" class="asaisir" aria-pressed="false"><svg class="ic" aria-hidden="true" focusable="false"><use href="#i-plus"/></svg><span>Saisir</span></button>
     <button type="button" id="aFin" aria-pressed="true"><svg class="ic" aria-hidden="true" focusable="false"><use href="#i-finances"/></svg><span>Mes finances</span></button>
     <button type="button" id="aVeh" aria-pressed="false"><svg class="ic" aria-hidden="true" focusable="false"><use href="#i-car"/></svg><span>Engins</span></button>
     <button type="button" id="aMai" aria-pressed="false"><svg class="ic" aria-hidden="true" focusable="false"><use href="#i-house"/></svg><span>House</span></button>
@@ -905,7 +907,7 @@ function setProgrammees(l){PROGS=(Array.isArray(l)?l:[]).map(x=>({...x,ignorees:
 const PERIODES={1:'chaque mois',2:'tous les 2 mois',3:'chaque trimestre',6:'chaque semestre',12:'chaque année'};
 const TYPES_EVT={mariage:'Mariage',bapteme:'Baptême',circoncision:'Circoncision',funerailles:'Funérailles',fete:'Fête','voyage-tourisme':'Voyage (tourisme)','voyage-mission':'Voyage (mission)','voyage-vacances':'Voyage (vacances)',sante:'Santé',projet:'Projet',autre:'Autre'};
 /* Nature d'une opération : s = sens sur le compte (+1 entrée, −1 sortie, 0 virement) */
-const VERSION_APP='Ousnou 1.3.0';   // nom et numéro de version (même valeur que VERSION / VERSION_NOM dans serveur.py)
+const VERSION_APP='Ousnou 1.3.1';   // nom et numéro de version (même valeur que VERSION / VERSION_NOM dans serveur.py)
 const NAT={depense:{l:'Dépense',s:-1},revenu:{l:'Revenu',s:1},virement:{l:'Virement',s:0},pret:{l:'Prêt accordé',s:-1},remboursement:{l:'Remboursement reçu',s:1},investissement:{l:'Investissement',s:-1}};
 const TYPES_CPT={especes:'Espèces',courant:'Compte courant',epargne:'Épargne',carte:'Carte prépayée',mobile:'Mobile money'};
 const MOTS_REVENU=['salaire','salary','prime','revenu','interet','honoraire','indemnite','bourse','vacation','perdiem','per diem','prodes','frais de mission','consultance','jury','soutenance','seminaire','atelier'];
@@ -1294,7 +1296,7 @@ function render(){
   // chaque vue n'affiche que son contenu
   const isM=view==='mois',isA=view==='annee',isP=view==='patrimoine',isS=view==='stats',isV=view==='vehicule',isH=view==='maison',isD=view==='donnees',isF=!isV&&!isH&&!isD,sm=isS?statsMode:'';
   if(isF)vueFin=view;
-  $('aFin').setAttribute('aria-pressed',isF);$('aVeh').setAttribute('aria-pressed',isV);$('aDon').setAttribute('aria-pressed',isD);$('aMai').setAttribute('aria-pressed',isH);
+  $('aFin').setAttribute('aria-pressed',isF);$('aVeh').setAttribute('aria-pressed',isV);majRubSaisie();$('aMai').setAttribute('aria-pressed',isH);
   $('maiAn').setAttribute('aria-pressed',!maiAll);$('maiTout').setAttribute('aria-pressed',maiAll);$('segMai').hidden=!isH;
   $('vMois').setAttribute('aria-pressed',isM);$('vAn').setAttribute('aria-pressed',isA);$('vPat').setAttribute('aria-pressed',isP);$('vStats').setAttribute('aria-pressed',isS);
   $('vehAn').setAttribute('aria-pressed',!vehAll);$('vehTout').setAttribute('aria-pressed',vehAll);
@@ -1541,6 +1543,7 @@ $('vMois').onclick=()=>{view='mois';shown=80;render()};
 $('vAn').onclick=()=>{view='annee';shown=80;render()};
 $('vPat').onclick=()=>{view='patrimoine';shown=80;render()};
 $('vStats').onclick=()=>{view='stats';render();window.scrollTo({top:0,behavior:doux()})};
+$('aSaisir').onclick=()=>{retourVue=null;view='donnees';render();showTab('tOne');$('fAmt').focus()};
 $('aFin').onclick=()=>{view=vueFin;render()};
 $('aVeh').onclick=()=>{view='vehicule';render()};
 $('aMai').onclick=()=>{view='maison';render()};
@@ -1871,7 +1874,9 @@ $('fAmt').addEventListener('input',amtHint);
 $('fKm').addEventListener('input',majChamps);
 $('fVidNext').addEventListener('input',()=>{touched.vidnext=true});
 const tabs=[['tOne','oneForm'],['tPaste','pasteBox'],['tRel','relBox'],['tPostes','posteBox'],['tCB','cbBox'],['tEvt','evtBox'],['tProg','progBox'],['tVid','vidPanel'],['tMai','maiPanel'],['tPar','paritesBox'],['tSav','savBox']];
-function showTab(t,focus){tabs.forEach(([tt,p])=>{const on=tt===t;$(tt).setAttribute('aria-selected',on);$(tt).tabIndex=on?0:-1;$(p).hidden=!on});if(focus)$(t).focus()}
+function showTab(t,focus){tabs.forEach(([tt,p])=>{const on=tt===t;$(tt).setAttribute('aria-selected',on);$(tt).tabIndex=on?0:-1;$(p).hidden=!on});majRubSaisie();if(focus)$(t).focus()}
+/* « Saisir » est enfoncé sur l'onglet Une opération ; « Données et réglages » sur les autres onglets */
+function majRubSaisie(){const d=view==='donnees',s=d&&$('tOne').getAttribute('aria-selected')==='true';$('aSaisir').setAttribute('aria-pressed',s);$('aDon').setAttribute('aria-pressed',d&&!s)}
 tabs.forEach(([t,p])=>{$(t).setAttribute('aria-controls',p);$(t).type='button';$(p).setAttribute('role','tabpanel');$(p).setAttribute('aria-labelledby',t)});
 document.querySelector('.tabs').addEventListener('keydown',ev=>{
   const i=tabs.findIndex(([t])=>t===ev.target.id);if(i<0)return;

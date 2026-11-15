@@ -292,7 +292,8 @@ h1.titre{display:flex;align-items:center;gap:10px}
 .apptabs{display:flex;flex-wrap:wrap;gap:6px;border-bottom:2px solid var(--line);padding-bottom:0}
 .apptabs button{border:0;background:transparent;padding:10px 14px;font-weight:600;font-size:1rem;color:var(--muted);border-bottom:3px solid transparent;margin-bottom:-2px;border-radius:8px 8px 0 0}
 .apptabs button[aria-pressed="true"]{color:var(--ink);border-bottom-color:var(--accent);background:var(--surface)}
-.apptabs .asaisir{color:var(--accent)}   /* « Saisir » : raccourci vers Données et réglages › Une opération, toujours visible */
+.apptabs .asaisir{color:var(--accent)}
+#saisie.seule>.tabs{display:none}   /* ouvert par « Saisir » : la carte des champs seule, sans les onglets */   /* « Saisir » : raccourci vers Données et réglages › Une opération, toujours visible */
 .subctl{margin-top:-6px}
 .partiel{grid-column:1/-1;font-size:.82rem;color:var(--muted);background:var(--bg);border:1px dashed var(--line);border-radius:8px;padding:6px 10px}
 /* carnet du véhicule (repris de l'ancienne application ; px à l'échelle 1,05) */
@@ -907,7 +908,7 @@ function setProgrammees(l){PROGS=(Array.isArray(l)?l:[]).map(x=>({...x,ignorees:
 const PERIODES={1:'chaque mois',2:'tous les 2 mois',3:'chaque trimestre',6:'chaque semestre',12:'chaque année'};
 const TYPES_EVT={mariage:'Mariage',bapteme:'Baptême',circoncision:'Circoncision',funerailles:'Funérailles',fete:'Fête','voyage-tourisme':'Voyage (tourisme)','voyage-mission':'Voyage (mission)','voyage-vacances':'Voyage (vacances)',sante:'Santé',projet:'Projet',autre:'Autre'};
 /* Nature d'une opération : s = sens sur le compte (+1 entrée, −1 sortie, 0 virement) */
-const VERSION_APP='Ousnou 1.3.1';   // nom et numéro de version (même valeur que VERSION / VERSION_NOM dans serveur.py)
+const VERSION_APP='Ousnou 1.3.2';   // nom et numéro de version (même valeur que VERSION / VERSION_NOM dans serveur.py)
 const NAT={depense:{l:'Dépense',s:-1},revenu:{l:'Revenu',s:1},virement:{l:'Virement',s:0},pret:{l:'Prêt accordé',s:-1},remboursement:{l:'Remboursement reçu',s:1},investissement:{l:'Investissement',s:-1}};
 const TYPES_CPT={especes:'Espèces',courant:'Compte courant',epargne:'Épargne',carte:'Carte prépayée',mobile:'Mobile money'};
 const MOTS_REVENU=['salaire','salary','prime','revenu','interet','honoraire','indemnite','bourse','vacation','perdiem','per diem','prodes','frais de mission','consultance','jury','soutenance','seminaire','atelier'];
@@ -954,6 +955,7 @@ const MOIS=['janv.','févr.','mars','avr.','mai','juin','juil.','août','sept.',
 /* Saisie des montants. Par défaut : le vrai montant en francs CFA (10000 = 10 000 FCFA).
    Option (Données et réglages › Montants et devises, propre à chaque appareil) : en milliers, 10 → 10 000 CFA,
    2,65 → 2 650 ; dans ce mode, un nombre de 10 000 ou plus reste un montant complet (25000 → 25 000). */
+let saisieSeule=false;   // vrai quand Données et réglages a été ouvert par le bouton « Saisir »
 let SAISIE_K=(()=>{try{return localStorage.getItem('daftar-saisie-milliers')==='1'}catch(e){return false}})();
 const num=s=>parseFloat(String(s).replace(',','.').replace(/[\s  ]/g,''));
 function cfa(s){const v=num(s);if(!isFinite(v)||v<=0)return NaN;return Math.round(SAISIE_K&&v<10000?v*1000:v)}
@@ -1543,16 +1545,16 @@ $('vMois').onclick=()=>{view='mois';shown=80;render()};
 $('vAn').onclick=()=>{view='annee';shown=80;render()};
 $('vPat').onclick=()=>{view='patrimoine';shown=80;render()};
 $('vStats').onclick=()=>{view='stats';render();window.scrollTo({top:0,behavior:doux()})};
-$('aSaisir').onclick=()=>{retourVue=null;view='donnees';render();showTab('tOne');$('fAmt').focus()};
+$('aSaisir').onclick=()=>{retourVue=null;saisieSeule=true;view='donnees';render();showTab('tOne');$('fAmt').focus()};
 $('aFin').onclick=()=>{view=vueFin;render()};
 $('aVeh').onclick=()=>{view='vehicule';render()};
 $('aMai').onclick=()=>{view='maison';render()};
-$('aDon').onclick=()=>{retourVue=null;view='donnees';render()};
+$('aDon').onclick=()=>{retourVue=null;saisieSeule=false;view='donnees';render()};
 function openMonth(ev){const t=ev.target.closest('[data-m]');if(!t)return;cur.m=+t.dataset.m;view='mois';render();window.scrollTo({top:0,behavior:doux()})}
 $('chart').addEventListener('click',openMonth);$('yearTbl').addEventListener('click',openMonth);
 $('accFermer').onclick=()=>{memo('appya-accueil-vu','1');render()};
 $('accComptes').onclick=()=>{view='donnees';render();showTab('tCB');$('saisie').scrollIntoView({behavior:doux()})};
-$('accSaisir').onclick=()=>{view='donnees';render();showTab('tOne');$('fAmt').focus()};
+$('accSaisir').onclick=()=>{saisieSeule=true;view='donnees';render();showTab('tOne');$('fAmt').focus()};
 $('demoRecreer').onclick=async()=>{if(!confirm('Effacer les données de démo modifiées et recréer les trois années simulées ?'))return;await locCharger();LOC.donnees=await donneesDemo();await locSauver();await charger();status('Données de démo recréées.')};
 $('segEngins').addEventListener('click',ev=>{const b=ev.target.closest('[data-v]');if(!b)return;choisirEngin(b.dataset.v);render()});
 $('segMaisons').addEventListener('click',ev=>{const b=ev.target.closest('[data-h]');if(!b)return;choisirMaison(b.dataset.h);render()});
@@ -1874,9 +1876,9 @@ $('fAmt').addEventListener('input',amtHint);
 $('fKm').addEventListener('input',majChamps);
 $('fVidNext').addEventListener('input',()=>{touched.vidnext=true});
 const tabs=[['tOne','oneForm'],['tPaste','pasteBox'],['tRel','relBox'],['tPostes','posteBox'],['tCB','cbBox'],['tEvt','evtBox'],['tProg','progBox'],['tVid','vidPanel'],['tMai','maiPanel'],['tPar','paritesBox'],['tSav','savBox']];
-function showTab(t,focus){tabs.forEach(([tt,p])=>{const on=tt===t;$(tt).setAttribute('aria-selected',on);$(tt).tabIndex=on?0:-1;$(p).hidden=!on});majRubSaisie();if(focus)$(t).focus()}
-/* « Saisir » est enfoncé sur l'onglet Une opération ; « Données et réglages » sur les autres onglets */
-function majRubSaisie(){const d=view==='donnees',s=d&&$('tOne').getAttribute('aria-selected')==='true';$('aSaisir').setAttribute('aria-pressed',s);$('aDon').setAttribute('aria-pressed',d&&!s)}
+function showTab(t,focus){if(t!=='tOne')saisieSeule=false;tabs.forEach(([tt,p])=>{const on=tt===t;$(tt).setAttribute('aria-selected',on);$(tt).tabIndex=on?0:-1;$(p).hidden=!on});majRubSaisie();if(focus)$(t).focus()}
+/* « Saisir » montre seulement la carte de saisie (onglets cachés) ; « Données et réglages » montre tout */
+function majRubSaisie(){const d=view==='donnees',s=d&&saisieSeule;$('saisie').classList.toggle('seule',s);$('saisie').setAttribute('aria-label',s?'Saisir une opération':'Données et réglages');$('aSaisir').setAttribute('aria-pressed',s);$('aDon').setAttribute('aria-pressed',d&&!s)}
 tabs.forEach(([t,p])=>{$(t).setAttribute('aria-controls',p);$(t).type='button';$(p).setAttribute('role','tabpanel');$(p).setAttribute('aria-labelledby',t)});
 document.querySelector('.tabs').addEventListener('keydown',ev=>{
   const i=tabs.findIndex(([t])=>t===ev.target.id);if(i<0)return;
@@ -1967,7 +1969,7 @@ function revenir(){if(retourVue){view=retourVue;retourVue=null;render();window.s
 $('editCancel').onclick=()=>{resetForm();$('addMsg').textContent='';revenir()};
 function startEdit(id){
   const e=all.find(x=>x.id===id);if(!e)return;
-  editId=id;if(view!=='donnees'){retourVue=view;view='donnees'}showTab('tOne');
+  editId=id;saisieSeule=false;if(view!=='donnees'){retourVue=view;view='donnees'}showTab('tOne');
   $('fDate').value=e.date;$('fAmt').value=versSaisie(e.montant);$('fLib').value=e.libelle;$('fNat').value=e.nature;$('fCpt').value=e.compte;
   $('fCat').value=e.categorie||'autre';$('fVers').value=e.vers;$('fPers').value=e.personne;$('fEch').value=e.echeance;$('fBien').value=e.bien;$('fRem').value=e.remarque;
   $('fCatM').value=e.cat_maison||guessCatM(e.libelle);$('fCatV').value=e.cat_vehicule||guessCatV(e.libelle);$('fKm').value=e.km||'';$('fQty').value=e.quantite?String(e.quantite).replace('.',','):'';$('fUnit').value=e.unite==='u'?'u':'L';$('fVid').checked=false;

@@ -39,7 +39,7 @@ from http.cookies import SimpleCookie
 from http.server import SimpleHTTPRequestHandler, ThreadingHTTPServer
 from urllib.parse import parse_qs, urlparse
 
-VERSION = "1.2.2"
+VERSION = "1.3.0"
 VERSION_NOM = "Ousnou"   # nom de la version (même valeur que VERSION_APP dans app/index.html)
 RACINE = os.path.dirname(os.path.abspath(__file__))
 APP = os.path.join(RACINE, "app")
@@ -205,6 +205,7 @@ def vidange_auto(d, o):
 
 
 RE_MAJ = re.compile(r"^\d{4}-\d{2}-\d{2}T[\d:.]+Z?$")
+RE_HEURE = re.compile(r"^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}Z$")
 
 
 def synchroniser(d, corps):
@@ -226,6 +227,17 @@ def synchroniser(d, corps):
         cid, maj = str(ch.get("id", "")), str(ch.get("maj", ""))
         if not re.match(r"^[\w-]{1,40}$", cid) or not RE_MAJ.match(maj):
             rejets.append({"id": cid, "erreur": "Changement mal formé."})
+            continue
+        if ch.get("type") == "params":
+            # réglages faits sur le téléphone (même hors ligne) : appliqués ici dans l'ordre de saisie
+            corps_p = ch.get("corps")
+            if not isinstance(corps_p, dict) or corps_p.get("restaurer") is not None:
+                rejets.append({"id": cid, "erreur": "Réglage mal formé."})
+                continue
+            try:
+                regler(d, corps_p, "réglages faits sur le téléphone")
+            except ValueError as e:
+                rejets.append({"id": cid, "erreur": str(e)})
             continue
         if ch.get("type") == "releve":
             # solde noté (ou retiré, solde null) sur le téléphone hors ligne : {compte, date, solde}
@@ -291,7 +303,10 @@ def appliquer_releve(d, ch):
         if c.get("id") == ch.get("compte"):
             rel = [r for r in c.get("releves") or [] if r.get("date") != date]
             if ch.get("solde") is not None:
-                rel.append({"date": date, "solde": montant_positif(ch.get("solde"), "Solde du relevé de %s" % c.get("nom"), zero=True)})
+                r = {"date": date, "solde": montant_positif(ch.get("solde"), "Solde du relevé de %s" % c.get("nom"), zero=True)}
+                if RE_HEURE.match(str(ch.get("heure") or "")):
+                    r["heure"] = ch["heure"]
+                rel.append(r)
             c["releves"] = sorted(rel, key=lambda r: r["date"])
             return True
     raise ValueError("Compte introuvable sur l'ordinateur (supprimé ?).")
@@ -670,9 +685,11 @@ def nettoyer_comptes(liste, d):
         for r in x.get("releves") or []:
             if not RE_DATE.match(str(r.get("date", ""))):
                 raise ValueError("Date de relevé invalide pour %s." % nom)
-            rel[r["date"]] = montant_positif(r.get("solde"), "Solde du relevé de %s" % nom, zero=True)
+            rel[r["date"]] = {"date": r["date"], "solde": montant_positif(r.get("solde"), "Solde du relevé de %s" % nom, zero=True)}
+            if RE_HEURE.match(str(r.get("heure") or "")):
+                rel[r["date"]]["heure"] = r["heure"]   # heure où le solde a été noté (soldes du jour)
         c = {"id": cid, "nom": nom, "type": typ, "mots": nettoyer_mots(x.get("mots")),
-             "releves": [{"date": k, "solde": rel[k]} for k in sorted(rel)]}
+             "releves": [rel[k] for k in sorted(rel)]}
         coul = str(x.get("couleur") or "")
         if RE_COULEUR.match(coul):
             c["couleur"] = coul

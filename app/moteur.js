@@ -237,10 +237,11 @@
       const rel = {};
       for (const r of x.releves || []) {
         if (!RE_DATE.test(String(r.date || ''))) erreur('Date de relevé invalide pour ' + nom + '.');
-        rel[r.date] = montantPositif(r.solde, 'Solde du relevé de ' + nom, true);
+        rel[r.date] = {date: r.date, solde: montantPositif(r.solde, 'Solde du relevé de ' + nom, true)};
+        if (/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}Z$/.test(String(r.heure || ''))) rel[r.date].heure = r.heure;   // heure où le solde a été noté
       }
       const c = {id: cid, nom, type: TYPES_COMPTE.includes(x.type) ? x.type : 'courant', mots: nettoyerMots(x.mots),
-                 releves: Object.keys(rel).sort().map(k => ({date: k, solde: rel[k]}))};
+                 releves: Object.keys(rel).sort().map(k => rel[k])};
       if (RE_COULEUR.test(String(x.couleur || ''))) c.couleur = x.couleur;
       if (![undefined, null, ''].includes(x.taux)) {
         c.taux = montantPositif(x.taux, "Taux d'intérêt de " + nom, true);

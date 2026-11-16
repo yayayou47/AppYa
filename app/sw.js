@@ -1,4 +1,8 @@
 /* Daftar — service hors ligne (téléphone).
+   v4 (2026-11-16) : la PAGE aussi est servie « cache d'abord » : elle s'ouvre tout de suite, sans attendre le réseau
+   (avant : jusqu'à 3 s d'attente à chaque ouverture via Tailscale ou les données mobiles). La version du réseau est
+   chargée en arrière-plan et rangée dans le cache ; si elle diffère, la page est prévenue (« daftar-maj ») et propose
+   de recharger. Sans copie en cache (premier lancement), on attend le réseau.
    La page et ses fichiers sont gardés en cache : Daftar s'ouvre sans réseau. Stratégie « réseau d'abord » :
    connecté, on prend toujours la dernière version (et on met le cache à jour) ; hors ligne, on sert le cache.
    Les appels /api/ ne passent jamais par le cache : les données sont gérées par la page (stockage local + synchronisation).
@@ -9,8 +13,7 @@
    figée au jour de l'installation : hors ligne, le téléphone montrait une vieille version (sans les icônes).
    Si l'ordinateur ne répond pas (éteint, Tailscale coupé), on n'attend pas plus de DELAI ms avant de
    servir le cache (la page) ; les icônes et le tableur sont servis du cache sans attendre. La réponse du réseau, si elle arrive plus tard, met quand même le cache à jour. */
-const CACHE = 'appya-v18';
-const DELAI = 3000;
+const CACHE = 'appya-v19';
 // chemins relatifs au dossier du service : '/' sur l'ordinateur, '/Daftar/' sur GitHub Pages
 const BASE = new URL('./', self.location).pathname;
 const FICHIERS = ['index.html', 'mode.js', 'moteur.js', 'releve.js', 'demo.js', 'pdf.min.js', 'pdf.worker.min.js', 'xlsx.full.min.js', 'daftar.svg', 'manifest.webmanifest', 'daftar-192.png', 'daftar-512.png', 'daftar-512-masque.png'].map(f => BASE + f);
@@ -28,6 +31,11 @@ self.addEventListener('install', ev => {
 });
 self.addEventListener('activate', ev => {
   ev.waitUntil(caches.keys().then(ks => Promise.all(ks.filter(k => k !== CACHE).map(k => caches.delete(k)))).then(() => self.clients.claim()));
+});
+// la page, une fois chargée, demande si une version plus récente est arrivée pendant son ouverture
+let majDispo = false;
+self.addEventListener('message', ev => {
+  if (ev.data === 'daftar-maj?' && majDispo && ev.source) { majDispo = false; ev.source.postMessage({type: 'daftar-maj'}); }
 });
 self.addEventListener('fetch', ev => {
   const req = ev.request, url = new URL(req.url);
@@ -48,11 +56,16 @@ self.addEventListener('fetch', ev => {
     }));
     return;
   }
-  ev.respondWith(new Promise(resoudre => {
-    let fini = false;
-    const servirCache = () => caches.open(CACHE).then(c => c.match(k)).then(r => { if (r && !fini) { fini = true; resoudre(r); } return r; });
-    const minuterie = setTimeout(servirCache, DELAI);
-    reseau.then(rep => { clearTimeout(minuterie); if (!fini) { fini = true; resoudre(rep); } })
-      .catch(() => { clearTimeout(minuterie); servirCache().then(r => { if (!r && !fini) { fini = true; resoudre(Response.error()); } }); });
+  ev.respondWith(caches.open(CACHE).then(c => c.match(k)).then(enCache => {
+    if (!enCache) return reseau.catch(() => Response.error());
+    // page servie du cache ; si la version du réseau est différente, prévenir la page (bandeau « Recharger »).
+    // La copie de comparaison est prise AVANT de rendre la réponse (son contenu ne peut être lu qu'une fois).
+    const copieCache = enCache.clone();
+    ev.waitUntil(reseau.then(async rep => {
+      if (!rep.ok) return;
+      const [avant, apres] = await Promise.all([copieCache.text(), rep.clone().text()]);
+      if (avant !== apres) { majDispo = true; (await self.clients.matchAll({type: 'window'})).forEach(cl => cl.postMessage({type: 'daftar-maj'})); }
+    }).catch(() => {}));
+    return enCache;
   }));
 });

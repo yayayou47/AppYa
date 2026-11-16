@@ -209,6 +209,10 @@ d'accueil »). Daftar s'ouvre alors comme une application, même sans réseau.
     demande que le téléphone soit relié à l'ordinateur.
   - L'adresse sécurisée est relayée par Tailscale (« tailscale serve ») ;
     pour la couper : tailscale serve --https=443 off
+  - Daftar s'ouvre tout de suite depuis la copie gardée dans le téléphone,
+    sans attendre l'ordinateur ; la version la plus récente est chargée en
+    arrière-plan et, si elle a changé, un bandeau « Une nouvelle version de
+    Daftar est prête » propose « Recharger ».
   - Hors ligne, Daftar affiche la dernière version ouverte en ligne. Après
     une mise à jour sur l'ordinateur, ouvrir une fois Daftar sur le téléphone
     avec l'ordinateur joignable : la nouvelle version est gardée pour la
@@ -464,7 +468,7 @@ il agit toujours sur l'installation réelle. Avant tout retrait, il recopie
 une dernière fois les données dans la copie miroir (disque branché). Il
 ne supprime jamais le dossier d'origine.
 
-Contenu : serveur.py (Daftar Ousnou 1.4.2, Python, bibliothèque standard), app/index.html,
+Contenu : serveur.py (Daftar Ousnou 1.4.3, Python, bibliothèque standard), app/index.html,
 app/moteur.js et app/mode.js (version autonome), app/releve.js et
 app/pdf.min.js + app/pdf.worker.min.js (pdf.js 3.11.174, Mozilla, licence
 Apache 2.0 : app/LICENCE-pdfjs.txt ; lecture des relevés), app/sw.js et

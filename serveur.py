@@ -39,7 +39,7 @@ from http.cookies import SimpleCookie
 from http.server import SimpleHTTPRequestHandler, ThreadingHTTPServer
 from urllib.parse import parse_qs, urlparse
 
-VERSION = "1.4.1"
+VERSION = "1.4.2"
 VERSION_NOM = "Ousnou"   # nom de la version (même valeur que VERSION_APP dans app/index.html)
 RACINE = os.path.dirname(os.path.abspath(__file__))
 APP = os.path.join(RACINE, "app")
@@ -337,6 +337,40 @@ def montant_signe(v, quoi="Solde"):
     if m != m or m in (float("inf"), float("-inf")):
         raise ValueError("%s invalide." % quoi)
     return int(m) if m.is_integer() else round(m, 2)
+
+
+DELAI_CORBEILLE = 30   # jours pendant lesquels un compte supprimé peut être rétabli
+
+
+def purger_corbeille(d, aujourdhui=None):
+    """Efface pour de bon les comptes supprimés depuis plus de DELAI_CORBEILLE jours, avec leurs opérations
+    (compte ou destination du virement) ; les dépenses qui y étaient versées perdent seulement ce lien.
+    Chaque opération effacée laisse sa trace dans d["supprimees"] (synchronisation du téléphone). Rend True si modifié."""
+    jour = aujourdhui or dt.date.today()
+    prm = d.get("parametres", {})
+    perimes = set()
+    for c in prm.get("comptes", []):
+        try:
+            if c.get("supprime") and (jour - dt.date.fromisoformat(c["supprime"])).days > DELAI_CORBEILLE:
+                perimes.add(c["id"])
+        except ValueError:
+            pass
+    if not perimes:
+        return False
+    garde = []
+    for o in d.get("operations", []):
+        if o.get("compte") in perimes or o.get("vers") in perimes:
+            d["supprimees"] = [t for t in d.setdefault("supprimees", []) if t["id"] != o.get("id")] + [marquer(d, {"id": o.get("id")})]
+            continue
+        if o.get("tiers") in perimes:
+            o.pop("tiers")
+            marquer(d, o)
+        garde.append(o)
+    d["operations"] = garde
+    prm["comptes"] = [c for c in prm.get("comptes", []) if c["id"] not in perimes]
+    prm["programmees"] = [p for p in prm.get("programmees", []) or [] if p.get("compte") not in perimes]
+    marquer_parametres(d)
+    return True
 
 
 def ids_tiers(d):
@@ -718,6 +752,8 @@ def nettoyer_comptes(liste, d):
         if x.get("taux") not in (None, ""):
             c["taux"] = montant_positif(x.get("taux"), "Taux d'intérêt de %s" % nom, zero=True)
             c["periode"] = int(montant_positif(x.get("periode") or 12, "Période des intérêts"))
+        if cid != "especes" and RE_DATE.match(str(x.get("supprime") or "")):
+            c["supprime"] = x["supprime"]   # compte supprimé ce jour-là : masqué, rétablissable 30 jours (purger_corbeille)
         if typ == "tiers":
             c["titulaire"] = texte(x.get("titulaire"), 60) or nom
             c["morale"] = bool(x.get("morale"))          # personne morale (association, famille, entreprise…)
@@ -1069,6 +1105,7 @@ class Gestionnaire(SimpleHTTPRequestHandler):
         try:
             with VERROU:
                 d = lire()
+                purger_corbeille(d)
                 res = action(d)
                 ecrire(d)
             return self._json(200, res)
@@ -1228,6 +1265,8 @@ def main():
                  % (d.get("version"), FICHIER, VERSION_NOM + " " + VERSION))
 
     with VERROU:
+        if purger_corbeille(d):   # comptes supprimés depuis plus de 30 jours : effacés pour de bon
+            ecrire(d)
         copier_miroir()   # au démarrage : rattrape les écritures faites pendant que le disque miroir était absent
 
     global RESEAU, CLE

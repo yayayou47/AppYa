@@ -68,6 +68,24 @@
     if (!Number.isFinite(m) || m < 0 || (m === 0 && !zero)) erreur(`${quoi} invalide : il doit être positif.`);
     return Number.isInteger(m) ? m : Math.round(m * 100) / 100;
   }
+  // comptes supprimés depuis plus de DELAI_CORBEILLE jours : effacés pour de bon avec leurs opérations (même règle que serveur.py)
+  const DELAI_CORBEILLE = 30;
+  function purgerCorbeille(d, aujourdhui) {
+    const jour = aujourdhui || new Date().toISOString().slice(0, 10), prm = d.parametres || {};
+    const jours = a => Math.round((Date.parse(jour) - Date.parse(a)) / 864e5);
+    const perimes = new Set((prm.comptes || []).filter(c => c.supprime && jours(c.supprime) > DELAI_CORBEILLE).map(c => c.id));
+    if (!perimes.size) return false;
+    d.supprimees = d.supprimees || [];
+    d.operations = (d.operations || []).filter(o => {
+      if (perimes.has(o.compte) || perimes.has(o.vers)) { d.supprimees = d.supprimees.filter(t => t.id !== o.id).concat([marquer(d, {id: o.id})]); return false; }
+      if (perimes.has(o.tiers)) { delete o.tiers; marquer(d, o); }
+      return true;
+    });
+    prm.comptes = (prm.comptes || []).filter(c => !perimes.has(c.id));
+    prm.programmees = (prm.programmees || []).filter(p => !perimes.has(p.compte));
+    marquerParametres(d);
+    return true;
+  }
   function montantSigne(v, quoi = 'Solde') {   // solde noté : peut être négatif
     const m = typeof v === 'number' ? v : (v === '' || v == null ? NaN : Number(v));
     if (!Number.isFinite(m)) erreur(`${quoi} invalide.`);
@@ -257,6 +275,7 @@
         c.taux = montantPositif(x.taux, "Taux d'intérêt de " + nom, true);
         c.periode = Math.trunc(montantPositif(x.periode || 12, 'Période des intérêts'));
       }
+      if (cid !== 'especes' && RE_DATE.test(String(x.supprime || ''))) c.supprime = x.supprime;   // rétablissable 30 jours
       if (c.type === 'tiers') {
         c.titulaire = texte(x.titulaire, 60) || nom; c.morale = !!x.morale;
         c.moi = nettoyerMots(x.moi); c.contrib = nettoyerMots(x.contrib);
@@ -409,5 +428,5 @@
     return d;
   }
 
-  window.AppYaMoteur = {vide, nettoyer, vidangeAuto, regler, reclasser, marquer, verifierImport, POSTES_DEFAUT, COMPTES_DEFAUT, REVENUS_DEFAUT, TYPES_EVENEMENT};
+  window.AppYaMoteur = {vide, purgerCorbeille, DELAI_CORBEILLE, nettoyer, vidangeAuto, regler, reclasser, marquer, verifierImport, POSTES_DEFAUT, COMPTES_DEFAUT, REVENUS_DEFAUT, TYPES_EVENEMENT};
 })();

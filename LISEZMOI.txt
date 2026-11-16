@@ -287,6 +287,16 @@ vérifiez nature, compte et poste dans l'aperçu avant d'importer. Une case
 par ligne permet d'en écarter une. « Montants en milliers » s'applique au
 collage seulement (coché d'après le réglage de Saisie).
 
+MODIFIER, SUPPRIMER, RÉTABLIR UN COMPTE
+Données et réglages › Comptes et biens présente deux sections : « Mes
+comptes » et « Comptes de tiers » (chacune avec son bouton d'ajout). Tout
+compte se modifie sur sa ligne puis « Enregistrer les comptes ». Le bouton
+✕ (à toucher deux fois) supprime un compte enregistré, même s'il a des
+opérations (sauf Espèces) : il passe dans « Comptes supprimés », masqué
+partout avec ses opérations, et « Rétablir » le ramène tel quel pendant
+30 jours. Passé ce délai, le compte et ses opérations sont effacés pour
+de bon ; une dépense qui y était versée reste dans votre journal.
+
 COMPTES GÉRÉS POUR DES TIERS
 Données et réglages › Comptes et biens › type « Compte d'un tiers » : de
 l'argent que vous gardez ou gérez pour quelqu'un (un frère qui vous a
@@ -454,7 +464,7 @@ il agit toujours sur l'installation réelle. Avant tout retrait, il recopie
 une dernière fois les données dans la copie miroir (disque branché). Il
 ne supprime jamais le dossier d'origine.
 
-Contenu : serveur.py (Daftar Ousnou 1.4.1, Python, bibliothèque standard), app/index.html,
+Contenu : serveur.py (Daftar Ousnou 1.4.2, Python, bibliothèque standard), app/index.html,
 app/moteur.js et app/mode.js (version autonome), app/releve.js et
 app/pdf.min.js + app/pdf.worker.min.js (pdf.js 3.11.174, Mozilla, licence
 Apache 2.0 : app/LICENCE-pdfjs.txt ; lecture des relevés), app/sw.js et

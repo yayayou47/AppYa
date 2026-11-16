@@ -37,7 +37,7 @@
   const TYPES_EVENEMENT = ['mariage', 'bapteme', 'circoncision', 'funerailles', 'fete', 'voyage-tourisme', 'voyage-mission',
                            'voyage-vacances', 'sante', 'projet', 'autre'];
   const NATURES = ['depense', 'revenu', 'virement', 'pret', 'remboursement', 'investissement'];
-  const TYPES_COMPTE = ['especes', 'courant', 'epargne', 'carte', 'mobile'];
+  const TYPES_COMPTE = ['especes', 'courant', 'epargne', 'carte', 'mobile', 'tiers'];   // tiers : compte géré pour quelqu'un d'autre
   const TYPES_BIEN = ['actif', 'passif'];
   const CAT_VEHICULE = ['carburant', 'entretien', 'reparation', 'service', 'achat', 'investissement', 'autre'];
   const CAT_MAISON = ['terrain', 'administratif', 'arrosage', 'eau', 'maconnerie', 'materiaux', 'electricite', 'main-oeuvre', 'autre'];
@@ -68,6 +68,12 @@
     if (!Number.isFinite(m) || m < 0 || (m === 0 && !zero)) erreur(`${quoi} invalide : il doit être positif.`);
     return Number.isInteger(m) ? m : Math.round(m * 100) / 100;
   }
+  function montantSigne(v, quoi = 'Solde') {   // solde noté : peut être négatif
+    const m = typeof v === 'number' ? v : (v === '' || v == null ? NaN : Number(v));
+    if (!Number.isFinite(m)) erreur(`${quoi} invalide.`);
+    return Number.isInteger(m) ? m : Math.round(m * 100) / 100;
+  }
+  const idsTiers = d => new Set(((d.parametres || {}).comptes || []).filter(c => c.type === 'tiers').map(c => c.id));
   function devinerCatMaison(libelle) {
     const lib = String(libelle || '').toLowerCase();
     for (const [cat, mots] of MOTS_CAT_MAISON) if (mots.some(m => lib.includes(m))) return cat;
@@ -110,6 +116,10 @@
       out.bien = doc.bien;
     }
     if (nature === 'revenu') out.cat_revenu = idsRevenus(d).has(doc.cat_revenu) ? doc.cat_revenu : 'autre';
+    if (nature === 'depense' && doc.tiers) {   // votre dépense versée au compte d'un tiers
+      if (!idsTiers(d).has(doc.tiers) || doc.tiers === compte) erreur('Compte du tiers inconnu : ' + doc.tiers);
+      out.tiers = doc.tiers;
+    }
     if ((nature === 'depense' || nature === 'revenu') && doc.evenement) {
       if (!ids(d, 'evenements').has(doc.evenement)) erreur('Événement inconnu : ' + doc.evenement);
       out.evenement = doc.evenement;
@@ -237,7 +247,7 @@
       const rel = {};
       for (const r of x.releves || []) {
         if (!RE_DATE.test(String(r.date || ''))) erreur('Date de relevé invalide pour ' + nom + '.');
-        rel[r.date] = {date: r.date, solde: montantPositif(r.solde, 'Solde du relevé de ' + nom, true)};
+        rel[r.date] = {date: r.date, solde: montantSigne(r.solde, 'Solde du relevé de ' + nom)};
         if (/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}Z$/.test(String(r.heure || ''))) rel[r.date].heure = r.heure;   // heure où le solde a été noté
       }
       const c = {id: cid, nom, type: TYPES_COMPTE.includes(x.type) ? x.type : 'courant', mots: nettoyerMots(x.mots),
@@ -247,11 +257,15 @@
         c.taux = montantPositif(x.taux, "Taux d'intérêt de " + nom, true);
         c.periode = Math.trunc(montantPositif(x.periode || 12, 'Période des intérêts'));
       }
+      if (c.type === 'tiers') {
+        c.titulaire = texte(x.titulaire, 60) || nom; c.morale = !!x.morale;
+        c.moi = nettoyerMots(x.moi); c.contrib = nettoyerMots(x.contrib);
+      }
       comptes.push(c);
     }
     if (!vus.has('especes')) comptes.unshift(copie(COMPTES_DEFAUT[0]));
     const garde = new Set(comptes.map(c => c.id));
-    const manquants = [...new Set(d.operations.flatMap(o => [o.compte, o.vers]).filter(Boolean))].filter(c => !garde.has(c));
+    const manquants = [...new Set(d.operations.flatMap(o => [o.compte, o.vers, o.tiers]).filter(Boolean))].filter(c => !garde.has(c));
     if (manquants.length) erreur('Impossible de supprimer un compte qui a des opérations : ' + manquants.sort().join(', '));
     return comptes;
   }

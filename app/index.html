@@ -89,6 +89,7 @@ header{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-betw
 .panel{box-shadow:0 1px 3px rgba(0,0,0,.05);background:var(--surface);border:1px solid var(--line);border-radius:14.7px;padding:16.8px;display:flex;flex-direction:column;gap:14.7px}
 .phead{display:flex;justify-content:space-between;align-items:baseline;gap:10.5px;flex-wrap:wrap}
 .hero{display:grid;grid-template-columns:repeat(auto-fit,minmax(147px,1fr));gap:14.7px}
+.hero .oeilL{grid-column:1/-1;display:flex;justify-content:flex-end}
 .hero .big{font-size:2rem;font-family:var(--f-num);font-variant-numeric:tabular-nums;line-height:1.1}
 .stat{display:flex;flex-direction:column;gap:2px;min-width:0}
 .stat .v{font-family:var(--f-num);font-size:1.15rem}
@@ -294,7 +295,6 @@ h1.titre{display:flex;align-items:center;gap:10px}
 .apptabs button[aria-pressed="true"]{color:var(--ink);border-bottom-color:var(--accent);background:var(--surface)}
 .apptabs .asaisir{color:var(--accent)}
 #saisie.seule>.tabs{display:none}
-#fAmtUnite{font-size:.8rem;align-self:flex-start;text-decoration:underline;text-underline-offset:2px}   /* ouvert par « Saisir » : la carte des champs seule, sans les onglets */   /* « Saisir » : raccourci vers Données et réglages › Une opération, toujours visible */
 .subctl{margin-top:-6px}
 .partiel{grid-column:1/-1;font-size:.82rem;color:var(--muted);background:var(--bg);border:1px dashed var(--line);border-radius:8px;padding:6px 10px}
 /* carnet du véhicule (repris de l'ancienne application ; px à l'échelle 1,05) */
@@ -327,6 +327,7 @@ tr.sel td{background:var(--accent-soft)}
 .vehf{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;border:1px solid var(--line);border-radius:10px;padding:10px 12px;margin:0}
 .vehf legend{padding:0 6px}
 .vehf .check{grid-column:1/-1;display:flex;gap:8px;align-items:center;font-size:.9rem}
+.check{display:flex;gap:8px;align-items:flex-start;font-size:.9rem;cursor:pointer}.check input{width:auto;flex:none;margin-top:3px}
 .vehf .check input{width:auto}
 .qty{display:flex;gap:6px}.qty input{flex:1;min-width:0}.qty select{width:auto;min-width:6.5em}
 .vidform{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px}
@@ -413,12 +414,6 @@ tr.sel td{background:var(--accent-soft)}
 .evrow input[type=date]{flex:0 1 10em}
 .evrow .eBud{flex:0 1 7em}
 .evrow label.chk{display:flex;gap:4px;align-items:center;flex:0 0 auto;font-size:.9rem}
-.exclist{display:flex;flex-direction:column;gap:6px}
-.excrow{display:flex;flex-wrap:wrap;justify-content:space-between;gap:4px 12px;text-align:left;padding:9px 12px;border:1px solid var(--line);border-radius:10px;background:var(--surface);color:var(--ink);cursor:pointer;font:inherit}
-.excrow:hover,.excrow.sel{border-color:var(--accent);background:var(--accent-soft)}
-.excrow .excnom{font-weight:600}
-.excrow .excval{display:flex;flex-wrap:wrap;gap:4px 12px;font-size:.9rem;font-variant-numeric:tabular-nums}
-.excrow .in{color:var(--ok)}
 .nat.inv{color:var(--accent);border-color:currentColor}
 .item .amt.in{color:var(--ok)}
 .acct{display:flex;flex-direction:column;gap:6.3px;padding:10.5px 0 10.5px 12.6px;border-bottom:1px solid var(--line);border-left:6.3px solid var(--cc,transparent)}
@@ -451,7 +446,18 @@ tr.solde td{color:var(--muted)}
 .cbhead{display:grid;gap:6.3px;font-size:.68rem;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);font-weight:600}
 #pretsList td:first-child{text-transform:none}
 .cbrow input,.cbrow select{padding:7.35px 8.4px;font-size:.85rem}
-@media (max-width:672px){.cbrow,.cbrow.bien{grid-template-columns:1fr 1fr}.cbrow>.cNom,.cbrow>.bNom{grid-column:1/-1}.cbrow.bien .bPoste,.cbrow.bien .bMots,.cbrow.bien [data-x]{grid-row:auto;grid-column:auto}.cbhead{display:none}}
+.cNomL{display:contents}   /* ordinateur : couleur et nom gardent leurs colonnes ; téléphone : sur une même ligne */
+.cTiers{grid-column:1/-1;display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:6.3px}.cTiers[hidden]{display:none}
+@media (max-width:672px){.cbrow,.cbrow.bien{grid-template-columns:1fr 1fr}.cbrow>.cNomL{display:flex;gap:6.3px;align-items:center;grid-column:1/-1}.cNomL .cNom{flex:1;min-width:0}.cNomL .cCoul{width:46.2px;flex:none}.cTiers{grid-template-columns:1fr 1fr}.cbrow>.bNom{grid-column:1/-1}.cbrow.bien .bPoste,.cbrow.bien .bMots,.cbrow.bien [data-x]{grid-row:auto;grid-column:auto}.cbhead{display:none}}
+/* clavier Daftar des montants (téléphone) */
+.clavier{position:fixed;left:0;right:0;bottom:0;z-index:60;background:var(--surface);border-top:1px solid var(--line);box-shadow:0 -6px 18px rgba(0,0,0,.12);padding:8px 8px calc(8px + env(safe-area-inset-bottom))}
+.clavier[hidden]{display:none}
+.clav-h{display:flex;justify-content:space-between;align-items:center;gap:8px;max-width:504px;margin:0 auto 6px;font-size:.85rem}
+.clav-g{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;max-width:504px;margin:0 auto}
+.clav-g button{height:50px;border:1px solid var(--line);border-radius:10px;background:var(--bg);color:var(--ink);font-size:1.25rem;font-family:var(--f-num);touch-action:manipulation}
+.clav-g button:active{background:var(--accent-soft)}
+.clav-g .clav-ok{background:var(--accent);color:#fff;border-color:var(--accent);font-weight:700}
+body.avec-clavier{padding-bottom:290px}
 </style>
 </head>
 <body>
@@ -462,6 +468,7 @@ tr.solde td{color:var(--muted)}
     <symbol id="i-car" viewBox="0 0 24 24"><path d="M4 16.5v-4l2.2-5.3A1.5 1.5 0 0 1 7.6 6.3h8.8a1.5 1.5 0 0 1 1.4.9l2.2 5.3v4"/><path d="M3 16.5h18M4 12.5h16"/><circle cx="7.5" cy="16.5" r="2"/><circle cx="16.5" cy="16.5" r="2"/></symbol>
     <symbol id="i-house" viewBox="0 0 24 24"><path d="M3 11.5 12 4l9 7.5"/><path d="M5.5 10v10h13V10"/><path d="M10 20v-5.5h4V20"/></symbol>
     <symbol id="i-reglages" viewBox="0 0 24 24"><path d="M4 6h9M17 6h3M4 12h3M11 12h9M4 18h11M19 18h1"/><circle cx="15" cy="6" r="2"/><circle cx="9" cy="12" r="2"/><circle cx="17" cy="18" r="2"/></symbol>
+    <symbol id="i-clavier" viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="M7 9h.01M11 9h.01M15 9h.01M7 12h.01M11 12h.01M15 12h.01M8 15.5h8"/></symbol>
     <symbol id="i-plus" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 8v8M8 12h8"/></symbol>
     <symbol id="i-coller" viewBox="0 0 24 24"><rect x="5" y="4.5" width="14" height="16.5" rx="2"/><path d="M9 3h6v3.5H9z"/><path d="M8.5 11h7M8.5 15h5"/></symbol>
     <symbol id="i-tag" viewBox="0 0 24 24"><path d="M3.5 12.5V4h8.5l9 9-8.5 8.5z"/><circle cx="8" cy="8.5" r="1.5"/></symbol>
@@ -488,7 +495,6 @@ tr.solde td{color:var(--muted)}
       <button id="syncBtn" class="btn ghost syncpill" type="button" hidden aria-live="polite"></button>
       <select id="devise" class="devsel" aria-label="Devise d'affichage" title="Devise d'affichage"></select>
       <div class="expmenu">
-        <button class="btn ghost oeil" id="oeilBtn" type="button" aria-pressed="false" title="Afficher ou masquer le patrimoine, les soldes, les biens et les prêts" hidden>👁 Afficher</button>
         <button class="btn ghost icbtn" id="exportBtn" type="button" aria-haspopup="menu" aria-expanded="false" aria-controls="exportMenu" aria-label="Exporter vers Excel" title="Exporter vers Excel"><svg class="ic" aria-hidden="true" focusable="false"><use href="#i-excel"/></svg></button>
         <div class="menu" id="exportMenu" role="menu" aria-label="Que voulez-vous exporter ?" hidden>
           <button type="button" role="menuitem" data-x="tout">Tout <span class="hint">toutes les rubriques</span><span class="cour hint"></span></button>
@@ -575,10 +581,6 @@ tr.solde td{color:var(--muted)}
     <div class="bars" id="bars"></div>
   </section>
 
-  <section class="panel" aria-labelledby="excTitre" id="excPanel" hidden>
-    <div class="phead"><h2 id="excTitre">Exceptionnel</h2><span class="hint">Événements et revenus ponctuels, hors courant · touchez pour filtrer le journal</span></div>
-    <div id="excList" class="exclist"></div>
-  </section>
 
   <section class="panel" aria-label="Rythme" id="rythmePanel">
     <div class="phead"><h2 id="chartTitle">Par semaine</h2><span class="hint" id="chartHint"></span></div>
@@ -680,7 +682,8 @@ tr.solde td{color:var(--muted)}
         <button role="tab" id="tProg" aria-selected="false"><svg class="ic" aria-hidden="true" focusable="false"><use href="#i-cycle"/></svg><span>Programmées</span></button>
         <button role="tab" id="tVid" aria-selected="false"><svg class="ic" aria-hidden="true" focusable="false"><use href="#i-huile"/></svg><span>Repères vidange</span></button>
         <button role="tab" id="tMai" aria-selected="false"><svg class="ic" aria-hidden="true" focusable="false"><use href="#i-chantier"/></svg><span>Projet maison</span></button>
-        <button role="tab" id="tPar" aria-selected="false"><svg class="ic" aria-hidden="true" focusable="false"><use href="#i-change"/></svg><span>Montants et devises</span></button>
+        <button role="tab" id="tSai" aria-selected="false"><svg class="ic" aria-hidden="true" focusable="false"><use href="#i-clavier"/></svg><span>Saisie</span></button>
+        <button role="tab" id="tPar" aria-selected="false"><svg class="ic" aria-hidden="true" focusable="false"><use href="#i-change"/></svg><span>Parités</span></button>
       </div>
       <div class="tgrp" role="presentation"><span class="tgl" aria-hidden="true">Sécurité</span>
         <button role="tab" id="tSav" aria-selected="false"><svg class="ic" aria-hidden="true" focusable="false"><use href="#i-sauve"/></svg><span>Sauvegarde et retour</span></button>
@@ -690,11 +693,12 @@ tr.solde td{color:var(--muted)}
     <form id="oneForm">
       <div class="editbar full" id="editBar" hidden><span>Modification : <b id="editWhat"></b></span><button type="button" class="btn ghost" id="editCancel">Annuler</button></div>
       <div class="field"><label class="label" for="fDate">Date</label><input type="date" id="fDate" required></div>
-      <div class="field"><label class="label" for="fAmt">Montant <span class="uS"></span></label><input type="text" inputmode="decimal" id="fAmt" placeholder="10" required autocomplete="off" aria-describedby="fAmtHint"><span class="hint" id="fAmtHint">10 = 10 000 CFA · 0,5 = 500 CFA</span><button type="button" class="linkbtn hint" id="fAmtUnite"></button></div>
+      <div class="field"><label class="label" for="fAmt">Montant <span class="uS"></span></label><input type="text" inputmode="decimal" id="fAmt" placeholder="10" required autocomplete="off" aria-describedby="fAmtHint"><span class="hint" id="fAmtHint">10 = 10 000 CFA · 0,5 = 500 CFA</span></div>
       <div class="field full"><label class="label" for="fLib">Libellé</label><input type="text" id="fLib" placeholder="vivres, salaire, carburant, vidange huile, prêt Ali, ciment maison…" required autocomplete="off" aria-describedby="fLibHint"><span class="hint" id="fLibHint" aria-live="polite"></span></div>
       <div class="field"><label class="label" for="fNat">Nature</label><select id="fNat"></select></div>
       <div class="field"><label class="label" for="fCpt" id="fCptLab">Payé avec</label><select id="fCpt"></select></div>
       <div class="field" id="wCat"><label class="label" for="fCat">Poste</label><select id="fCat"></select></div>
+      <div class="field" id="wTiers" hidden><label class="label" for="fTiers">Versé au compte de</label><select id="fTiers" aria-describedby="fTiersHint"></select><span class="hint" id="fTiersHint">Votre part : la dépense alimente aussi ce compte.</span></div>
       <div class="field" id="wRev" hidden><label class="label" for="fCatR">Type de revenu</label><select id="fCatR"></select></div>
       <div class="field" id="wEvt" hidden><label class="label" for="fEvt">Événement (facultatif)</label><select id="fEvt" aria-describedby="fEvtHint"></select><span class="hint" id="fEvtHint">Rattachée à un événement, l'opération compte comme exceptionnelle.</span></div>
       <div class="field" id="wVers" hidden><label class="label" for="fVers">Vers le compte</label><select id="fVers"></select></div>
@@ -716,6 +720,9 @@ tr.solde td{color:var(--muted)}
     </form>
 
     <div id="pasteBox" hidden style="display:flex;flex-direction:column;gap:10.5px">
+      <div class="row" style="gap:8px 14px"><label class="label" for="pasteCpt" style="margin:0">Lignes d'un seul compte</label><select id="pasteCpt" aria-describedby="pasteCptH"></select>
+        <label class="check"><input type="checkbox" id="pasteK"> montants en milliers (10 = 10 000)</label></div>
+      <span class="hint" id="pasteCptH">Pour l'historique d'un compte (compte d'un tiers…) : « − » = dépense de ce compte, sans signe = entrée ; votre nom (« prt Yaya ») = votre part, versée de vos espèces ; « ( −244 000 ) » = solde du compte ce jour-là.</span>
       <label class="label" for="pasteText">Une opération par ligne, comme dans votre carnet (montants <span class="uS-court"></span>, sans signe)</label>
       <textarea id="pasteText" placeholder=""></textarea>
       <div class="hint compteshint"><b>Compte qui paie :</b> sans précision, la dépense est faite en <b>espèces</b>. Ajoutez le mot-clé du compte dans la ligne : <code><span data-k="30">30</span> scolarité banque</code>, <code><span data-k="5">5</span> crédit mobile</code>. Chaque compte (banque, carte, mobile money…) se crée dans Comptes et biens, avec ses mots-clés.</div>
@@ -815,10 +822,14 @@ tr.solde td{color:var(--muted)}
       <input type="file" id="savFichier" accept=".json,application/json">
     </div>
     </div>
-    <div id="paritesBox" hidden style="display:flex;flex-direction:column;gap:12px">
-    <div class="phead"><h3 class="sub">Saisie des montants</h3><span class="hint">Sur cet appareil</span></div>
+    <div id="saisieBox" hidden style="display:flex;flex-direction:column;gap:12px">
+    <div class="phead"><h3 class="sub">Saisie des montants</h3><span class="hint">Réglages propres à cet appareil</span></div>
     <label class="check"><input type="checkbox" id="saisieK"> Taper les montants en milliers (10 = 10 000 FCFA, 2,5 = 2 500 FCFA)</label>
     <div class="hint" id="saisieKInfo"></div>
+    <label class="check"><input type="checkbox" id="clavierK"> Clavier Daftar pour les montants (chiffres, signe −, 00 et 000)</label>
+    <div class="hint" id="clavierKInfo"></div>
+    </div>
+    <div id="paritesBox" hidden style="display:flex;flex-direction:column;gap:12px">
     <div class="phead"><h3 class="sub">Parités des devises</h3><span class="hint">1 unité de la devise = … francs CFA</span></div>
     <details class="aide"><summary>Comment ça marche ?</summary><div class="hint">Les montants restent enregistrés et saisis en francs CFA ; la devise choisie ne change que l'affichage. Le franc CFA (XAF, BEAC) est la référence : parité 1.</div></details>
     <div class="cbhead parhead"><span>Code</span><span>Nom</span><span>Symbole</span><span>1 unité = FCFA</span><span>Mise à jour</span><span></span></div>
@@ -867,6 +878,15 @@ tr.solde td{color:var(--muted)}
 </dialog>
 
 <script src="mode.js"></script>
+<div id="clavier" class="clavier" hidden role="group" aria-label="Clavier des montants">
+  <div class="clav-h"><button type="button" class="linkbtn" data-c="tel">⌨ Clavier du téléphone</button><span class="hint" id="clavApercu" aria-live="polite"></span></div>
+  <div class="clav-g">
+    <button type="button" data-c="7">7</button><button type="button" data-c="8">8</button><button type="button" data-c="9">9</button><button type="button" data-c="del" aria-label="Effacer">⌫</button>
+    <button type="button" data-c="4">4</button><button type="button" data-c="5">5</button><button type="button" data-c="6">6</button><button type="button" data-c="moins" aria-label="Signe moins">−</button>
+    <button type="button" data-c="1">1</button><button type="button" data-c="2">2</button><button type="button" data-c="3">3</button><button type="button" data-c="," aria-label="Virgule">,</button>
+    <button type="button" data-c="00">00</button><button type="button" data-c="0">0</button><button type="button" data-c="000">000</button><button type="button" data-c="ok" class="clav-ok">OK</button>
+  </div>
+</div>
 <script src="moteur.js"></script>
 <script src="releve.js"></script>
 <script>
@@ -880,10 +900,16 @@ function setPostes(p){
 const ESPECES={id:'especes',nom:'Espèces',type:'especes',mots:['espèces','especes','cash','liquide'],releves:[]};
 let COMPTES=[ESPECES], CPT={especes:ESPECES};
 function setComptes(c){
-  if(Array.isArray(c)&&c.length)COMPTES=c.map(x=>({id:x.id,nom:x.nom,type:x.type||'courant',mots:Array.isArray(x.mots)?x.mots:[],releves:Array.isArray(x.releves)?x.releves:[],taux:x.taux,periode:x.periode,couleur:x.couleur||''}));
+  if(Array.isArray(c)&&c.length)COMPTES=c.map(x=>({id:x.id,nom:x.nom,type:x.type||'courant',mots:Array.isArray(x.mots)?x.mots:[],releves:Array.isArray(x.releves)?x.releves:[],taux:x.taux,periode:x.periode,couleur:x.couleur||'',titulaire:x.titulaire||'',morale:!!x.morale,moi:Array.isArray(x.moi)?x.moi:[],contrib:Array.isArray(x.contrib)?x.contrib:[]}));
   if(!COMPTES.some(c=>c.id==='especes'))COMPTES.unshift({...ESPECES});
   CPT=Object.fromEntries(COMPTES.map(c=>[c.id,c]));
 }
+/* comptes gérés pour des tiers (personne ou personne morale) : gardés à part de vos comptes ; leurs opérations ne comptent
+   ni dans vos dépenses ni dans vos revenus. perso(e) = opération faite sur un de VOS comptes */
+const estTiers=id=>(CPT[id]||{}).type==='tiers';
+const MES=()=>COMPTES.filter(c=>c.type!=='tiers'),TIERS=()=>COMPTES.filter(c=>c.type==='tiers');
+const perso=e=>!estTiers(e.compte);
+const allP=()=>all.filter(perso);
 let BIENS=[], BIEN={};
 function setBiens(b){
   BIENS=(Array.isArray(b)?b:[]).map(x=>({id:x.id,nom:x.nom,type:x.type==='passif'?'passif':'actif',date_achat:x.date_achat||'',prix_achat:+x.prix_achat||0,poste:x.poste||'',mots:Array.isArray(x.mots)?x.mots:[],estimations:Array.isArray(x.estimations)?x.estimations:[],vehicule:!!x.vehicule,engin:x.engin||'voiture',vidange:x.vidange||null,maison:!!x.maison,projet:x.projet||null}));
@@ -909,9 +935,9 @@ function setProgrammees(l){PROGS=(Array.isArray(l)?l:[]).map(x=>({...x,ignorees:
 const PERIODES={1:'chaque mois',2:'tous les 2 mois',3:'chaque trimestre',6:'chaque semestre',12:'chaque année'};
 const TYPES_EVT={mariage:'Mariage',bapteme:'Baptême',circoncision:'Circoncision',funerailles:'Funérailles',fete:'Fête','voyage-tourisme':'Voyage (tourisme)','voyage-mission':'Voyage (mission)','voyage-vacances':'Voyage (vacances)',sante:'Santé',projet:'Projet',autre:'Autre'};
 /* Nature d'une opération : s = sens sur le compte (+1 entrée, −1 sortie, 0 virement) */
-const VERSION_APP='Ousnou 1.3.3';   // nom et numéro de version (même valeur que VERSION / VERSION_NOM dans serveur.py)
+const VERSION_APP='Ousnou 1.4.0';   // nom et numéro de version (même valeur que VERSION / VERSION_NOM dans serveur.py)
 const NAT={depense:{l:'Dépense',s:-1},revenu:{l:'Revenu',s:1},virement:{l:'Virement',s:0},pret:{l:'Prêt accordé',s:-1},remboursement:{l:'Remboursement reçu',s:1},investissement:{l:'Investissement',s:-1}};
-const TYPES_CPT={especes:'Espèces',courant:'Compte courant',epargne:'Épargne',carte:'Carte prépayée',mobile:'Mobile money'};
+const TYPES_CPT={especes:'Espèces',courant:'Compte courant',epargne:'Épargne',carte:'Carte prépayée',mobile:'Mobile money',tiers:"Compte d'un tiers"};
 const MOTS_REVENU=['salaire','salary','prime','revenu','interet','honoraire','indemnite','bourse','vacation','perdiem','per diem','prodes','frais de mission','consultance','jury','soutenance','seminaire','atelier'];
 
 /* ================= outils ================= */
@@ -954,14 +980,16 @@ const pct=x=>(x>0?'+':x<0?'−':'')+fmt1(Math.abs(x*100))+' %';
 const esc=s=>String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
 const MOIS=['janv.','févr.','mars','avr.','mai','juin','juil.','août','sept.','oct.','nov.','déc.'];
 /* Saisie des montants. Par défaut : le vrai montant en francs CFA (10000 = 10 000 FCFA).
-   Option (Données et réglages › Montants et devises, propre à chaque appareil) : en milliers, 10 → 10 000 CFA,
+   Option (Données et réglages › Saisie, propre à chaque appareil) : en milliers, 10 → 10 000 CFA,
    2,65 → 2 650 ; dans ce mode, un nombre de 10 000 ou plus reste un montant complet (25000 → 25 000). */
 let saisieSeule=false;   // vrai quand Données et réglages a été ouvert par le bouton « Saisir »
 let SAISIE_K=(()=>{try{return localStorage.getItem('daftar-saisie-milliers')==='1'}catch(e){return false}})();
 const num=s=>parseFloat(String(s).replace(',','.').replace(/[\s  ]/g,''));
-function cfa(s){const v=num(s);if(!isFinite(v)||v<=0)return NaN;return Math.round(SAISIE_K&&v<10000?v*1000:v)}
+/* un nombre écrit avec ses milliers séparés (« 5 000 ») est toujours un montant complet, même en saisie en milliers */
+const groupeMilliers=s=>/\d[\s\u00a0\u202f]\d{3}(?!\d)/.test(String(s));
+function cfa(s){const v=num(s);if(!isFinite(v)||v<=0)return NaN;return Math.round(SAISIE_K&&v<10000&&!groupeMilliers(s)?v*1000:v)}
 /* soldes, prix, valeurs et budgets : même unité de saisie, zéro accepté (en milliers : toujours × 1000) */
-function montantSaisi(s){const v=num(s);if(!isFinite(v)||v<0)return NaN;return Math.round(SAISIE_K?v*1000:v)}
+function montantSaisi(s,signe){const v=num(String(s).replace('−','-'));if(!isFinite(v)||(v<0&&!signe))return NaN;return Math.round(SAISIE_K&&!groupeMilliers(s)?v*1000:v)}   // signe : solde noté, peut être négatif
 /* montant enregistré → texte dans un champ de saisie, dans l'unité choisie */
 const versSaisie=m=>SAISIE_K?(m/1000>=10000?String(Math.round(m)):String(Math.round(m)/1000).replace('.',',')):String(Math.round(m));
 const exK=k=>SAISIE_K?String(k).replace('.',','):String(Math.round(k*1000));   // exemple d'un montant donné en milliers
@@ -1130,7 +1158,7 @@ $('syncBtn').onclick=async()=>{
 const norm=x=>{const n=NAT[x.nature]?x.nature:'depense';return {id:x.id,date:String(x.date||''),montant:+x.montant||0,libelle:String(x.libelle||''),nature:n,
   compte:x.compte||'especes',vers:x.vers||'',personne:String(x.personne||''),echeance:x.echeance||'',bien:x.bien||'',
   categorie:n==='depense'?(CAT[x.categorie]?x.categorie:'autre'):'',remarque:String(x.remarque||''),cree:String(x.cree||''),
-  vehicule:x.vehicule||'',cat_vehicule:x.cat_vehicule||'',cat_maison:x.cat_maison||'',km:+x.km||0,quantite:+x.quantite||0,unite:x.unite||'',
+  tiers:x.tiers||'',vehicule:x.vehicule||'',cat_vehicule:x.cat_vehicule||'',cat_maison:x.cat_maison||'',km:+x.km||0,quantite:+x.quantite||0,unite:x.unite||'',
   cat_revenu:n==='revenu'?String(x.cat_revenu||''):'',evenement:(n==='depense'||n==='revenu')?String(x.evenement||''):'',prog:x.prog||'',prog_date:x.prog_date||''}};
 const api={
   async add(doc){const x=await req('POST','/api/operations',doc);all.push(norm(x));return x},
@@ -1165,25 +1193,26 @@ async function charger(silencieux){
 
 /* ================= calculs ================= */
 const sorted=a=>[...a].sort((x,y)=>x.date<y.date?-1:x.date>y.date?1:(x.cree<y.cree?-1:1));
-function monthItems(y,m){const p=`${y}-${pad(m+1)}`;return all.filter(e=>e.date.startsWith(p))}
-function yearItems(y){return all.filter(e=>e.date.startsWith(y+'-'))}
+function monthItems(y,m){const p=`${y}-${pad(m+1)}`;return all.filter(e=>perso(e)&&e.date.startsWith(p))}
+function yearItems(y){return all.filter(e=>perso(e)&&e.date.startsWith(y+'-'))}
 const sum=a=>a.reduce((s,e)=>s+e.montant,0);
 /* type de revenu (enregistré, sinon deviné du libellé) ; exceptionnel = rattaché à un événement, ou revenu ponctuel */
 function guessCatR(lib){return guessCat(lib,REVENUS)}
 const catRev=e=>REV[e.cat_revenu]?e.cat_revenu:guessCatR(e.libelle);
 const estExc=e=>(e.nature==='depense'||e.nature==='revenu')&&(!!e.evenement||(e.nature==='revenu'&&!(REV[catRev(e)]||{}).courant));
 function guessEvt(lib){const L=normTxt(lib);const ev=EVTS.find(x=>x.mots.some(m=>{const k=normTxt(m);return k&&hasWord(L,k)}));return ev?ev.id:''}
-const deps=a=>a.filter(e=>e.nature==='depense'&&!e.evenement);      // dépenses COURANTES (statistiques, postes, couleurs des jours)
-const depsExc=a=>a.filter(e=>e.nature==='depense'&&e.evenement);    // dépenses exceptionnelles (rattachées à un événement)
+const deps=a=>a.filter(e=>e.nature==='depense'&&!e.evenement&&perso(e));      // dépenses COURANTES (statistiques, postes, couleurs des jours)
+const depsExc=a=>a.filter(e=>e.nature==='depense'&&e.evenement&&perso(e));    // dépenses exceptionnelles (rattachées à un événement)
 const ofNat=(a,...n)=>sum(a.filter(e=>n.includes(e.nature)));
 function byCat(items){const r={};deps(items).forEach(e=>r[e.categorie]=(r[e.categorie]||0)+e.montant);return r}
 /* Flux d'une période : entrées (revenus + remboursements) − sorties (dépenses + investissements + prêts) ; les virements sont neutres */
 /* ent = entrées courantes (revenus courants + remboursements), entX = revenus exceptionnels ; dep = dépenses courantes,
    exc = dépenses exceptionnelles ; net compte TOUT (aucune opération n'échappe au solde) */
-function flux(items){const ent=sum(items.filter(e=>(e.nature==='revenu'&&!estExc(e))||e.nature==='remboursement')),entX=sum(items.filter(e=>e.nature==='revenu'&&estExc(e))),
+function flux(items){items=items.filter(perso);const ent=sum(items.filter(e=>(e.nature==='revenu'&&!estExc(e))||e.nature==='remboursement')),entX=sum(items.filter(e=>e.nature==='revenu'&&estExc(e))),
   dep=sum(deps(items)),exc=sum(depsExc(items)),inv=ofNat(items,'investissement'),pre=ofNat(items,'pret');return {ent,entX,dep,exc,inv,pre,net:ent+entX-dep-exc-inv-pre}}
 /* Effet d'une opération sur le solde d'un compte */
-function effet(e,cid){if(e.nature==='virement')return (e.vers===cid?e.montant:0)-(e.compte===cid?e.montant:0);return e.compte===cid?NAT[e.nature].s*e.montant:0}
+function effet(e,cid){if(e.nature==='depense'&&e.tiers===cid&&e.compte!==cid)return e.montant;   // votre part versée au compte d'un tiers
+  if(e.nature==='virement')return (e.vers===cid?e.montant:0)-(e.compte===cid?e.montant:0);return e.compte===cid?NAT[e.nature].s*e.montant:0}
 /* Solde d'un compte = dernier relevé noté + opérations datées APRÈS ce relevé (un relevé inclut les opérations de son jour).
    Chaque relevé est comparé au précédent + opérations intermédiaires : l'écart révèle une opération oubliée. */
 /* une opération compte après un solde noté si elle est datée d'un jour suivant, ou du même jour mais saisie après
@@ -1220,10 +1249,12 @@ function etatBien(b){
   return {nInv:inv.length,I,U:sum(usage),nU:usage.length,cout,est,V,pv,taux,ans,valeur:V!==null?V:cout};
 }
 function patrimoine(){
-  const liq=COMPTES.reduce((s,c)=>s+etatCompte(c).solde,0);
+  const liq=MES().reduce((s,c)=>s+etatCompte(c).solde,0);
   const biens=BIENS.reduce((s,b)=>s+etatBien(b).valeur,0);
-  const cre=creances().reduce((s,c)=>s+Math.max(0,c.reste),0);
-  return {liq,biens,cre,net:liq+biens+cre};
+  // compte d'un tiers à découvert : vous avez avancé l'argent, il vous le doit ; un solde positif lui appartient (non compté)
+  const av=TIERS().map(c=>Math.max(0,-etatCompte(c).solde)).filter(v=>v>0);
+  const cre=creances().reduce((s,c)=>s+Math.max(0,c.reste),0)+av.reduce((a,v)=>a+v,0);
+  return {liq,biens,cre,nTiers:av.length,net:liq+biens+cre};
 }
 
 /* ================= reconnaissance d'une note ================= */
@@ -1261,6 +1292,8 @@ function guessOp(lib){
   if(r.nature==='investissement'&&BIEN[r.bien]&&BIEN[r.bien].maison)r.cat_maison=guessCatM(lib);
   if(r.nature==='revenu')r.cat_revenu=guessCatR(lib);
   if(r.nature==='depense'||r.nature==='revenu')r.evenement=guessEvt(lib);
+  // votre part versée au compte d'un tiers (« contribution maison ») : reste votre dépense, et alimente ce compte
+  if(r.nature==='depense'){const t=TIERS().find(c=>c.contrib.some(m=>{const k=normTxt(m);return k&&(L===k||hasWord(L,k))}));if(t&&t.id!==r.compte)r.tiers=t.id}
   return r;
 }
 
@@ -1271,7 +1304,7 @@ const optsBiens=sel=>BIENS.map(b=>`<option value="${b.id}"${b.id===sel?' selecte
 const optsNat=sel=>Object.entries(NAT).map(([k,v])=>`<option value="${k}"${k===sel?' selected':''}>${v.l}</option>`).join('');
 const nomCpt=id=>(CPT[id]||{}).nom||id;
 /* Couleur d'un compte : celle choisie (charte de la banque), sinon une couleur par type */
-const COUL_TYPE={especes:'#F3E3A3',courant:'#6b7b90',epargne:'#2e8a57',carte:'#9363b0',mobile:'#2f97ad'};
+const COUL_TYPE={especes:'#F3E3A3',courant:'#6b7b90',epargne:'#2e8a57',carte:'#9363b0',mobile:'#2f97ad',tiers:'#b07a3c'};
 const coulCpt=id=>{const c=CPT[id];return (c&&c.couleur)||COUL_TYPE[(c||{}).type]||'#9a968c'};
 const dotCpt=id=>`<i aria-hidden="true" class="dot cdot" style="background:${coulCpt(id)}"></i>`;
 function filtreOk(e,f){
@@ -1281,7 +1314,7 @@ function filtreOk(e,f){
   if(t==='e')return e.evenement===v;
   if(t==='r')return e.nature==='revenu'&&!e.evenement&&catRev(e)===v;
   if(t==='x')return estExc(e);
-  if(t==='c')return e.compte===v||e.vers===v;
+  if(t==='c')return e.compte===v||e.vers===v||e.tiers===v;
   if(t==='p')return normTxt(e.personne)===v;
   if(t==='b'){const b=BIEN[v];return e.bien===v||(!!b&&!!b.poste&&e.nature==='depense'&&e.categorie===b.poste&&(!b.date_achat||e.date>=b.date_achat))}
   return true;
@@ -1314,7 +1347,7 @@ function render(){
   const tableau=isM||isA||isP;
   $('resumePanel').hidden=$('journal').hidden=!tableau;
   $('postesPanel').hidden=!(isM||isA);$('rythmePanel').hidden=!isA;  // en vue Mois, le rythme hebdomadaire est dans le résumé
-  ['comptesPanel','biensPanel','pretsPanel'].forEach(i=>$(i).hidden=!isP);$('oeilBtn').hidden=!isP;
+  ['comptesPanel','biensPanel','pretsPanel'].forEach(i=>$(i).hidden=!isP);
   $('statsBox').hidden=!isS;$('saisie').hidden=!isD;if(!isS)cacherTip();
   ['vehDash','vehStats','vehRecap','vehVid','vehJournal'].forEach(i=>$(i).hidden=!isV);
   ['maiDash','maiStats','maiRecap','maiPersp','maiJournal'].forEach(i=>$(i).hidden=!isH);
@@ -1323,7 +1356,7 @@ function render(){
   if(isH){renderMaison();return}
   if(isD){openVidange();openProjet();return}
   if(!tableau){if(isS)renderStats();return}
-  const items=sorted(isP?all:isM?monthItems(cur.y,cur.m):yearItems(cur.y));
+  const items=sorted(isP?all.filter(e=>perso(e)||(filtre&&filtre==='c:'+e.compte)):isM?monthItems(cur.y,cur.m):yearItems(cur.y));   // Patrimoine : opérations des tiers seulement sur leur compte
   const F=flux(items);const total=F.dep;
 
   /* résumé */
@@ -1331,9 +1364,10 @@ function render(){
   const fluxCol=F.net>=0?'var(--ok)':'var(--warn)';
   if(isP){
     const P=patrimoine();
-    $('hero').innerHTML=stat('Patrimoine net',fmtM(P.net),`${U()} · comptes + biens + créances`,true)+
-      stat('Comptes',fmtM(P.liq),`${U()} sur ${COMPTES.length} comptes`)+stat('Biens',fmtM(P.biens),`${U()} · valeur actuelle, sinon coût`)+
-      stat('On vous doit',fmtM(P.cre),`${U()} · ${creances().filter(c=>c.reste>0).length} personne(s)`);
+    $('hero').innerHTML=`<div class="oeilL"><button class="btn ghost small oeil" id="oeilBtn" type="button" title="Afficher ou masquer le patrimoine, les soldes, les biens et les prêts"></button></div>`+stat('Patrimoine net',fmtM(P.net),`${U()} · comptes + biens + créances`,true)+
+      stat('Comptes',fmtM(P.liq),`${U()} sur ${MES().length} comptes`)+stat('Biens',fmtM(P.biens),`${U()} · valeur actuelle, sinon coût`)+
+      stat('On vous doit',fmtM(P.cre),`${U()} · ${creances().filter(c=>c.reste>0).length+P.nTiers} personne(s)`);
+    majOeil();
     renderComptes();renderBiens();renderPrets();
   }else if(isM){
     const days=new Date(cur.y,cur.m+1,0).getDate();
@@ -1376,18 +1410,6 @@ function render(){
       return `<button type="button" class="bar${fk===id?' sel':''}" data-c="k:${id}" aria-pressed="${fk===id}"><span class="name"><span class="dot" aria-hidden="true" style="background:${color(c.id)}"></span>${esc(c.label)}</span><div class="track"><div class="fill" style="width:${v/scale*100}%;background:${over?'var(--warn)':color(c.id)}"></div>${b?`<span class="budget" style="left:calc(${b/scale*100}% - 1px)" title="Budget ${fmtM(b)} ${U()}"></span>`:''}</div><span class="amt">${fmtM(v)}<span class="pct">${total?Math.round(v/total*100):0} %</span>${b?`<span class="over" style="color:${over?'var(--warn)':'var(--muted)'}">${over?`dépassé de ${fmtM(v-b)}`:`reste ${fmtM(b-v)}`}</span>`:''}</span></button>`}).join('')
       :'<div class="empty">Aucune dépense sur cette période.</div>';
 
-    /* exceptionnel : par événement (dépenses, revenus, budget) puis revenus ponctuels hors événement, par type */
-    {const parEvt=new Map(),parRev=new Map();
-      items.filter(estExc).forEach(e=>{if(e.evenement){const x=parEvt.get(e.evenement)||{dep:0,ent:0,n:0};if(e.nature==='depense')x.dep+=e.montant;else x.ent+=e.montant;x.n++;parEvt.set(e.evenement,x)}
-        else{const k=catRev(e),x=parRev.get(k)||{ent:0,n:0};x.ent+=e.montant;x.n++;parRev.set(k,x)}});
-      const fsel=filtre;let h='';
-      for(const [id,x] of [...parEvt].sort((a,b)=>(b[1].dep+b[1].ent)-(a[1].dep+a[1].ent))){const ev=EVT[id]||{nom:id,type:'autre',budget:0};
-        const totDep=sum(all.filter(e=>e.evenement===id&&e.nature==='depense')),bud=ev.budget;
-        h+=`<button type="button" class="excrow${fsel==='e:'+id?' sel':''}" data-f="e:${id}" aria-pressed="${fsel==='e:'+id}"><span class="excnom">★ ${esc(ev.nom)} <span class="hint">${esc(TYPES_EVT[ev.type]||'')}${ev.debut?' · '+dmy(ev.debut)+(ev.fin&&ev.fin!==ev.debut?' → '+dmy(ev.fin):''):''}</span></span>`+
-          `<span class="excval">${x.dep?`<span>dépensé <b>${fmtM(x.dep)}</b></span>`:''}${x.ent?`<span class="in">reçu <b>${fmtM(x.ent)}</b></span>`:''}${x.dep&&x.ent?`<span>net <b>${sgnM(x.ent-x.dep)}</b></span>`:''}${bud?`<span${totDep>bud?' style="color:var(--warn)"':''}>budget ${fmtM(totDep)} / ${fmtM(bud)}</span>`:''}</span></button>`}
-      for(const [k,x] of [...parRev].sort((a,b)=>b[1].ent-a[1].ent))
-        h+=`<button type="button" class="excrow${fsel==='r:'+k?' sel':''}" data-f="r:${k}" aria-pressed="${fsel==='r:'+k}"><span class="excnom">${esc((REV[k]||{label:k}).label)} <span class="hint">revenu ponctuel · ${x.n} ligne${x.n>1?'s':''}</span></span><span class="excval"><span class="in">reçu <b>${fmtM(x.ent)}</b></span></span></button>`;
-      $('excPanel').hidden=!h;$('excList').innerHTML=h;}
 
     /* rythme (dépenses) */
     if(!isM){
@@ -1474,19 +1496,23 @@ function opTag(e){
 let releveOuvert=null, estimOuvert=null;
 function renderComptes(){
   let tot=0;
-  const parts=COMPTES.map(c=>({c,v:Math.max(0,etatCompte(c).solde)})).filter(x=>x.v>0),tp=parts.reduce((a,x)=>a+x.v,0);
+  const parts=MES().map(c=>({c,v:Math.max(0,etatCompte(c).solde)})).filter(x=>x.v>0),tp=parts.reduce((a,x)=>a+x.v,0);
   const repart=tp?`<div class="stack" role="img" aria-label="Répartition des soldes">${parts.map(x=>`<span style="flex:${x.v};background:${coulCpt(x.c.id)}" title="${esc(x.c.nom)} : ${fmtM(x.v)} ${U()} (${part(x.v/tp*100)} %)"></span>`).join('')}</div>
     <div class="legend">${parts.map(x=>`<button type="button" class="linkbtn" data-f="c:${x.c.id}">${dotCpt(x.c.id)}${esc(x.c.nom)} <span class="muted">${part(x.v/tp*100)} %</span></button>`).join('')}</div>`:'';
-  $('comptesList').innerHTML=repart+COMPTES.map(c=>{const s=etatCompte(c);tot+=s.solde;const L=s.last;
+  const tiers=TIERS();
+  $('comptesList').innerHTML=repart+COMPTES.filter(c=>c.type!=='tiers').concat(tiers).map((c,i,l)=>{const s=etatCompte(c);if(c.type!=='tiers')tot+=s.solde;const L=s.last;
+    const ent=c.type==='tiers'&&c===tiers[0]?`<div class="acct tot"><b>Total des comptes</b><span class="acct-s num">${fmtM(tot)}</span></div>
+      <h3 class="sub" style="margin-top:14px">Comptes gérés pour des tiers</h3><p class="hint">Gardés à part : ils ne comptent ni dans vos comptes ni dans vos dépenses. Un solde négatif est de l'argent que vous avez avancé : il compte dans « On vous doit ».</p>`:'';
+    const tit=c.type==='tiers'?`<span class="tag">${c.morale?'Personne morale':'Personne'} · ${esc(c.titulaire||c.nom)}</span>`:`<span class="tag">${TYPES_CPT[c.type]||''}</span>`;
     const ec=s.ecarts.length?`<span class="warn">${s.ecarts.length} écart${s.ecarts.length>1?'s':''} entre relevés</span>`:'';
     const interet=c.taux?`<span class="hint">Intérêts : ${fmt1(c.taux)} % tous les ${c.periode||12} mois, soit environ ${fmtM(s.solde*c.taux/100)} ${U()} par période au solde actuel</span>`:'';
-    return `<div class="acct" style="--cc:${coulCpt(c.id)}">
-      <div class="acct-h">${dotCpt(c.id)}<button type="button" class="linkbtn" data-f="c:${c.id}"><b>${esc(c.nom)}</b></button><span class="tag">${TYPES_CPT[c.type]||''}</span><span class="acct-s num${s.solde<0?' warn':''}">${fmtM(s.solde)}</span></div>
+    return ent+`<div class="acct" style="--cc:${coulCpt(c.id)}">
+      <div class="acct-h">${dotCpt(c.id)}<button type="button" class="linkbtn" data-f="c:${c.id}"><b>${esc(c.nom)}</b></button>${tit}<span class="acct-s num${s.solde<0?' warn':''}">${fmtM(s.solde)}</span></div>
       <div class="acct-d"><span class="hint">${L?`Relevé du ${dmy(L.date)} : ${fmtM(L.solde)} ${U()}${s.n?` · ${s.n} opération${s.n>1?'s':''} depuis`:''}`:'Aucun relevé : solde calculé depuis zéro'}</span>${ec}${interet}</div>
       <div class="row"><button type="button" class="btn ghost small" data-rel="${c.id}">Noter le solde</button>${s.hist.length?`<details><summary class="hint">Relevés (${s.hist.length})</summary><div class="tbl"><table><thead><tr><th>Date</th><th>Noté</th><th>Attendu</th><th>Écart</th><th></th></tr></thead><tbody>${s.hist.slice().reverse().map(h=>`<tr><td>${dmy(h.date)}</td><td>${fmtM(h.solde)}</td><td>${h.attendu===null?'–':fmtM(h.attendu)}</td><td class="${h.ecart?'warn':''}">${h.attendu===null?'–':h.ecart?sgnM(h.ecart):'0'}</td><td><button type="button" class="del" data-delrel="${c.id}|${h.date}" aria-label="Supprimer ce relevé">✕</button></td></tr>`).join('')}</tbody></table></div></details>`:''}</div>
       ${releveOuvert===c.id?`<div class="row relform"><input type="date" id="relD" value="${today}" aria-label="Date du relevé"><input type="text" inputmode="decimal" id="relV" placeholder="solde ${U_SAISIE()}" aria-label="Solde ${U_SAISIE()}" aria-describedby="relH" style="max-width:11em"><span class="hint" id="relH"></span><button type="button" class="btn small" data-relok="${c.id}">Enregistrer</button><button type="button" class="btn ghost small" data-relno>Annuler</button></div>`:''}
-    </div>`}).join('')+`<div class="acct tot"><b>Total des comptes</b><span class="acct-s num">${fmtM(tot)}</span></div>`;
-  const v=$('relV');if(v){v.focus();v.oninput=()=>{const m=montantSaisi(v.value);$('relH').textContent=isFinite(m)?`= ${fmtC(m)} FCFA`:''}}
+    </div>`}).join('')+(tiers.length?'':`<div class="acct tot"><b>Total des comptes</b><span class="acct-s num">${fmtM(tot)}</span></div>`);
+  const v=$('relV');if(v){v.focus();v.oninput=()=>{const m=montantSaisi(v.value,true);$('relH').textContent=isFinite(m)?`= ${fmtC(m)} FCFA`:''}}
 }
 function renderBiens(){
   if(!BIENS.length){$('biensList').innerHTML='<div class="empty">Aucun bien. Ajoutez-en dans l\'onglet « Comptes et biens ».</div>';return}
@@ -1520,7 +1546,7 @@ $('comptesList').addEventListener('click',async ev=>{
   if('relno' in b.dataset){releveOuvert=null;renderComptes();return}
   if(b.dataset.relok||b.dataset.delrel){
     let id,date,solde=null;
-    if(b.dataset.relok){id=b.dataset.relok;date=$('relD').value;solde=montantSaisi($('relV').value);if(!date||!isFinite(solde)){$('relH').textContent=`Date et solde (${U_SAISIE()}) requis.`;return}}
+    if(b.dataset.relok){id=b.dataset.relok;date=$('relD').value;solde=montantSaisi($('relV').value,true);if(!date||!isFinite(solde)){$('relH').textContent=`Date et solde (${U_SAISIE()}) requis.`;return}}
     else{[id,date]=b.dataset.delrel.split('|');if(!b.classList.contains('armed')){b.classList.add('armed');b.textContent='Supprimer ?';return}}
     b.disabled=true;try{await api.releve(id,date,solde);releveOuvert=null;await charger()}
     catch(e){status(e.message,true);if($('relH'))$('relH').textContent=e.message;b.disabled=false}
@@ -1560,7 +1586,6 @@ $('demoRecreer').onclick=async()=>{if(!confirm('Effacer les données de démo mo
 $('segEngins').addEventListener('click',ev=>{const b=ev.target.closest('[data-v]');if(!b)return;choisirEngin(b.dataset.v);render()});
 $('segMaisons').addEventListener('click',ev=>{const b=ev.target.closest('[data-h]');if(!b)return;choisirMaison(b.dataset.h);render()});
 $('bars').addEventListener('click',ev=>{const b=ev.target.closest('[data-c]');if(!b)return;filtre=filtre===b.dataset.c?'':b.dataset.c;render()});
-$('excList').addEventListener('click',ev=>{const b=ev.target.closest('[data-f]');if(!b)return;filtre=filtre===b.dataset.f?'':b.dataset.f;render()});
 let qT;$('q').addEventListener('input',()=>{clearTimeout(qT);qT=setTimeout(()=>{query=$('q').value.trim();render()},200)});
 $('more').onclick=()=>{shown+=150;render()};
 
@@ -1820,6 +1845,8 @@ function fillSelects(){
   $('dlPers').innerHTML=creances().map(c=>`<option value="${esc(c.nom)}">`).join('');
   const cm=$('fCatM').value;$('fCatM').innerHTML=CATS_M.map(c=>`<option value="${c.id}"${c.id===cm?' selected':''}>${esc(c.l)}</option>`).join('');
   const cr=$('fCatR').value;$('fCatR').innerHTML=REVENUS.map(r=>`<option value="${r.id}"${r.id===cr?' selected':''}>${esc(r.label)} (${r.courant?'courant':'ponctuel'})</option>`).join('');
+  const pc=$('pasteCpt').value;$('pasteCpt').innerHTML='<option value="">— non : compte reconnu dans chaque ligne —</option>'+COMPTES.map(c=>`<option value="${c.id}"${c.id===pc?' selected':''}>${esc(c.nom)}${c.type==='tiers'?' (tiers)':''}</option>`).join('');
+  const ct=$('fTiers').value;$('fTiers').innerHTML='<option value="">— non —</option>'+TIERS().map(c=>`<option value="${c.id}"${c.id===ct?' selected':''}>${esc(c.nom)}</option>`).join('');
   const ce=$('fEvt').value;$('fEvt').innerHTML='<option value="">— aucun : opération courante —</option>'+[...EVTS].sort((a,b)=>(b.debut||'').localeCompare(a.debut||'')).map(x=>`<option value="${x.id}"${x.id===ce?' selected':''}>★ ${esc(x.nom)}</option>`).join('');
   const ve=$('fVeh').value;$('fVeh').innerHTML=VEHS().map(b=>`<option value="${b.id}"${b.id===ve?' selected':''}>${esc(b.nom)}</option>`).join('');
   const cv=$('fCatV').value;$('fCatV').innerHTML=CATS_V.map(c=>`<option value="${c.id}"${c.id===cv?' selected':''}>${c.l}</option>`).join('');
@@ -1827,7 +1854,7 @@ function fillSelects(){
 }
 function majChamps(){
   const n=$('fNat').value;
-  $('wCat').hidden=n!=='depense';$('wVers').hidden=n!=='virement';$('wPers').hidden=!(n==='pret'||n==='remboursement');
+  $('wCat').hidden=n!=='depense';$('wTiers').hidden=!(n==='depense'&&TIERS().length&&!estTiers($('fCpt').value));$('wVers').hidden=n!=='virement';$('wPers').hidden=!(n==='pret'||n==='remboursement');
   $('wEch').hidden=n!=='pret';$('wBien').hidden=n!=='investissement';
   $('wRev').hidden=n!=='revenu';$('wEvt').hidden=!((n==='depense'||n==='revenu')&&EVTS.length);
   // champs du véhicule : dépense du poste du véhicule, ou investissement dans un bien véhicule
@@ -1854,6 +1881,7 @@ function deviner(){
   if(!touched.catm&&g.cat_maison)$('fCatM').value=g.cat_maison;
   if(!touched.rev&&g.cat_revenu)$('fCatR').value=g.cat_revenu;
   if(!touched.evt)$('fEvt').value=g.evenement||'';
+  if(!touched.tiers)$('fTiers').value=g.tiers||'';
   majChamps();
   // ce que la reconnaissance a réglé (champs non modifiés à la main), affiché sous le libellé
   const n=$('fNat').value,bits=[];
@@ -1865,18 +1893,21 @@ function deviner(){
   if(n==='revenu'&&!touched.rev&&REV[$('fCatR').value]){const r=REV[$('fCatR').value];bits.push(`${r.label} (${r.courant?'courant':'ponctuel'})`)}
   if(!$('wEvt').hidden&&!touched.evt&&EVT[$('fEvt').value])bits.push('★ '+EVT[$('fEvt').value].nom+' (exceptionnel)');
   if((n==='pret'||n==='remboursement')&&!touched.pers&&$('fPers').value)bits.push($('fPers').value);
+  if(!$('wTiers').hidden&&!touched.tiers&&$('fTiers').value)bits.push('versé au compte '+nomCpt($('fTiers').value));
   $('fLibHint').textContent=bits.length?'Reconnu : '+bits.join(' · ')+' (modifiable ci-dessous)':'';
 }
 $('fDate').value=today;
 fillSelects();
 const AMT_HINT=()=>SAISIE_K?'10 = 10 000 CFA · 0,5 = 500 CFA · 1750 = 1 750 000':'montant en francs CFA, par exemple 10000';
-function amtHint(){const v=cfa($('fAmt').value);$('fAmtHint').textContent=v>0?`= ${fmtC(v)} FCFA`:($('fAmt').value.trim()?'Montant non reconnu':AMT_HINT())}
-$('fAmt').addEventListener('input',amtHint);
+/* Une opération : le montant est toujours positif ; un signe − tapé devant veut dire « sortie » (dépense) */
+const amtNeg=()=>/^\s*[-−]/.test($('fAmt').value),amtVal=()=>cfa($('fAmt').value.replace(/^\s*[-−]\s*/,''));
+function amtHint(){const v=amtVal();$('fAmtHint').textContent=v>0?`= ${fmtC(v)} FCFA${amtNeg()?' · sortie':''}`:($('fAmt').value.trim()?'Montant non reconnu':AMT_HINT())}
+$('fAmt').addEventListener('input',()=>{amtHint();if(amtNeg()&&!touched.nat&&['revenu','remboursement'].includes($('fNat').value)){$('fNat').value='depense';majChamps()}});
 ['input','change','compositionend'].forEach(t=>$('fLib').addEventListener(t,deviner));   // claviers de téléphone : la saisie prédictive n'émet pas toujours « input »
-[['fNat','nat'],['fCpt','cpt'],['fCat','cat'],['fVers','vers'],['fBien','bien'],['fPers','pers'],['fCatV','catv'],['fCatM','catm'],['fCatR','rev'],['fEvt','evt'],['fVeh','veh']].forEach(([i,k])=>$(i).addEventListener(i==='fPers'?'input':'change',()=>{touched[k]=true;majChamps()}));
+[['fNat','nat'],['fCpt','cpt'],['fCat','cat'],['fVers','vers'],['fBien','bien'],['fPers','pers'],['fCatV','catv'],['fCatM','catm'],['fCatR','rev'],['fEvt','evt'],['fVeh','veh'],['fTiers','tiers']].forEach(([i,k])=>$(i).addEventListener(i==='fPers'?'input':'change',()=>{touched[k]=true;majChamps()}));
 $('fKm').addEventListener('input',majChamps);
 $('fVidNext').addEventListener('input',()=>{touched.vidnext=true});
-const tabs=[['tOne','oneForm'],['tPaste','pasteBox'],['tRel','relBox'],['tPostes','posteBox'],['tCB','cbBox'],['tEvt','evtBox'],['tProg','progBox'],['tVid','vidPanel'],['tMai','maiPanel'],['tPar','paritesBox'],['tSav','savBox']];
+const tabs=[['tOne','oneForm'],['tPaste','pasteBox'],['tRel','relBox'],['tPostes','posteBox'],['tCB','cbBox'],['tEvt','evtBox'],['tProg','progBox'],['tVid','vidPanel'],['tMai','maiPanel'],['tSai','saisieBox'],['tPar','paritesBox'],['tSav','savBox']];
 function showTab(t,focus){if(t!=='tOne')saisieSeule=false;tabs.forEach(([tt,p])=>{const on=tt===t;$(tt).setAttribute('aria-selected',on);$(tt).tabIndex=on?0:-1;$(p).hidden=!on});majRubSaisie();if(focus)$(t).focus()}
 /* « Saisir » montre seulement la carte de saisie (onglets cachés) ; « Données et réglages » montre tout */
 function majRubSaisie(){const d=view==='donnees',s=d&&saisieSeule;$('saisie').classList.toggle('seule',s);$('saisie').setAttribute('aria-label',s?'Saisir une opération':'Données et réglages');$('aSaisir').setAttribute('aria-pressed',s);$('aDon').setAttribute('aria-pressed',d&&!s)}
@@ -1900,19 +1931,41 @@ function majSaisie(){
   document.querySelectorAll('.uS-acc').forEach(x=>x.textContent=SAISIE_K?'les montants se tapent en milliers':'les montants se tapent en francs CFA');
   document.querySelectorAll('[data-k]').forEach(x=>x.textContent=exK(+x.dataset.k));
   $('fAmt').placeholder=exK(10);
+  $('pasteK').checked=SAISIE_K;
   $('pasteText').placeholder=[`${exK(10)} vivres le 02/10/26`,`${exK(4)} dej`,`${exK(200)} salaire banque le 27/10/26`,`${exK(80)} retrait banque`,`${exK(100)} épargne banque > mobile`,`prêt ${exK(100)} Ali échéance 30/07/26`,`remb ${exK(75)} Ali`,`${exK(50)} ciment maison`,`${exK(25)} carburant 35,7L 110882km`,`${exK(17)} vidange huile 110818km`,`${exK(12)} pharmacie`,`${exK(30)} scolarité banque`,`${exK(5)} crédit mobile`].join('\n');
   $('saisieK').checked=SAISIE_K;
-  $('fAmtUnite').textContent=SAISIE_K?'Taper en FCFA':'Taper en milliers';
   $('saisieKInfo').textContent=SAISIE_K?'Activé : tapez 10 pour 10 000 FCFA. Un nombre de 10 000 ou plus est pris tel quel.':'Désactivé : tapez le vrai montant, par exemple 10000 pour 10 000 FCFA.';
   amtHint();
 }
 $('saisieK').addEventListener('change',()=>{SAISIE_K=$('saisieK').checked;try{localStorage.setItem('daftar-saisie-milliers',SAISIE_K?'1':'0')}catch(e){}
   majSaisie();if(!dirty)openPostes();if(!cbDirty)openCB();if(!evtDirty)openEvt();openProjet();render();status(SAISIE_K?'Montants en milliers sur cet appareil.':'Montants en francs CFA sur cet appareil.')});
 majSaisie();
-/* lien sous le champ Montant : change l'unité de saisie (même réglage que la case de Montants et devises) en gardant le montant déjà tapé */
-$('fAmtUnite').onclick=()=>{const v=cfa($('fAmt').value);$('saisieK').checked=!SAISIE_K;$('saisieK').dispatchEvent(new Event('change'));
-  if(v>0)$('fAmt').value=versSaisie(v);amtHint();$('fAmt').focus()};
-function resetForm(){['fAmt','fLib','fRem','fPers','fEch','fKm','fQty'].forEach(i=>$(i).value='');$('fLibHint').textContent='';$('fUnit').value='L';$('fVid').checked=true;touched={};$('fVidNext').value='';$('fNat').value='depense';$('fCpt').value='especes';$('fCat').value='autre';$('fEvt').value='';editId=null;$('editBar').hidden=true;$('addBtn').textContent='Ajouter';majChamps();amtHint();render()}
+/* clavier Daftar des montants : remplace le clavier du téléphone (qui n'a pas toujours le signe −) dans les champs de montant ;
+   chiffres, virgule, signe −, 00 et 000. Réglage par appareil (Données et réglages › Saisie), actif par défaut sur écran tactile. */
+let CLAVIER=(()=>{try{const v=localStorage.getItem('daftar-clavier');if(v!==null)return v==='1'}catch(e){}return matchMedia('(pointer:coarse)').matches})();
+let clavCible=null;
+const champClav=el=>!!el&&el.tagName==='INPUT'&&(el.getAttribute('inputmode')==='decimal'||el.dataset.clav==='1')&&!el.closest('dialog')&&!el.disabled&&!el.readOnly;
+function clavApercu(){const el=clavCible;$('clavApercu').textContent=el?(el.getAttribute('aria-label')||(el.labels&&el.labels[0]?el.labels[0].textContent:'')||'').trim():''}
+function clavOuvrir(el){clavCible=el;el.dataset.clav='1';el.setAttribute('inputmode','none');$('clavier').hidden=false;document.body.classList.add('avec-clavier');clavApercu();
+  setTimeout(()=>el.scrollIntoView({block:'center',behavior:doux()}),50)}
+function clavFermer(){const el=clavCible;clavCible=null;$('clavier').hidden=true;document.body.classList.remove('avec-clavier');if(el)el.setAttribute('inputmode','decimal')}
+document.addEventListener('focusin',ev=>{const el=ev.target;if(CLAVIER&&champClav(el)&&el.dataset.telephone!=='1')clavOuvrir(el);else if(clavCible&&el!==clavCible)clavFermer()});
+document.addEventListener('focusout',ev=>{const el=ev.target;if(el.dataset&&el.dataset.telephone==='1'){delete el.dataset.telephone}
+  setTimeout(()=>{if(clavCible&&document.activeElement!==clavCible)clavFermer()},0)});
+$('clavier').addEventListener('pointerdown',ev=>{if(ev.target.closest('button'))ev.preventDefault()});   // garde le curseur dans le champ
+$('clavier').addEventListener('click',ev=>{const b=ev.target.closest('[data-c]'),el=clavCible;if(!b||!el)return;const c=b.dataset.c;
+  if(c==='ok'){el.blur();clavFermer();return}
+  if(c==='tel'){el.dataset.telephone='1';clavFermer();el.blur();setTimeout(()=>el.focus(),0);return}
+  let a=el.selectionStart??el.value.length,z=el.selectionEnd??a;
+  if(c==='del'){if(a===z&&a>0)a--;el.setRangeText('',a,z,'end')}
+  else if(c==='moins'){const neg=/^\s*[-−]/.test(el.value);el.value=neg?el.value.replace(/^\s*[-−]\s*/,''):'-'+el.value;const p=el.value.length;el.setSelectionRange(p,p)}
+  else if(c===','){if(!el.value.includes(','))el.setRangeText(el.value?',':'0,',a,z,'end')}
+  else el.setRangeText(c,a,z,'end');
+  el.dispatchEvent(new Event('input',{bubbles:true}))});
+function majClavier(){$('clavierK').checked=CLAVIER;$('clavierKInfo').textContent=CLAVIER?'Activé : toucher un champ de montant ouvre le clavier Daftar ; « ⌨ Clavier du téléphone » revient au clavier habituel.':'Désactivé : le clavier du téléphone s\'ouvre dans les champs de montant.'}
+$('clavierK').addEventListener('change',()=>{CLAVIER=$('clavierK').checked;try{localStorage.setItem('daftar-clavier',CLAVIER?'1':'0')}catch(e){}majClavier();status(CLAVIER?'Clavier Daftar activé sur cet appareil.':'Clavier du téléphone sur cet appareil.')});
+majClavier();
+function resetForm(){['fAmt','fLib','fRem','fPers','fEch','fKm','fQty'].forEach(i=>$(i).value='');$('fTiers').value='';$('fLibHint').textContent='';$('fUnit').value='L';$('fVid').checked=true;touched={};$('fVidNext').value='';$('fNat').value='depense';$('fCpt').value='especes';$('fCat').value='autre';$('fEvt').value='';editId=null;$('editBar').hidden=true;$('addBtn').textContent='Ajouter';majChamps();amtHint();render()}
 /* fenêtre de confirmation : résumé lisible de l'opération avant l'enregistrement (Échap ou « Modifier » = annuler) */
 /* ================= annuler : message en bas de l'écran, 10 secondes ================= */
 let toastT=null,HIST=null;
@@ -1948,6 +2001,8 @@ function confirmerOp(doc,opt={}){
   else lignes.push([{revenu:'Reçu sur',remboursement:'Reçu sur'}[doc.nature]||'Payé avec',nomCpt(doc.compte)]);
   if(doc.nature==='depense')lignes.push(['Poste',(CAT[doc.categorie]||{}).label||doc.categorie]);
   if(doc.cat_revenu){const r=REV[doc.cat_revenu]||{label:doc.cat_revenu};lignes.push(['Type de revenu',`${r.label} (${r.courant?'courant':'ponctuel'})`])}
+  if(doc.tiers)lignes.push(['Versé au compte',`${nomCpt(doc.tiers)} : votre dépense alimente aussi ce compte`]);
+  if(estTiers(doc.compte))lignes.push(['Compte d\'un tiers','gardé à part : ne compte pas dans vos dépenses ni vos revenus']);
   if(doc.evenement)lignes.push(['Événement',`★ ${(EVT[doc.evenement]||{}).nom||doc.evenement} : opération exceptionnelle`]);
   if(doc.personne)lignes.push(['Personne',doc.personne]);
   if(doc.echeance)lignes.push(['Échéance',dmy(doc.echeance)]);
@@ -1978,9 +2033,9 @@ function startEdit(id){
   $('fDate').value=e.date;$('fAmt').value=versSaisie(e.montant);$('fLib').value=e.libelle;$('fNat').value=e.nature;$('fCpt').value=e.compte;
   $('fCat').value=e.categorie||'autre';$('fVers').value=e.vers;$('fPers').value=e.personne;$('fEch').value=e.echeance;$('fBien').value=e.bien;$('fRem').value=e.remarque;
   $('fCatM').value=e.cat_maison||guessCatM(e.libelle);$('fCatV').value=e.cat_vehicule||guessCatV(e.libelle);$('fKm').value=e.km||'';$('fQty').value=e.quantite?String(e.quantite).replace('.',','):'';$('fUnit').value=e.unite==='u'?'u':'L';$('fVid').checked=false;
-  $('fCatR').value=e.nature==='revenu'?catRev(e):'autre';$('fEvt').value=e.evenement||'';
+  $('fCatR').value=e.nature==='revenu'?catRev(e):'autre';$('fEvt').value=e.evenement||'';$('fTiers').value=e.tiers||'';
   if(e.vehicule&&BIEN[e.vehicule])$('fVeh').value=e.vehicule;
-  touched={nat:1,cpt:1,cat:1,vers:1,pers:1,bien:1,catv:1,catm:1,rev:1,evt:1,veh:1};majChamps();
+  touched={nat:1,cpt:1,cat:1,vers:1,pers:1,bien:1,catv:1,catm:1,rev:1,evt:1,veh:1,tiers:1};majChamps();
   $('editBar').hidden=false;$('editWhat').textContent=`${e.libelle}, ${fmtC(e.montant)} FCFA`;
   $('addBtn').textContent='Enregistrer les modifications';$('addMsg').textContent='';amtHint();render();
   window.scrollTo({top:0,behavior:doux()});
@@ -1988,6 +2043,7 @@ function startEdit(id){
 function docOp(o){
   const d={date:o.date,montant:o.montant,libelle:o.libelle,nature:o.nature,compte:o.compte,cree:o.cree};
   if(o.nature==='depense')d.categorie=o.categorie;
+  if(o.nature==='depense'&&o.tiers&&o.tiers!==o.compte)d.tiers=o.tiers;
   if(o.nature==='virement')d.vers=o.vers;
   if(o.nature==='pret'||o.nature==='remboursement'){d.personne=o.personne;if(o.nature==='pret'&&o.echeance)d.echeance=o.echeance}
   if(o.nature==='investissement')d.bien=o.bien;
@@ -2002,10 +2058,11 @@ function docOp(o){
 }
 $('oneForm').addEventListener('submit',async ev=>{
   ev.preventDefault();
-  const montant=cfa($('fAmt').value);const libelle=$('fLib').value.trim();
+  const montant=amtVal();const libelle=$('fLib').value.trim();
   if(!(montant>0)){$('addMsg').textContent=(SAISIE_K?'Montant invalide : tapez un nombre en milliers, par exemple 10 pour 10 000 CFA.':'Montant invalide : tapez le montant en francs CFA, par exemple 10000.');return}
   if(!ready){$('addMsg').textContent="Les données ne sont pas encore chargées.";return}
   const nature=$('fNat').value;
+  if(amtNeg()&&['revenu','remboursement'].includes(nature)){$('addMsg').textContent='Montant précédé de « − » : c\'est une sortie. Choisissez une dépense, ou retirez le signe.';return}
   if((nature==='pret'||nature==='remboursement')&&!$('fPers').value.trim()){$('addMsg').textContent='Indiquez la personne.';return}
   if(nature==='investissement'&&!$('fBien').value){$('addMsg').textContent="Choisissez le bien (ajoutez-le d'abord dans « Comptes et biens »).";return}
   const avecVeh=!$('wVeh').hidden,km=avecVeh?Math.round(num($('fKm').value))||0:0,qte=avecVeh?num($('fQty').value)||0:0;
@@ -2017,7 +2074,7 @@ $('oneForm').addEventListener('submit',async ev=>{
     const doc=docOp({date:$('fDate').value,montant,libelle,nature,compte:$('fCpt').value,categorie:$('fCat').value,vers:$('fVers').value,
       personne:nature==='pret'||nature==='remboursement'?personneConnue($('fPers').value.trim()):'',echeance:$('fEch').value,bien:$('fBien').value,
       vehicule:avecVeh?(nature==='investissement'?$('fBien').value:($('fVeh').value||VEH().id)):'',cat_maison:$('wMai').hidden?'':$('fCatM').value,cat_vehicule:$('fCatV').value,km,quantite:qte,unite:$('fUnit').value,
-      cat_revenu:$('fCatR').value,evenement:$('wEvt').hidden?'':$('fEvt').value,
+      cat_revenu:$('fCatR').value,evenement:$('wEvt').hidden?'':$('fEvt').value,tiers:$('wTiers').hidden?'':$('fTiers').value,
       remarque:$('fRem').value.trim(),cree:old?old.cree:new Date().toISOString()});
     const nouvVid=avecVeh&&!$('vidBox').hidden&&$('fVid').checked&&km>0,vehOp=BIEN[doc.vehicule];
     const prochVid=nouvVid?Math.round(num($('fVidNext').value))||km+vidangeDe(vehOp).intervalle:0;
@@ -2058,10 +2115,11 @@ function montantLibelle(txt){
   if(!am)return null;
   return {montant:cfa(am[1]),libelle:((pre?pre+' ':'')+am[2]).replace(/\s+(le|du)\s*$/i,'').replace(/\s+/g,' ').trim()||'(sans libellé)'};
 }
-function parseList(text,fallback){
-  const out=[];let date=fallback;let py=null,pm=null;
+function parseList(text,fallback,impose){
+  const out=[];let date=fallback;let py=null,pm=null;const X=impose?CPT[impose]:null,pris=new Set();
   const an=y=>{y=+y;return y<100?y+2000:y};
   for(const raw of text.split(/\n/)){
+    const neg=/^\s*[-−]/.test(raw);
     let line=raw.trim().replace(/^[+\-−]\s*/,'');if(!line)continue;
     let ech='';
     const em=line.match(/\(?\s*(?:échéance|echeance|délai|delai)\s*:?\s*(?:le\s+|au\s+)?(\d{1,2})\/(\d{1,2})\/(\d{2,4})\s*\)?/i);
@@ -2070,6 +2128,7 @@ function parseList(text,fallback){
     if(dm){let d=+dm[1],m=+dm[2],y=an(dm[3]);
       if(py&&m===pm&&y!==py)y=py; // coquille d'année
       date=`${y}-${pad(m)}-${pad(d)}`;py=y;pm=m;line=line.replace(dm[0],' ')}
+    if(X){const r=ligneCompte(line,neg,date,X,pris);out.push(...r);continue}
     // véhicule : « 35,7L » et « 110882km », ou l'ancienne forme du carnet « (35,71) » = litres, « (106183) » = km.
     // Ces lectures ne valent que si la ligne concerne le véhicule : « 8 huile 5l » (foyer) garde son texte, et un
     // petit entier entre parenthèses (« (458) ») reste un cumul ignoré.
@@ -2089,6 +2148,27 @@ function parseList(text,fallback){
   }
   return out;
 }
+/* « Lignes d'un seul compte » : − = dépense de ce compte, sans signe = entrée ; « ( −244 000 ) » = solde du compte ce jour-là ;
+   sur le compte d'un tiers, votre nom (« prt Yaya ») = votre part : votre dépense en espèces, versée à ce compte, rattachée
+   à la dépense déjà notée dans votre journal quand il y en a une (même montant, ±TOL_J jours, libellé de versement) */
+function ligneCompte(line,neg,date,X,pris){
+  const out=[];
+  line=line.replace(/\(\s*([-−+]?)\s*(\d{1,3}(?:[\s\u00a0\u202f]\d{3})+|\d+(?:[.,]\d+)?)\s*\)/,(m0,sg,v)=>{const m=cfa(v);
+    if(m>0||v.trim()==='0')out.push({type:'releve',compte:X.id,date,solde:(sg==='-'||sg==='−'?-1:1)*(m||0),garder:true});return ' '});
+  const r=montantLibelle(line);if(!r||!(r.montant>0))return out;
+  const L=normTxt(r.libelle),base={date,montant:r.montant,libelle:r.libelle,vers:'',personne:'',bien:'',evenement:'',vehicule:'',km:0,quantite:0,unite:'',echeance:'',garder:true};
+  if(neg){out.unshift({...base,nature:'depense',compte:X.id,categorie:guessCat(r.libelle)});return out}
+  if(X.type==='tiers'&&X.moi.some(m=>{const k=normTxt(m);return k&&hasWord(L,k)})){
+    const motsV=X.contrib.map(normTxt).filter(Boolean),jours=(a,b)=>Math.abs(Date.parse(a)-Date.parse(b))/864e5;
+    const dejà=all.filter(e=>e.nature==='depense'&&perso(e)&&!e.tiers&&!pris.has(e.id)&&e.montant===r.montant&&jours(e.date,date)<=TOL_J&&
+      (!motsV.length||motsV.some(k=>hasWord(normTxt(e.libelle),k)))).sort((a,b)=>jours(a.date,date)-jours(b.date,date))[0];
+    if(dejà){pris.add(dejà.id);out.unshift({...base,nature:'depense',compte:dejà.compte,categorie:dejà.categorie,tiers:X.id,lier:dejà.id,libelle:dejà.libelle,date:dejà.date,note:r.libelle});return out}
+    const lib=X.contrib[0]||('contribution '+X.nom.toLowerCase());
+    out.unshift({...base,nature:'depense',compte:'especes',categorie:guessCat(lib),tiers:X.id,libelle:lib,note:r.libelle});return out}
+  if(X.type==='tiers'){out.unshift({...base,nature:'revenu',compte:X.id,cat_revenu:guessCatR(r.libelle)});return out}
+  const g=guessOp(r.libelle);out.unshift({...base,...g,compte:X.id,vers:g.nature==='virement'&&g.vers!==X.id?g.vers:'',nature:g.nature==='virement'&&(!g.vers||g.vers===X.id)?'revenu':g.nature,date,montant:r.montant,libelle:r.libelle,garder:true});
+  return out;
+}
 function pvDetail(e,i){
   const evt=e.evenement&&EVT[e.evenement]?` <span class="nat exc">★ ${esc(EVT[e.evenement].nom)}</span>`:'';
   if(e.nature==='revenu')return `<select data-i="${i}" data-k="cat_revenu" aria-label="Type de revenu, ligne ${i+1}">${REVENUS.map(r=>`<option value="${r.id}"${r.id===e.cat_revenu?' selected':''}>${esc(r.label)}</option>`).join('')}</select>${evt}`;
@@ -2105,17 +2185,22 @@ function pvDetailBase(e,i){
   return '';
 }
 function pvRender(){
-  $('pvBody').innerHTML=parsed.map((e,i)=>`<tr><td>${dmy(e.date)}</td><td>${fmt(e.montant)}</td><td style="text-align:left;font-family:var(--f-body);white-space:normal">${esc(e.libelle)}</td><td><select data-i="${i}" data-k="nature" aria-label="Nature, ligne ${i+1}">${optsNat(e.nature)}</select></td><td><select data-i="${i}" data-k="compte" aria-label="Compte, ligne ${i+1}">${optsComptes(e.compte)}</select></td><td style="text-align:left">${pvDetail(e,i)}</td></tr>`).join('');
-  const f=flux(parsed);
-  $('importBtn').textContent=`Importer ${parsed.length} opération${parsed.length>1?'s':''}`;
+  const garde=(e,i)=>`<input type="checkbox" data-i="${i}" data-k="garder"${e.garder?' checked':''} aria-label="Garder la ligne ${i+1}">`;
+  $('pvBody').innerHTML=parsed.map((e,i)=>e.type==='releve'?`<tr class="solde"><td>${dmy(e.date)}</td><td class="${e.solde<0?'warn':''}">${fmt(e.solde)}</td><td style="text-align:left;font-family:var(--f-body)">Solde noté</td><td colspan="2">${esc(nomCpt(e.compte))}</td><td style="text-align:left">${garde(e,i)}</td></tr>`
+    :e.lier?`<tr><td>${dmy(e.date)}</td><td>${fmt(e.montant)}</td><td style="text-align:left;font-family:var(--f-body);white-space:normal">${esc(e.libelle)} <span class="hint">(« ${esc(e.note)} »)</span></td><td colspan="2" style="text-align:left;white-space:normal">Déjà dans votre journal : rattachée au compte ${esc(nomCpt(e.tiers))}</td><td style="text-align:left">${garde(e,i)}</td></tr>`
+    :`<tr><td>${garde(e,i)} ${dmy(e.date)}</td><td>${fmt(e.montant)}</td><td style="text-align:left;font-family:var(--f-body);white-space:normal">${esc(e.libelle)}</td><td><select data-i="${i}" data-k="nature" aria-label="Nature, ligne ${i+1}">${optsNat(e.nature)}</select></td><td><select data-i="${i}" data-k="compte" aria-label="Compte, ligne ${i+1}">${optsComptes(e.compte)}</select></td><td style="text-align:left">${pvDetail(e,i)}${e.tiers?` <span class="hint">→ versé au compte ${esc(nomCpt(e.tiers))}${e.note?` (« ${esc(e.note)} »)`:''}</span>`:''}</td></tr>`).join('');
+  const ops=parsed.filter(e=>e.garder&&!e.type&&!e.lier),n=parsed.filter(e=>e.garder).length,f=flux(ops);
+  $('importBtn').textContent=`Importer ${n} ligne${n>1?'s':''}`;
   $('pvMsg').textContent=`Dépenses ${fmt(f.dep)} · entrées ${fmt(f.ent)} · investi ${fmt(f.inv)} · prêté ${fmt(f.pre)} ${U()}`;
 }
 $('parseBtn').onclick=()=>{
-  parsed=parseList($('pasteText').value,$('fDate').value||today);
+  const sv=SAISIE_K;SAISIE_K=$('pasteK').checked;   // unité des montants de ce collage
+  try{parsed=parseList($('pasteText').value,$('fDate').value||today,$('pasteCpt').value).map(e=>({garder:true,...e}))}finally{SAISIE_K=sv}
   if(!parsed.length){$('pastePreview').hidden=true;status("Aucune ligne reconnue. Chaque ligne doit contenir un montant, par exemple « 10 vivres ».",true);return}
   status('');pvRender();$('pastePreview').hidden=false;
 };
 $('pvBody').addEventListener('change',ev=>{const s=ev.target.closest('[data-i]');if(!s)return;const e=parsed[+s.dataset.i],k=s.dataset.k;
+  if(k==='garder'){e.garder=s.checked;pvRender();return}
   e[k]=k==='personne'?s.value.trim():s.value;
   if(k==='nature'){const g=guessOp(e.libelle);if(e.nature==='depense')e.categorie=e.categorie||g.categorie||guessCat(e.libelle);
     if(e.nature==='revenu')e.cat_revenu=e.cat_revenu||guessCatR(e.libelle);
@@ -2128,17 +2213,23 @@ $('pvBody').addEventListener('change',ev=>{const s=ev.target.closest('[data-i]')
   if(k!=='personne')pvRender()});
 $('importBtn').onclick=async()=>{
   if(!ready||!parsed.length)return;
-  const manque=parsed.findIndex(e=>((e.nature==='pret'||e.nature==='remboursement')&&!e.personne)||(e.nature==='investissement'&&!e.bien));
+  const ops=parsed.filter(e=>e.garder&&!e.type&&!e.lier),liens=parsed.filter(e=>e.garder&&e.lier),soldes=parsed.filter(e=>e.garder&&e.type==='releve');
+  if(!ops.length&&!liens.length&&!soldes.length){$('pvMsg').textContent='Aucune ligne gardée.';return}
+  const manque=parsed.findIndex(e=>e.garder&&!e.type&&!e.lier&&((e.nature==='pret'||e.nature==='remboursement')&&!e.personne)||(e.nature==='investissement'&&!e.bien));
   if(manque>=0){$('pvMsg').textContent=`Ligne ${manque+1} : indiquez la personne ou le bien.`;return}
   $('importBtn').disabled=true;
-  const base=Date.now();const docs=parsed.map((e,i)=>docOp({...e,personne:e.personne?personneConnue(e.personne):'',cree:new Date(base+i).toISOString()}));
-  try{await api.addMany(docs);let msg=`${docs.length} opérations importées.`;
+  const base=Date.now();const docs=ops.map((e,i)=>docOp({...e,personne:e.personne?personneConnue(e.personne):'',cree:new Date(base+i).toISOString()}));
+  try{if(docs.length)await api.addMany(docs);let msg=`${docs.length} opération${docs.length>1?'s':''} importée${docs.length>1?'s':''}.`;
+    for(const e of liens){const o=all.find(x=>x.id===e.lier);if(o)await api.put(o.id,docOp({...o,tiers:e.tiers}))}
+    for(const e of soldes)await api.releve(e.compte,e.date,e.solde);
+    if(liens.length)msg+=` ${liens.length} dépense${liens.length>1?'s':''} de votre journal rattachée${liens.length>1?'s':''} au compte.`;
+    if(soldes.length){msg+=` ${soldes.length} solde${soldes.length>1?'s':''} noté${soldes.length>1?'s':''}.`;await charger(true)}
     // une vidange d'huile avec kilométrage plus récent que le repère le met à jour
     for(const v of VEHS()){const vd=vidangeDe(v),vid=docs.filter(d=>d.vehicule===v.id&&d.km>vd.dernier&&isVidange({libelle:d.libelle})).sort((a,b)=>b.km-a.km)[0];if(!vid)continue;
       if(MODE_SYNC)msg+=` Vidange ${v.nom} à ${nb(vid.km)} km : le repère sera mis à jour à la synchronisation.`;
       else{await enregistrerVidange({...vd,dernier:vid.km,prochain:vid.km+vd.intervalle},v);await charger(true);msg+=` Vidange ${v.nom} à ${nb(vid.km)} km : prochaine à ${nb(vid.km+vd.intervalle)} km.`}}
     $('pvMsg').textContent=msg;$('pasteText').value='';$('pastePreview').hidden=true;
-    const [y,m]=docs[0].date.split('-').map(Number);cur={y,m:m-1};parsed=[];fillSelects();render()}
+    if(docs.length){const [y,m]=docs[0].date.split('-').map(Number);cur={y,m:m-1}}parsed=[];fillSelects();render()}
   catch(e){$('pvMsg').textContent=`Import refusé : ${e.message}. Aucune ligne n'a été ajoutée.`}
   $('importBtn').disabled=false;
 };
@@ -2146,7 +2237,7 @@ $('importBtn').onclick=async()=>{
 /* ================= postes et libellés ================= */
 let draft=[], dirty=false;
 const PALETTE=['#2f6fa8','#c58b2a','#c0533a','#2e8a57','#d9772f','#6b7b90','#2f97ad','#8a9a2e','#9363b0','#cc5f86','#4f8f8f','#a0522d'];
-function statsPoste(id){const it=all.filter(e=>e.nature==='depense'&&e.categorie===id);return {n:it.length,t:sum(it)}}
+function statsPoste(id){const it=allP().filter(e=>e.nature==='depense'&&e.categorie===id);return {n:it.length,t:sum(it)}}
 function openPostes(){
   draft=CATS.map(c=>({id:c.id,label:c.label,couleur:c.couleur,mots:c.mots.join(', '),budget:budgets[c.id]?versSaisie(budgets[c.id]):'',del:false,cible:'autre'}));
   dirty=false;renderDraft();
@@ -2257,13 +2348,17 @@ $('libTbl').addEventListener('change',async ev=>{
 
 /* ================= comptes et biens ================= */
 let cbDirty=false;
-function utilisesCpt(){const s=new Set();all.forEach(e=>{s.add(e.compte);if(e.vers)s.add(e.vers)});return s}
+function utilisesCpt(){const s=new Set();all.forEach(e=>{s.add(e.compte);if(e.vers)s.add(e.vers);if(e.tiers)s.add(e.tiers)});return s}
 function cptRow(c){const used=utilisesCpt().has(c.id)||c.id==='especes';
-  return `<div class="cbrow" data-id="${c.id||''}"><input type="color" class="cCoul" value="${c.id?coulCpt(c.id):(c.couleur||'#6b7b90')}" aria-label="Couleur du compte"><input class="cNom" value="${esc(c.nom)}" aria-label="Nom du compte" maxlength="60">
+  return `<div class="cbrow" data-id="${c.id||''}"><span class="cNomL"><input type="color" class="cCoul" value="${c.id?coulCpt(c.id):(c.couleur||'#6b7b90')}" aria-label="Couleur du compte"><input class="cNom" value="${esc(c.nom)}" aria-label="Nom du compte" maxlength="60"></span>
     <select class="cType" aria-label="Type">${Object.entries(TYPES_CPT).map(([k,v])=>`<option value="${k}"${k===c.type?' selected':''}>${v}</option>`).join('')}</select>
     <input class="cMots" value="${esc((c.mots||[]).join(', '))}" placeholder="mots-clés : banque, carte…" aria-label="Mots-clés">
     <span class="row" style="gap:4px;flex-wrap:nowrap"><input class="cTaux" inputmode="decimal" value="${c.taux!=null?String(c.taux).replace('.',','):''}" placeholder="taux %" aria-label="Taux d'intérêt en %" style="width:5.5em"><input class="cPer" inputmode="numeric" value="${c.taux!=null?(c.periode||12):''}" placeholder="mois" aria-label="Période en mois" style="width:4.5em"></span>
-    <button type="button" class="mini danger" data-x ${used?'disabled title="Compte utilisé : impossible à supprimer"':''} aria-label="Supprimer le compte">✕</button></div>`}
+    <button type="button" class="mini danger" data-x ${used?'disabled title="Compte utilisé : impossible à supprimer"':''} aria-label="Supprimer le compte">✕</button>
+    <div class="cTiers"${c.type==='tiers'?'':' hidden'}><input class="cTit" value="${esc(c.titulaire||'')}" placeholder="titulaire (frère, maison familiale…)" aria-label="Titulaire du compte" maxlength="60">
+      <select class="cMor" aria-label="Personne physique ou morale"><option value="">Personne physique</option><option value="1"${c.morale?' selected':''}>Personne morale (famille, association…)</option></select>
+      <input class="cMoi" value="${esc((c.moi||[]).join(', '))}" placeholder="votre nom dans ses notes : yaya" aria-label="Votre nom dans les notes de ce compte">
+      <input class="cContrib" value="${esc((c.contrib||[]).join(', '))}" placeholder="vos versements : contribution maison" aria-label="Libellés de vos dépenses versées à ce compte"></div></div>`}
 function bienRow(b){const used=all.some(e=>e.nature==='investissement'&&e.bien===b.id);
   return `<div class="cbrow bien" data-id="${b.id||''}"><input class="bNom" value="${esc(b.nom)}" aria-label="Nom du bien" maxlength="60">
     <select class="bType" aria-label="Type"><option value="actif"${b.type==='actif'?' selected':''}>Actif</option><option value="passif"${b.type==='passif'?' selected':''}>Passif</option></select>
@@ -2275,6 +2370,7 @@ function bienRow(b){const used=all.some(e=>e.nature==='investissement'&&e.bien==
     <button type="button" class="mini danger" data-x ${used?'disabled title="Bien avec investissements : impossible à supprimer"':''} aria-label="Supprimer le bien">✕</button></div>`}
 function openCB(){$('cptEdit').innerHTML=COMPTES.map(cptRow).join('');$('bienEdit').innerHTML=BIENS.map(bienRow).join('');cbDirty=false}
 $('cbBox').addEventListener('input',()=>{cbDirty=true});
+$('cbBox').addEventListener('change',ev=>{if(ev.target.classList.contains('cType'))ev.target.closest('.cbrow').querySelector('.cTiers').hidden=ev.target.value!=='tiers'});
 $('cbBox').addEventListener('click',ev=>{const b=ev.target.closest('[data-x]');if(b&&!b.disabled){const r=b.closest('.cbrow');retirerLigne(r,r.classList.contains('bien')?'Bien':'Compte',()=>{cbDirty=true})}});
 $('addCpt').onclick=()=>{$('cptEdit').insertAdjacentHTML('beforeend',cptRow({id:'',nom:'',type:'mobile',mots:[]}));cbDirty=true;$('cptEdit').lastElementChild.querySelector('.cNom').focus()};
 $('addBien').onclick=()=>{$('bienEdit').insertAdjacentHTML('beforeend',bienRow({id:'',nom:'',type:'actif',mots:[]}));cbDirty=true;$('bienEdit').lastElementChild.querySelector('.bNom').focus()};
@@ -2284,6 +2380,7 @@ $('saveCpt').onclick=async()=>{
   for(const r of $('cptEdit').querySelectorAll('.cbrow')){
     const nom=r.querySelector('.cNom').value.trim();if(!nom){$('cptMsg').textContent='Chaque compte doit avoir un nom.';return}
     const old=CPT[r.dataset.id];const c={id:old?old.id:nouvelId(nom,pris),nom,couleur:r.querySelector('.cCoul').value,type:r.querySelector('.cType').value,mots:listeMots(r.querySelector('.cMots').value),releves:old?old.releves:[]};
+    if(c.type==='tiers')Object.assign(c,{titulaire:r.querySelector('.cTit').value.trim()||nom,morale:!!r.querySelector('.cMor').value,moi:listeMots(r.querySelector('.cMoi').value),contrib:listeMots(r.querySelector('.cContrib').value)});
     const t=r.querySelector('.cTaux').value.trim();if(t){const v=num(t);if(!(v>=0)){$('cptMsg').textContent=`Taux invalide pour « ${nom} ».`;return}c.taux=v;c.periode=Math.max(1,Math.round(num(r.querySelector('.cPer').value)||12))}
     out.push(c);
   }
@@ -2402,7 +2499,7 @@ function bornesStats(){
   if(statsMode==='periode'){let a=statsDu,b=statsAu;if(a>b)[a,b]=[b,a];const N=nbJ(a,b);
     return {debut:a,finPer:b,nom:`la période du ${dmy(a)} au ${dmy(b)}`,court:`${dmy(a)} – ${dmy(b)}`,
       cmp:{debut:addJ(a,-N),fin:addJ(a,-1),nom:`les ${N} jours précédents`,court:'période précédente'}}}
-  const d=all.map(e=>e.date).sort()[0]||today;
+  const d=allP().map(e=>e.date).sort()[0]||today;
   return {debut:d,finPer:today,nom:"tout l'historique",court:'historique',cmp:null};
 }
 const debutSuivi=()=>DEBUT_SUIVI||deps(all).map(e=>e.date).sort()[0]||today;   // début du suivi quotidien (parametres.debut_suivi)
@@ -2411,7 +2508,7 @@ function periodeStats(){
   // avant le début du suivi, un jour sans dépense notée n'est pas un jour « à zéro » : on ne le compte pas
   const d0=B.debut>prem?B.debut:prem,n=d0<=fin?nbJ(d0,fin):0;
   const jours=new Array(n).fill(0);deps(all).forEach(e=>{if(e.date>=d0&&e.date<=fin)jours[nbJ(d0,e.date)-1]+=e.montant});
-  return {...B,fin,d0,n,jours,ops:all.filter(e=>e.date>=B.debut&&e.date<=fin)};
+  return {...B,fin,d0,n,jours,ops:all.filter(e=>perso(e)&&e.date>=B.debut&&e.date<=fin)};
 }
 const moyenne=a=>a.length?a.reduce((x,y)=>x+y,0)/a.length:0;
 const ecartType=a=>{if(a.length<2)return 0;const m=moyenne(a);return Math.sqrt(a.reduce((s,v)=>s+(v-m)*(v-m),0)/(a.length-1))};
@@ -2630,10 +2727,11 @@ $('statsPer').addEventListener('click',ev=>{const b=ev.target.closest('[data-p]'
 let rsT;if(window.ResizeObserver)new ResizeObserver(()=>{clearTimeout(rsT);rsT=setTimeout(renderStats,150)}).observe($('statsBox'));
 
 /* ================= montants masqués ================= */
-function majOeil(){const b=$('oeilBtn');b.textContent=masque?'👁 Afficher':'🙈 Masquer';b.setAttribute('aria-pressed',!masque);
+function majOeil(){const b=$('oeilBtn');if(!b)return;b.textContent=masque?'👁 Afficher':'🙈 Masquer';b.setAttribute('aria-pressed',!masque);
   b.setAttribute('aria-label',masque?'Afficher le patrimoine, les soldes, les biens et les prêts':'Masquer le patrimoine, les soldes, les biens et les prêts')}
 function basculerMasque(v){masque=v;majOeil();render();if(typeof renderDraft==='function'&&draft.length)renderDraft();renderLibs()}
-$('oeilBtn').onclick=()=>basculerMasque(!masque);
+/* bouton Afficher / Masquer : dans la carte du patrimoine (redessinée à chaque rendu) */
+$('hero').addEventListener('click',ev=>{if(ev.target.closest('#oeilBtn')){basculerMasque(!masque);const b=$('oeilBtn');if(b)b.focus()}});
 document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='hidden'&&!masque)basculerMasque(true)});
 majOeil();
 
@@ -2667,7 +2765,7 @@ function feuillesFinancier(X){
   const bp=byCat(items),tp=sum(deps(items));
   F.push(['Par poste',feuille(X,[["Poste","Montant (CFA)","Part","Budget mensuel (CFA)"]].concat(CATS.filter(c=>bp[c.id]).sort((a,b)=>bp[b.id]-bp[a.id]).map(c=>[c.label,bp[c.id],tp?bp[c.id]/tp:0,budgets[c.id]||null]),[["Total",tp,1,null]]),
     [18,15,9,20],{B:'#,##0',C:'0.0%',D:'#,##0'})]);
-  const used=CATS.filter(c=>deps(all).some(e=>e.categorie===c.id)),mois=[...new Set(all.map(e=>e.date.slice(0,7)))].sort(),ba=byCat(all),fa=flux(all);
+  const used=CATS.filter(c=>deps(all).some(e=>e.categorie===c.id)),mois=[...new Set(allP().map(e=>e.date.slice(0,7)))].sort(),ba=byCat(all),fa=flux(all);
   F.push(['Récap mensuel',feuille(X,[["Mois",...used.map(c=>c.label),"Dépenses courantes","Dépenses exceptionnelles","Entrées courantes","Revenus ponctuels","Investissements","Prêts","Solde"]].concat(mois.map(m=>{const it=all.filter(e=>e.date.startsWith(m)),b=byCat(it),f=flux(it);
     return [moisLong(m),...used.map(c=>b[c.id]||0),f.dep,f.exc,f.ent,f.entX,f.inv,f.pre,f.net]}),[["Total",...used.map(c=>ba[c.id]||0),fa.dep,fa.exc,fa.ent,fa.entX,fa.inv,fa.pre,fa.net]]),[16].concat(used.map(()=>14),[13,13,13,13,15,12,13]))]);
   const evx=EVTS.filter(x=>all.some(e=>e.evenement===x.id));

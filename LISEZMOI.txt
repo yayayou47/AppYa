@@ -57,7 +57,7 @@ Variantes :
   - Données et réglages, en trois groupes d'onglets :
     Saisir (Une opération · Coller une liste · Relevé bancaire),
     Personnaliser (Postes et libellés · Comptes et biens · Événements et
-    revenus · Programmées · Repères vidange · Projet maison · Montants et devises),
+    revenus · Programmées · Repères vidange · Projet maison · Saisie · Parités),
     Sécurité (Sauvegarde et retour). Les explications de chaque onglet
     s'ouvrent avec « Comment ça marche ? ». Un point orange sur un onglet
     et un bouton « Enregistrer » encadré signalent des modifications non
@@ -88,9 +88,10 @@ Courant et exceptionnel : Données et réglages › Événements et revenus.
   - Les TYPES DE REVENUS sont courants (salaire, primes, intérêts) ou
     ponctuels (mission, atelier, consultance, enseignement, jury…).
   - Les vues Mois et Année séparent les dépenses courantes (postes,
-    moyennes, couleurs des jours, statistiques) de la section
-    « Exceptionnel » (total par événement, avec son budget, et revenus
-    ponctuels). Le solde du mois et les soldes des comptes comptent TOUT.
+    moyennes, couleurs des jours, statistiques) de l'exceptionnel, résumé
+    dans la case « Exceptionnel » ; le détail par événement est dans
+    l'onglet Événements et revenus, les statistiques et l'export. Le solde
+    du mois et les soldes des comptes comptent TOUT.
   - Une opération saisie affiche ce qui a été reconnu dans le libellé
     (nature, poste, compte, type de revenu, événement), puis un résumé à
     confirmer avant l'enregistrement.
@@ -164,7 +165,7 @@ Annuler et revenir en arrière :
 Montants masqués : dans la vue Patrimoine seulement, le patrimoine net, les
 soldes des comptes, la valeur des biens et les prêts s'affichent « ••••• »
 à chaque ouverture (et quand l'application passe en arrière-plan). Le bouton
-« 👁 Afficher », visible dans cette vue, les montre ; « 🙈 Masquer » les
+« 👁 Afficher », en haut de la carte du patrimoine net, les montre ; « 🙈 Masquer » les
 cache. Les autres vues (Mois, Année, Statistiques, carnets) ne sont pas
 masquées.
 
@@ -265,16 +266,50 @@ comptent pas dans les dépenses courantes du mois ; ils s'ajoutent au coût
 du bien.
 
 Les montants se tapent en francs CFA : 10000 = 10 000 CFA. Pour aller plus
-vite, Données et réglages › Montants et devises › « Taper les montants en
-milliers » (réglage propre à chaque appareil) : 10 = 10 000 CFA,
-2,5 = 2 500, 1750 = 1 750 000 ; un nombre de 10 000 ou plus est alors pris
-tel quel (25000 = 25 000 CFA). Soldes, prix, valeurs et budgets suivent le
-même réglage. Le lien « Taper en milliers » / « Taper en FCFA » sous le
-champ Montant change ce réglage sans quitter la saisie, en gardant le
-montant déjà tapé.
+vite, Données et réglages › Saisie › « Taper les montants en milliers »
+(réglage propre à chaque appareil) : 10 = 10 000 CFA, 2,5 = 2 500,
+1750 = 1 750 000 ; un nombre de 10 000 ou plus est alors pris tel quel
+(25000 = 25 000 CFA). Soldes, prix, valeurs et budgets suivent le même
+réglage.
 Sous le champ, le carnet affiche le montant compris (« = 10 000 CFA »).
+Un « − » devant le montant d'une opération veut dire « sortie » (dépense) ;
+le montant enregistré reste positif. Un solde noté peut être négatif
+(découvert, compte d'un tiers avancé de votre poche).
+
+Clavier Daftar (téléphone) : toucher un champ de montant ouvre un clavier
+propre à l'application, avec les chiffres, la virgule, le signe −, « 00 » et
+« 000 ». « ⌨ Clavier du téléphone » revient au clavier habituel pour ce
+champ ; « OK » ferme. Actif par défaut sur écran tactile ; à couper dans
+Données et réglages › Saisie (réglage propre à chaque appareil).
+
 Dans « Coller une liste », la date d'une ligne vaut pour les suivantes ;
-vérifiez nature, compte et poste dans l'aperçu avant d'importer.
+vérifiez nature, compte et poste dans l'aperçu avant d'importer. Une case
+par ligne permet d'en écarter une. « Montants en milliers » s'applique au
+collage seulement (coché d'après le réglage de Saisie).
+
+COMPTES GÉRÉS POUR DES TIERS
+Données et réglages › Comptes et biens › type « Compte d'un tiers » : de
+l'argent que vous gardez ou gérez pour quelqu'un (un frère qui vous a
+confié une somme, la caisse d'une maison familiale…). Renseignez le
+titulaire, personne physique ou morale, votre nom tel qu'il apparaît dans
+ses notes (« yaya ») et le libellé de vos versements (« contribution
+maison »).
+  - Ces comptes sont gardés à part : leurs dépenses et leurs entrées ne
+    comptent ni dans vos dépenses, ni dans vos revenus, ni dans vos
+    statistiques. Patrimoine les montre sous « Comptes gérés pour des
+    tiers ».
+  - Un solde positif appartient au tiers : il n'entre pas dans votre
+    patrimoine. Un solde négatif est de l'argent que vous avez avancé : il
+    compte dans « On vous doit ».
+  - Votre part (« contribution maison ») reste votre dépense, payée de vos
+    espèces ; le champ « Versé au compte de » (reconnu par son libellé) la
+    fait aussi entrer sur le compte du tiers, sans doublon.
+  - Historique d'un tiers : Coller une liste › « Lignes d'un seul compte »
+    = ce compte. « −40 000 msri » = dépense du compte ; « 20 000 prt
+    Gamra » = dépôt de Gamra ; « 50 000 prt Yaya » = votre part, rattachée
+    à la dépense déjà notée dans votre journal (même montant, à 5 jours
+    près) ou ajoutée comme dépense en espèces ; « ( −244 000 ) » en fin de
+    ligne = solde du compte ce jour-là, après les opérations du jour.
 
 
 4. CE QUE FAIT LE SUIVI FINANCIER
@@ -297,12 +332,13 @@ vérifiez nature, compte et poste dans l'aperçu avant d'importer.
         une voiture).
       · Prêts : prêté, remboursé, reste dû, échéance (en rouge si dépassée).
   - Devise d'affichage : le menu en haut (FCFA par défaut, €, $, ¥…) convertit
-    tous les montants affichés ; « Montants et devises » règle les taux
+    tous les montants affichés ; l'onglet « Parités » règle les taux
     (1 € = 655 FCFA…) et permet d'ajouter une devise. La saisie et l'export
     restent en francs CFA.
   - Chaque bouton n'affiche que son contenu : Mois, Année, Patrimoine,
-    Statistiques ; les parités sont dans Données et réglages › Montants et
-    devises.
+    Statistiques ; les parités sont dans Données et réglages › Parités.
+  - Patrimoine : le bouton « Afficher / Masquer » est dans la carte du
+    patrimoine net (comptes, biens, on vous doit).
   - Statistiques, par mois ou par année (flèches ‹ ›), sur une période
     choisie (du … au …) ou sur tout l'historique : alertes (prêt en retard, rythme de dépense, écarts de
     relevés, réserve d'espèces…), courbe des dépenses cumulées du mois avec
@@ -414,7 +450,7 @@ il agit toujours sur l'installation réelle. Avant tout retrait, il recopie
 une dernière fois les données dans la copie miroir (disque branché). Il
 ne supprime jamais le dossier d'origine.
 
-Contenu : serveur.py (Daftar Ousnou 1.3.3, Python, bibliothèque standard), app/index.html,
+Contenu : serveur.py (Daftar Ousnou 1.4.0, Python, bibliothèque standard), app/index.html,
 app/moteur.js et app/mode.js (version autonome), app/releve.js et
 app/pdf.min.js + app/pdf.worker.min.js (pdf.js 3.11.174, Mozilla, licence
 Apache 2.0 : app/LICENCE-pdfjs.txt ; lecture des relevés), app/sw.js et

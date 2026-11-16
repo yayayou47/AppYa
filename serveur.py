@@ -39,7 +39,7 @@ from http.cookies import SimpleCookie
 from http.server import SimpleHTTPRequestHandler, ThreadingHTTPServer
 from urllib.parse import parse_qs, urlparse
 
-VERSION = "1.3.3"
+VERSION = "1.4.0"
 VERSION_NOM = "Ousnou"   # nom de la version (même valeur que VERSION_APP dans app/index.html)
 RACINE = os.path.dirname(os.path.abspath(__file__))
 APP = os.path.join(RACINE, "app")
@@ -89,7 +89,9 @@ def ids_postes(d):
 #   remboursement   entre sur « compte », réduit la créance de « personne »
 #   investissement  sort de « compte », s'ajoute au coût du « bien » (construction, entretien)
 NATURES = ("depense", "revenu", "virement", "pret", "remboursement", "investissement")
-TYPES_COMPTE = ("especes", "courant", "epargne", "carte", "mobile")
+TYPES_COMPTE = ("especes", "courant", "epargne", "carte", "mobile", "tiers")
+# « tiers » : compte géré pour quelqu'un d'autre (personne ou personne morale), gardé à part de vos comptes ;
+# ses opérations ne comptent pas dans vos dépenses ni vos revenus
 TYPES_BIEN = ("actif", "passif")  # actif : prend de la valeur (terrain) ; passif : en perd (voiture)
 COMPTES_DEFAUT = [{"id": "especes", "nom": "Espèces", "type": "especes",
                    "mots": ["espèces", "especes", "cash", "liquide"], "releves": []}]
@@ -303,7 +305,7 @@ def appliquer_releve(d, ch):
         if c.get("id") == ch.get("compte"):
             rel = [r for r in c.get("releves") or [] if r.get("date") != date]
             if ch.get("solde") is not None:
-                r = {"date": date, "solde": montant_positif(ch.get("solde"), "Solde du relevé de %s" % c.get("nom"), zero=True)}
+                r = {"date": date, "solde": montant_signe(ch.get("solde"), "Solde du relevé de %s" % c.get("nom"))}
                 if RE_HEURE.match(str(ch.get("heure") or "")):
                     r["heure"] = ch["heure"]
                 rel.append(r)
@@ -324,6 +326,21 @@ def montant_positif(v, quoi="Montant", zero=False):
     if m != m or m in (float("inf"), float("-inf")) or m < 0 or (m == 0 and not zero):
         raise ValueError("%s invalide : il doit être positif." % quoi)
     return int(m) if m.is_integer() else round(m, 2)
+
+
+def montant_signe(v, quoi="Solde"):
+    """Solde noté : peut être négatif (découvert, compte d'un tiers avancé de votre poche)."""
+    try:
+        m = float(v)
+    except (TypeError, ValueError):
+        raise ValueError("%s invalide." % quoi)
+    if m != m or m in (float("inf"), float("-inf")):
+        raise ValueError("%s invalide." % quoi)
+    return int(m) if m.is_integer() else round(m, 2)
+
+
+def ids_tiers(d):
+    return {c.get("id") for c in d.get("parametres", {}).get("comptes", []) if c.get("type") == "tiers"}
 
 
 def texte(v, n):
@@ -517,6 +534,11 @@ def nettoyer(doc, d):
         out["bien"] = doc["bien"]
     if nature == "revenu":
         out["cat_revenu"] = doc.get("cat_revenu") if doc.get("cat_revenu") in ids_revenus(d) else "autre"
+    if nature == "depense" and doc.get("tiers"):
+        # votre dépense versée au compte d'un tiers (votre part à la maison familiale) : elle l'alimente aussi
+        if doc["tiers"] not in ids_tiers(d) or doc["tiers"] == compte:
+            raise ValueError("Compte du tiers inconnu : %s" % doc["tiers"])
+        out["tiers"] = doc["tiers"]
     if nature in ("depense", "revenu") and doc.get("evenement"):
         if doc["evenement"] not in ids_de(d, "evenements"):
             raise ValueError("Événement inconnu : %s" % doc["evenement"])
@@ -685,7 +707,7 @@ def nettoyer_comptes(liste, d):
         for r in x.get("releves") or []:
             if not RE_DATE.match(str(r.get("date", ""))):
                 raise ValueError("Date de relevé invalide pour %s." % nom)
-            rel[r["date"]] = {"date": r["date"], "solde": montant_positif(r.get("solde"), "Solde du relevé de %s" % nom, zero=True)}
+            rel[r["date"]] = {"date": r["date"], "solde": montant_signe(r.get("solde"), "Solde du relevé de %s" % nom)}
             if RE_HEURE.match(str(r.get("heure") or "")):
                 rel[r["date"]]["heure"] = r["heure"]   # heure où le solde a été noté (soldes du jour)
         c = {"id": cid, "nom": nom, "type": typ, "mots": nettoyer_mots(x.get("mots")),
@@ -696,10 +718,16 @@ def nettoyer_comptes(liste, d):
         if x.get("taux") not in (None, ""):
             c["taux"] = montant_positif(x.get("taux"), "Taux d'intérêt de %s" % nom, zero=True)
             c["periode"] = int(montant_positif(x.get("periode") or 12, "Période des intérêts"))
+        if typ == "tiers":
+            c["titulaire"] = texte(x.get("titulaire"), 60) or nom
+            c["morale"] = bool(x.get("morale"))          # personne morale (association, famille, entreprise…)
+            c["moi"] = nettoyer_mots(x.get("moi"))       # vos noms dans les notes de ce compte (« prt Yaya » = votre part)
+            c["contrib"] = nettoyer_mots(x.get("contrib"))   # libellés de vos dépenses versées à ce compte
         comptes.append(c)
     if "especes" not in vus:
         comptes.insert(0, json.loads(json.dumps(COMPTES_DEFAUT[0])))
-    utilises = {o.get("compte") for o in d.get("operations", [])} | {o.get("vers") for o in d.get("operations", [])}
+    ops = d.get("operations", [])
+    utilises = {o.get("compte") for o in ops} | {o.get("vers") for o in ops} | {o.get("tiers") for o in ops}
     manquants = (utilises - {None}) - {c["id"] for c in comptes}
     if manquants:
         raise ValueError("Impossible de supprimer un compte qui a des opérations : %s" % ", ".join(sorted(manquants)))

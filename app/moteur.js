@@ -260,6 +260,7 @@
       if (c.type === 'tiers') {
         c.titulaire = texte(x.titulaire, 60) || nom; c.morale = !!x.morale;
         c.moi = nettoyerMots(x.moi); c.contrib = nettoyerMots(x.contrib);
+        if (x.sourdine) c.sourdine = true;   // avance non comptée dans le patrimoine
       }
       comptes.push(c);
     }

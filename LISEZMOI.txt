@@ -299,8 +299,12 @@ maison »).
     statistiques. Patrimoine les montre sous « Comptes gérés pour des
     tiers ».
   - Un solde positif appartient au tiers : il n'entre pas dans votre
-    patrimoine. Un solde négatif est de l'argent que vous avez avancé : il
-    compte dans « On vous doit ».
+    patrimoine. Un solde négatif est de l'argent que vous avez avancé ;
+    pour chaque compte, au choix : « compté comme dette » (il entre dans
+    « On vous doit ») ou « en sourdine » (il reste affiché dans le compte
+    mais n'entre pas dans votre patrimoine). Le bouton « Mettre en
+    sourdine » / « Compter comme dette » est sous le compte, dans
+    Patrimoine ; le même choix est dans Comptes et biens.
   - Votre part (« contribution maison ») reste votre dépense, payée de vos
     espèces ; le champ « Versé au compte de » (reconnu par son libellé) la
     fait aussi entrer sur le compte du tiers, sans doublon.
@@ -450,7 +454,7 @@ il agit toujours sur l'installation réelle. Avant tout retrait, il recopie
 une dernière fois les données dans la copie miroir (disque branché). Il
 ne supprime jamais le dossier d'origine.
 
-Contenu : serveur.py (Daftar Ousnou 1.4.0, Python, bibliothèque standard), app/index.html,
+Contenu : serveur.py (Daftar Ousnou 1.4.1, Python, bibliothèque standard), app/index.html,
 app/moteur.js et app/mode.js (version autonome), app/releve.js et
 app/pdf.min.js + app/pdf.worker.min.js (pdf.js 3.11.174, Mozilla, licence
 Apache 2.0 : app/LICENCE-pdfjs.txt ; lecture des relevés), app/sw.js et

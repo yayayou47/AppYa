@@ -900,7 +900,7 @@ function setPostes(p){
 const ESPECES={id:'especes',nom:'Espèces',type:'especes',mots:['espèces','especes','cash','liquide'],releves:[]};
 let COMPTES=[ESPECES], CPT={especes:ESPECES};
 function setComptes(c){
-  if(Array.isArray(c)&&c.length)COMPTES=c.map(x=>({id:x.id,nom:x.nom,type:x.type||'courant',mots:Array.isArray(x.mots)?x.mots:[],releves:Array.isArray(x.releves)?x.releves:[],taux:x.taux,periode:x.periode,couleur:x.couleur||'',titulaire:x.titulaire||'',morale:!!x.morale,moi:Array.isArray(x.moi)?x.moi:[],contrib:Array.isArray(x.contrib)?x.contrib:[]}));
+  if(Array.isArray(c)&&c.length)COMPTES=c.map(x=>({id:x.id,nom:x.nom,type:x.type||'courant',mots:Array.isArray(x.mots)?x.mots:[],releves:Array.isArray(x.releves)?x.releves:[],taux:x.taux,periode:x.periode,couleur:x.couleur||'',titulaire:x.titulaire||'',morale:!!x.morale,moi:Array.isArray(x.moi)?x.moi:[],contrib:Array.isArray(x.contrib)?x.contrib:[],sourdine:!!x.sourdine}));
   if(!COMPTES.some(c=>c.id==='especes'))COMPTES.unshift({...ESPECES});
   CPT=Object.fromEntries(COMPTES.map(c=>[c.id,c]));
 }
@@ -935,7 +935,7 @@ function setProgrammees(l){PROGS=(Array.isArray(l)?l:[]).map(x=>({...x,ignorees:
 const PERIODES={1:'chaque mois',2:'tous les 2 mois',3:'chaque trimestre',6:'chaque semestre',12:'chaque année'};
 const TYPES_EVT={mariage:'Mariage',bapteme:'Baptême',circoncision:'Circoncision',funerailles:'Funérailles',fete:'Fête','voyage-tourisme':'Voyage (tourisme)','voyage-mission':'Voyage (mission)','voyage-vacances':'Voyage (vacances)',sante:'Santé',projet:'Projet',autre:'Autre'};
 /* Nature d'une opération : s = sens sur le compte (+1 entrée, −1 sortie, 0 virement) */
-const VERSION_APP='Ousnou 1.4.0';   // nom et numéro de version (même valeur que VERSION / VERSION_NOM dans serveur.py)
+const VERSION_APP='Ousnou 1.4.1';   // nom et numéro de version (même valeur que VERSION / VERSION_NOM dans serveur.py)
 const NAT={depense:{l:'Dépense',s:-1},revenu:{l:'Revenu',s:1},virement:{l:'Virement',s:0},pret:{l:'Prêt accordé',s:-1},remboursement:{l:'Remboursement reçu',s:1},investissement:{l:'Investissement',s:-1}};
 const TYPES_CPT={especes:'Espèces',courant:'Compte courant',epargne:'Épargne',carte:'Carte prépayée',mobile:'Mobile money',tiers:"Compte d'un tiers"};
 const MOTS_REVENU=['salaire','salary','prime','revenu','interet','honoraire','indemnite','bourse','vacation','perdiem','per diem','prodes','frais de mission','consultance','jury','soutenance','seminaire','atelier'];
@@ -1251,8 +1251,9 @@ function etatBien(b){
 function patrimoine(){
   const liq=MES().reduce((s,c)=>s+etatCompte(c).solde,0);
   const biens=BIENS.reduce((s,b)=>s+etatBien(b).valeur,0);
-  // compte d'un tiers à découvert : vous avez avancé l'argent, il vous le doit ; un solde positif lui appartient (non compté)
-  const av=TIERS().map(c=>Math.max(0,-etatCompte(c).solde)).filter(v=>v>0);
+  // compte d'un tiers à découvert : vous avez avancé l'argent, il vous le doit (sauf avance « en sourdine » : gardée dans
+  // le compte, pas comptée) ; un solde positif lui appartient (non compté)
+  const av=TIERS().filter(c=>!c.sourdine).map(c=>Math.max(0,-etatCompte(c).solde)).filter(v=>v>0);
   const cre=creances().reduce((s,c)=>s+Math.max(0,c.reste),0)+av.reduce((a,v)=>a+v,0);
   return {liq,biens,cre,nTiers:av.length,net:liq+biens+cre};
 }
@@ -1502,12 +1503,13 @@ function renderComptes(){
   const tiers=TIERS();
   $('comptesList').innerHTML=repart+COMPTES.filter(c=>c.type!=='tiers').concat(tiers).map((c,i,l)=>{const s=etatCompte(c);if(c.type!=='tiers')tot+=s.solde;const L=s.last;
     const ent=c.type==='tiers'&&c===tiers[0]?`<div class="acct tot"><b>Total des comptes</b><span class="acct-s num">${fmtM(tot)}</span></div>
-      <h3 class="sub" style="margin-top:14px">Comptes gérés pour des tiers</h3><p class="hint">Gardés à part : ils ne comptent ni dans vos comptes ni dans vos dépenses. Un solde négatif est de l'argent que vous avez avancé : il compte dans « On vous doit ».</p>`:'';
+      <h3 class="sub" style="margin-top:14px">Comptes gérés pour des tiers</h3><p class="hint">Gardés à part : ils ne comptent ni dans vos comptes ni dans vos dépenses. Un solde négatif est de l'argent que vous avez avancé : compté comme dette, il entre dans « On vous doit » ; en sourdine, il reste dans le compte sans entrer dans votre patrimoine.</p>`:'';
     const tit=c.type==='tiers'?`<span class="tag">${c.morale?'Personne morale':'Personne'} · ${esc(c.titulaire||c.nom)}</span>`:`<span class="tag">${TYPES_CPT[c.type]||''}</span>`;
     const ec=s.ecarts.length?`<span class="warn">${s.ecarts.length} écart${s.ecarts.length>1?'s':''} entre relevés</span>`:'';
     const interet=c.taux?`<span class="hint">Intérêts : ${fmt1(c.taux)} % tous les ${c.periode||12} mois, soit environ ${fmtM(s.solde*c.taux/100)} ${U()} par période au solde actuel</span>`:'';
     return ent+`<div class="acct" style="--cc:${coulCpt(c.id)}">
       <div class="acct-h">${dotCpt(c.id)}<button type="button" class="linkbtn" data-f="c:${c.id}"><b>${esc(c.nom)}</b></button>${tit}<span class="acct-s num${s.solde<0?' warn':''}">${fmtM(s.solde)}</span></div>
+      ${c.type==='tiers'&&s.solde<0?`<div class="row" style="gap:4px 10px"><span class="hint">Avance de ${fmtM(-s.solde)} ${U()} : ${c.sourdine?'<b>en sourdine</b>, non comptée dans votre patrimoine':'<b>comptée comme dette</b> (« On vous doit »)'}</span><button type="button" class="linkbtn" data-sourd="${c.id}">${c.sourdine?'Compter comme dette':'Mettre en sourdine'}</button></div>`:''}
       <div class="acct-d"><span class="hint">${L?`Relevé du ${dmy(L.date)} : ${fmtM(L.solde)} ${U()}${s.n?` · ${s.n} opération${s.n>1?'s':''} depuis`:''}`:'Aucun relevé : solde calculé depuis zéro'}</span>${ec}${interet}</div>
       <div class="row"><button type="button" class="btn ghost small" data-rel="${c.id}">Noter le solde</button>${s.hist.length?`<details><summary class="hint">Relevés (${s.hist.length})</summary><div class="tbl"><table><thead><tr><th>Date</th><th>Noté</th><th>Attendu</th><th>Écart</th><th></th></tr></thead><tbody>${s.hist.slice().reverse().map(h=>`<tr><td>${dmy(h.date)}</td><td>${fmtM(h.solde)}</td><td>${h.attendu===null?'–':fmtM(h.attendu)}</td><td class="${h.ecart?'warn':''}">${h.attendu===null?'–':h.ecart?sgnM(h.ecart):'0'}</td><td><button type="button" class="del" data-delrel="${c.id}|${h.date}" aria-label="Supprimer ce relevé">✕</button></td></tr>`).join('')}</tbody></table></div></details>`:''}</div>
       ${releveOuvert===c.id?`<div class="row relform"><input type="date" id="relD" value="${today}" aria-label="Date du relevé"><input type="text" inputmode="decimal" id="relV" placeholder="solde ${U_SAISIE()}" aria-label="Solde ${U_SAISIE()}" aria-describedby="relH" style="max-width:11em"><span class="hint" id="relH"></span><button type="button" class="btn small" data-relok="${c.id}">Enregistrer</button><button type="button" class="btn ghost small" data-relno>Annuler</button></div>`:''}
@@ -1544,6 +1546,11 @@ $('comptesList').addEventListener('click',async ev=>{
   const b=ev.target.closest('button');if(!b)return;
   if(b.dataset.rel){releveOuvert=b.dataset.rel;renderComptes();return}
   if('relno' in b.dataset){releveOuvert=null;renderComptes();return}
+  if(b.dataset.sourd){   // avance d'un compte de tiers : comptée comme dette, ou en sourdine
+    const id=b.dataset.sourd,c=CPT[id];if(!c)return;b.disabled=true;
+    try{await api.params({comptes:COMPTES.map(x=>x.id!==id?x:{...x,sourdine:!x.sourdine})});await charger(true);
+      status(c.sourdine?`${c.nom} : l'avance est de nouveau comptée comme dette.`:`${c.nom} : avance mise en sourdine, hors patrimoine.`)}
+    catch(e){status(e.message,true);b.disabled=false}return}
   if(b.dataset.relok||b.dataset.delrel){
     let id,date,solde=null;
     if(b.dataset.relok){id=b.dataset.relok;date=$('relD').value;solde=montantSaisi($('relV').value,true);if(!date||!isFinite(solde)){$('relH').textContent=`Date et solde (${U_SAISIE()}) requis.`;return}}
@@ -2358,7 +2365,8 @@ function cptRow(c){const used=utilisesCpt().has(c.id)||c.id==='especes';
     <div class="cTiers"${c.type==='tiers'?'':' hidden'}><input class="cTit" value="${esc(c.titulaire||'')}" placeholder="titulaire (frère, maison familiale…)" aria-label="Titulaire du compte" maxlength="60">
       <select class="cMor" aria-label="Personne physique ou morale"><option value="">Personne physique</option><option value="1"${c.morale?' selected':''}>Personne morale (famille, association…)</option></select>
       <input class="cMoi" value="${esc((c.moi||[]).join(', '))}" placeholder="votre nom dans ses notes : yaya" aria-label="Votre nom dans les notes de ce compte">
-      <input class="cContrib" value="${esc((c.contrib||[]).join(', '))}" placeholder="vos versements : contribution maison" aria-label="Libellés de vos dépenses versées à ce compte"></div></div>`}
+      <input class="cContrib" value="${esc((c.contrib||[]).join(', '))}" placeholder="vos versements : contribution maison" aria-label="Libellés de vos dépenses versées à ce compte">
+      <select class="cSourd" aria-label="Solde négatif (avance)"><option value="">Solde négatif : compté comme dette</option><option value="1"${c.sourdine?' selected':''}>Solde négatif : en sourdine</option></select></div></div>`}
 function bienRow(b){const used=all.some(e=>e.nature==='investissement'&&e.bien===b.id);
   return `<div class="cbrow bien" data-id="${b.id||''}"><input class="bNom" value="${esc(b.nom)}" aria-label="Nom du bien" maxlength="60">
     <select class="bType" aria-label="Type"><option value="actif"${b.type==='actif'?' selected':''}>Actif</option><option value="passif"${b.type==='passif'?' selected':''}>Passif</option></select>
@@ -2380,7 +2388,7 @@ $('saveCpt').onclick=async()=>{
   for(const r of $('cptEdit').querySelectorAll('.cbrow')){
     const nom=r.querySelector('.cNom').value.trim();if(!nom){$('cptMsg').textContent='Chaque compte doit avoir un nom.';return}
     const old=CPT[r.dataset.id];const c={id:old?old.id:nouvelId(nom,pris),nom,couleur:r.querySelector('.cCoul').value,type:r.querySelector('.cType').value,mots:listeMots(r.querySelector('.cMots').value),releves:old?old.releves:[]};
-    if(c.type==='tiers')Object.assign(c,{titulaire:r.querySelector('.cTit').value.trim()||nom,morale:!!r.querySelector('.cMor').value,moi:listeMots(r.querySelector('.cMoi').value),contrib:listeMots(r.querySelector('.cContrib').value)});
+    if(c.type==='tiers')Object.assign(c,{titulaire:r.querySelector('.cTit').value.trim()||nom,morale:!!r.querySelector('.cMor').value,moi:listeMots(r.querySelector('.cMoi').value),contrib:listeMots(r.querySelector('.cContrib').value),sourdine:!!r.querySelector('.cSourd').value});
     const t=r.querySelector('.cTaux').value.trim();if(t){const v=num(t);if(!(v>=0)){$('cptMsg').textContent=`Taux invalide pour « ${nom} ».`;return}c.taux=v;c.periode=Math.max(1,Math.round(num(r.querySelector('.cPer').value)||12))}
     out.push(c);
   }

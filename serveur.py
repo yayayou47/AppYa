@@ -39,7 +39,7 @@ from http.cookies import SimpleCookie
 from http.server import SimpleHTTPRequestHandler, ThreadingHTTPServer
 from urllib.parse import parse_qs, urlparse
 
-VERSION = "1.4.0"
+VERSION = "1.4.1"
 VERSION_NOM = "Ousnou"   # nom de la version (même valeur que VERSION_APP dans app/index.html)
 RACINE = os.path.dirname(os.path.abspath(__file__))
 APP = os.path.join(RACINE, "app")
@@ -723,6 +723,8 @@ def nettoyer_comptes(liste, d):
             c["morale"] = bool(x.get("morale"))          # personne morale (association, famille, entreprise…)
             c["moi"] = nettoyer_mots(x.get("moi"))       # vos noms dans les notes de ce compte (« prt Yaya » = votre part)
             c["contrib"] = nettoyer_mots(x.get("contrib"))   # libellés de vos dépenses versées à ce compte
+            if x.get("sourdine"):
+                c["sourdine"] = True   # solde négatif (avance) gardé dans le compte mais pas compté dans le patrimoine
         comptes.append(c)
     if "especes" not in vus:
         comptes.insert(0, json.loads(json.dumps(COMPTES_DEFAUT[0])))

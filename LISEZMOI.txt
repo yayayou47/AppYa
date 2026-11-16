@@ -39,6 +39,10 @@ Variantes :
 
 2. LES RUBRIQUES
 ----------------
+  - La barre des rubriques reste en haut de l'écran quand on fait défiler.
+    Le bouton retour du téléphone ramène à la rubrique, à la vue ou à
+    l'onglet précédents (et ferme d'abord une fenêtre ouverte) ; seul le
+    premier écran fait sortir de Daftar.
   - Saisir (premier bouton, en bleu) : affiche seulement la carte de saisie
     d'une opération, le curseur dans le champ Montant. Les autres onglets
     (coller une liste, relevé, réglages…) sont dans Données et réglages.
@@ -468,7 +472,7 @@ il agit toujours sur l'installation réelle. Avant tout retrait, il recopie
 une dernière fois les données dans la copie miroir (disque branché). Il
 ne supprime jamais le dossier d'origine.
 
-Contenu : serveur.py (Daftar Ousnou 1.4.3, Python, bibliothèque standard), app/index.html,
+Contenu : serveur.py (Daftar Ousnou 1.4.4, Python, bibliothèque standard), app/index.html,
 app/moteur.js et app/mode.js (version autonome), app/releve.js et
 app/pdf.min.js + app/pdf.worker.min.js (pdf.js 3.11.174, Mozilla, licence
 Apache 2.0 : app/LICENCE-pdfjs.txt ; lecture des relevés), app/sw.js et

@@ -449,6 +449,21 @@ tr.solde td{color:var(--muted)}
 /* rapidité : le navigateur ne met en page une section qu'à l'approche de l'écran (≈ −60 % au changement de vue, mesuré) ;
    « auto » retient la hauteur réelle une fois la section vue, pour un défilement stable */
 main>section.panel{content-visibility:auto;contain-intrinsic-size:auto 800px}
+/* barre des rubriques figée en haut au défilement ; les défilements automatiques s'arrêtent sous elle */
+nav.apptabs{position:sticky;top:0;z-index:30;background:var(--bg)}
+html{scroll-padding-top:72px}
+/* téléphone : logo, synchronisation, devise et export sur une seule ligne (logo un peu réduit) */
+@media (max-width:567px){
+  header{flex-wrap:nowrap;gap:6px}
+  header h1.titre{min-width:0;flex:0 1 auto}
+  header .nomapp{font-size:1.02em;padding:2px 11px 3px 8px}
+  header .ctl{flex-wrap:nowrap;gap:5px;flex:none}
+  header .ctl>.btn,header .ctl>.devsel,header .ctl .expmenu>.btn{height:38px}
+  header .syncpill{padding:0 8px;font-size:.8rem}.syncdet{display:none}
+  header .devsel{max-width:5em;padding:0 2px 0 7px}
+  header .icbtn{width:40px}header .icbtn .ic{width:24px;height:24px}
+  html{scroll-padding-top:84px}
+}
 .cbsec{margin:14px 0 2px;font-size:.95rem;display:flex;flex-wrap:wrap;gap:4px 10px;align-items:baseline}.cbsec .hint{font-weight:400}
 .corb{display:flex;flex-wrap:wrap;gap:6px 12px;align-items:center;justify-content:space-between;padding:8px 0;border-bottom:1px solid var(--line)}
 .cNomL{display:contents}   /* ordinateur : couleur et nom gardent leurs colonnes ; téléphone : sur une même ligne */
@@ -951,7 +966,7 @@ function setProgrammees(l){PROGS=(Array.isArray(l)?l:[]).map(x=>({...x,ignorees:
 const PERIODES={1:'chaque mois',2:'tous les 2 mois',3:'chaque trimestre',6:'chaque semestre',12:'chaque année'};
 const TYPES_EVT={mariage:'Mariage',bapteme:'Baptême',circoncision:'Circoncision',funerailles:'Funérailles',fete:'Fête','voyage-tourisme':'Voyage (tourisme)','voyage-mission':'Voyage (mission)','voyage-vacances':'Voyage (vacances)',sante:'Santé',projet:'Projet',autre:'Autre'};
 /* Nature d'une opération : s = sens sur le compte (+1 entrée, −1 sortie, 0 virement) */
-const VERSION_APP='Ousnou 1.4.3';   // nom et numéro de version (même valeur que VERSION / VERSION_NOM dans serveur.py)
+const VERSION_APP='Ousnou 1.4.4';   // nom et numéro de version (même valeur que VERSION / VERSION_NOM dans serveur.py)
 const NAT={depense:{l:'Dépense',s:-1},revenu:{l:'Revenu',s:1},virement:{l:'Virement',s:0},pret:{l:'Prêt accordé',s:-1},remboursement:{l:'Remboursement reçu',s:1},investissement:{l:'Investissement',s:-1}};
 const TYPES_CPT={especes:'Espèces',courant:'Compte courant',epargne:'Épargne',carte:'Carte prépayée',mobile:'Mobile money',tiers:"Compte d'un tiers"};
 const MOTS_REVENU=['salaire','salary','prime','revenu','interet','honoraire','indemnite','bourse','vacation','perdiem','per diem','prodes','frais de mission','consultance','jury','soutenance','seminaire','atelier'];
@@ -1004,6 +1019,7 @@ const MOIS=['janv.','févr.','mars','avr.','mai','juin','juil.','août','sept.',
 /* Saisie des montants. Par défaut : le vrai montant en francs CFA (10000 = 10 000 FCFA).
    Option (Données et réglages › Saisie, propre à chaque appareil) : en milliers, 10 → 10 000 CFA,
    2,65 → 2 650 ; dans ce mode, un nombre de 10 000 ou plus reste un montant complet (25000 → 25 000). */
+var navCle='',navRetour=false,navPret=false;   // bouton retour (voir « bouton retour ») ; var : lisibles dès le premier affichage
 let saisieSeule=false;   // vrai quand Données et réglages a été ouvert par le bouton « Saisir »
 let SAISIE_K=(()=>{try{return localStorage.getItem('daftar-saisie-milliers')==='1'}catch(e){return false}})();
 const num=s=>parseFloat(String(s).replace(',','.').replace(/[\s  ]/g,''));
@@ -1169,7 +1185,8 @@ function majSync(){
   else if(LOC.etat==='horsligne'||LOC.etat==='erreur'){t=`Hors ligne${n?` · ${n} en attente`:''}`;cls='off'}
   else if(n)t=`⟳ ${n} en attente`;
   else t=`✓ À jour${h?' · '+h:''}`;
-  b.textContent=t;b.className='btn ghost syncpill '+cls;
+  // sur téléphone, le détail après « · » (heure, nombre en attente) se cache pour tenir sur la ligne du logo
+  const i=t.indexOf(' · ');b.innerHTML=i<0?esc(t):`${esc(t.slice(0,i))}<span class="syncdet">${esc(t.slice(i))}</span>`;b.className='btn ghost syncpill '+cls;
   b.title=(LOC.dernier?`Dernière synchronisation : ${new Date(LOC.dernier).toLocaleString('fr-FR')}. `:'')+'Toucher pour synchroniser maintenant.';
 }
 $('syncBtn').onclick=async()=>{
@@ -1358,7 +1375,8 @@ function filtreNom(f){const t=f[0],v=f.slice(2);
   if(t==='p'){const c=creances().find(x=>x.key===v);return c?c.nom:v}if(t==='b')return (BIEN[v]||{}).nom||v;return f}
 function voirJournal(f){filtre=f;query='';$('q').value='';shown=80;render();$('list').scrollIntoView({behavior:doux(),block:'start'})}
 
-function render(){
+function render(){try{renderVue()}finally{navNoter()}}
+function renderVue(){
   majBandeauProg();
   $('demoBandeau').hidden=!MODE_DEMO;
   $('accueil').hidden=MODE_DEMO||!ready||all.length>0||memo('appya-accueil-vu')==='1'||view!=='mois';
@@ -1612,7 +1630,7 @@ $('vMois').onclick=()=>{view='mois';shown=80;render()};
 $('vAn').onclick=()=>{view='annee';shown=80;render()};
 $('vPat').onclick=()=>{view='patrimoine';shown=80;render()};
 $('vStats').onclick=()=>{view='stats';render();window.scrollTo({top:0,behavior:doux()})};
-$('aSaisir').onclick=()=>{retourVue=null;saisieSeule=true;view='donnees';render();showTab('tOne');$('fAmt').focus()};
+$('aSaisir').onclick=()=>{navEtape(()=>{retourVue=null;saisieSeule=true;view='donnees';showTab('tOne');render()});$('fAmt').focus()};
 $('aFin').onclick=()=>{view=vueFin;render()};
 $('aVeh').onclick=()=>{view='vehicule';render()};
 $('aMai').onclick=()=>{view='maison';render()};
@@ -1620,8 +1638,8 @@ $('aDon').onclick=()=>{retourVue=null;saisieSeule=false;view='donnees';render()}
 function openMonth(ev){const t=ev.target.closest('[data-m]');if(!t)return;cur.m=+t.dataset.m;view='mois';render();window.scrollTo({top:0,behavior:doux()})}
 $('chart').addEventListener('click',openMonth);$('yearTbl').addEventListener('click',openMonth);
 $('accFermer').onclick=()=>{memo('appya-accueil-vu','1');render()};
-$('accComptes').onclick=()=>{view='donnees';render();showTab('tCB');$('saisie').scrollIntoView({behavior:doux()})};
-$('accSaisir').onclick=()=>{saisieSeule=true;view='donnees';render();showTab('tOne');$('fAmt').focus()};
+$('accComptes').onclick=()=>{navEtape(()=>{view='donnees';showTab('tCB');render()});$('saisie').scrollIntoView({behavior:doux()})};
+$('accSaisir').onclick=()=>{navEtape(()=>{saisieSeule=true;view='donnees';showTab('tOne');render()});$('fAmt').focus()};
 $('demoRecreer').onclick=async()=>{if(!confirm('Effacer les données de démo modifiées et recréer les trois années simulées ?'))return;await locCharger();LOC.donnees=await donneesDemo();await locSauver();await charger();status('Données de démo recréées.')};
 $('segEngins').addEventListener('click',ev=>{const b=ev.target.closest('[data-v]');if(!b)return;choisirEngin(b.dataset.v);render()});
 $('segMaisons').addEventListener('click',ev=>{const b=ev.target.closest('[data-h]');if(!b)return;choisirMaison(b.dataset.h);render()});
@@ -1948,7 +1966,7 @@ $('fAmt').addEventListener('input',()=>{amtHint();if(amtNeg()&&!touched.nat&&['r
 $('fKm').addEventListener('input',majChamps);
 $('fVidNext').addEventListener('input',()=>{touched.vidnext=true});
 const tabs=[['tOne','oneForm'],['tPaste','pasteBox'],['tRel','relBox'],['tPostes','posteBox'],['tCB','cbBox'],['tEvt','evtBox'],['tProg','progBox'],['tVid','vidPanel'],['tMai','maiPanel'],['tSai','saisieBox'],['tPar','paritesBox'],['tSav','savBox']];
-function showTab(t,focus){if(t!=='tOne')saisieSeule=false;tabs.forEach(([tt,p])=>{const on=tt===t;$(tt).setAttribute('aria-selected',on);$(tt).tabIndex=on?0:-1;$(p).hidden=!on});majRubSaisie();if(focus)$(t).focus()}
+function showTab(t,focus){if(t!=='tOne')saisieSeule=false;tabs.forEach(([tt,p])=>{const on=tt===t;$(tt).setAttribute('aria-selected',on);$(tt).tabIndex=on?0:-1;$(p).hidden=!on});majRubSaisie();navNoter();if(focus)$(t).focus()}
 /* « Saisir » montre seulement la carte de saisie (onglets cachés) ; « Données et réglages » montre tout */
 function majRubSaisie(){const d=view==='donnees',s=d&&saisieSeule;$('saisie').classList.toggle('seule',s);$('saisie').setAttribute('aria-label',s?'Saisir une opération':'Données et réglages');$('aSaisir').setAttribute('aria-pressed',s);$('aDon').setAttribute('aria-pressed',d&&!s)}
 tabs.forEach(([t,p])=>{$(t).setAttribute('aria-controls',p);$(t).type='button';$(p).setAttribute('role','tabpanel');$(p).setAttribute('aria-labelledby',t)});
@@ -2069,7 +2087,7 @@ function revenir(){if(retourVue){view=retourVue;retourVue=null;render();window.s
 $('editCancel').onclick=()=>{resetForm();$('addMsg').textContent='';revenir()};
 function startEdit(id){
   const e=all.find(x=>x.id===id);if(!e)return;
-  editId=id;saisieSeule=false;if(view!=='donnees'){retourVue=view;view='donnees'}showTab('tOne');
+  navEtape(()=>{editId=id;saisieSeule=false;if(view!=='donnees'){retourVue=view;view='donnees'}showTab('tOne')});
   $('fDate').value=e.date;$('fAmt').value=versSaisie(e.montant);$('fLib').value=e.libelle;$('fNat').value=e.nature;$('fCpt').value=e.compte;
   $('fCat').value=e.categorie||'autre';$('fVers').value=e.vers;$('fPers').value=e.personne;$('fEch').value=e.echeance;$('fBien').value=e.bien;$('fRem').value=e.remarque;
   $('fCatM').value=e.cat_maison||guessCatM(e.libelle);$('fCatV').value=e.cat_vehicule||guessCatV(e.libelle);$('fKm').value=e.km||'';$('fQty').value=e.quantite?String(e.quantite).replace('.',','):'';$('fUnit').value=e.unite==='u'?'u':'L';$('fVid').checked=false;
@@ -3178,7 +3196,26 @@ if(!MODE_SYNC&&!MODE_AUTONOME&&'EventSource' in window&&/^(localhost|127\.0\.0\.
   brancher();
 }
 
+/* ================= bouton retour ================= */
+/* Chaque changement de rubrique, de vue ou d'onglet de Données et réglages est une étape de l'historique du navigateur :
+   le bouton retour (téléphone, navigateur, APK via @capacitor/app) ramène à l'étape précédente au lieu de fermer Daftar.
+   Une fenêtre ouverte (confirmation, engin…) se ferme d'abord. Seul le premier écran laisse sortir de l'application. */
+function ongletActif(){const t=tabs.find(([tt])=>$(tt).getAttribute('aria-selected')==='true');return t?t[0]:'tOne'}
+function etatNav(){return {v:view,t:view==='donnees'?ongletActif():'',s:view==='donnees'&&saisieSeule?1:0}}
+/* plusieurs changements (vue + onglet) = une seule étape de l'historique */
+function navEtape(fn){const r=navRetour;navRetour=true;try{fn()}finally{navRetour=r;navNoter()}}
+/* appelée par render() et showTab() ; ignore les affichages faits pendant le chargement du script (navPret) */
+function navNoter(){if(!navPret||navRetour||!history.pushState)return;const st=etatNav(),k=JSON.stringify(st);if(k===navCle)return;
+  try{if(!navCle)history.replaceState(st,'');else history.pushState(st,'')}catch(e){}navCle=k}
+addEventListener('popstate',ev=>{
+  const ouv=[...document.querySelectorAll('dialog[open]')];
+  if(ouv.length){ouv.forEach(d=>d.close());try{history.pushState(etatNav(),'')}catch(e){}return}   // retour = fermer la fenêtre
+  const st=ev.state;if(!st||!st.v)return;
+  navRetour=true;try{if(st.v!=='donnees'&&editId)resetForm();view=st.v;saisieSeule=!!st.s;render();if(st.t)showTab(st.t);window.scrollTo(0,0)}finally{navRetour=false}
+  navCle=JSON.stringify(etatNav())});
+
 /* ================= démarrage ================= */
+navPret=true;
 render();charger().then(()=>{if(MODE_SYNC)synchroniser()});
 if(MODE_SYNC||MODE_AUTONOME){
   if('serviceWorker' in navigator&&window.isSecureContext&&!window.Capacitor&&!MODE_DEMO){navigator.serviceWorker.register('sw.js').catch(()=>{});

@@ -350,9 +350,10 @@ maison »).
     quelques grosses journées comme la moyenne), taux d'épargne du mois
     (revenus courants − dépenses courantes, divisé par les revenus courants ;
     remboursements de prêts et revenus ponctuels non comptés) et, pour le
-    mois en cours, le taux d'épargne PRÉVISIONNEL : le même calcul sur les
-    dépenses à ce jour, comme si les revenus courants attendus étaient déjà
-    tombés. Revenu attendu : chaque revenu courant reçu chacun des 3 mois
+    mois en cours, le taux d'épargne PRÉVISIONNEL de fin de mois : revenus
+    courants attendus (comme s'ils étaient déjà tombés) moins dépenses
+    prévues (dépenses à ce jour + moyenne par jour × jours restants, la même
+    projection que dans les Statistiques), divisé par les revenus attendus. Revenu attendu : chaque revenu courant reçu chacun des 3 mois
     précédents (salaire, prime…) au montant du mois dernier ; sans revenu
     fixe, le revenu courant moyen des 12 derniers mois suivis. Comparaison avec le mois
     précédent, entrées, investissements et prêts, solde du mois ;

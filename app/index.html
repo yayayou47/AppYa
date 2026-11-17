@@ -1443,7 +1443,7 @@ function renderVue(){
     $('hero').innerHTML=partiel+stat('Dépenses courantes du mois',fmtM(total),`${U()}${btot?` · budget ${fmtM(btot)}`:''} · ${deps(items).length} lignes`,true)+
       stat('Moyenne par jour',`${fmtM(total/elapsed)} <span class="sd" title="Médiane des dépenses journalières : un jour sur deux, on dépense moins (jours sans dépense comptés à 0)"><span aria-hidden="true">(médiane ${mdj===null?'—':fmtM(mdj)})</span><span class="sr">, médiane ${mdj===null?'non calculable':fmtM(mdj)+' '+U()}</span></span>`,`${U()} sur ${elapsed} jours`)+
       stat(`Vs ${isCur?'même période':'mois précédent'}`,delta,prevTot?`${fmtM(prevTot)} ${U()} ${isCur?`(1–${elapsed} ${pmName})`:`en ${pmName}`}`:'pas de données',false,dcol)+
-      statEpargne(items,total,isCur,stat)+stat('Entrées courantes',fmtM(F.ent),`${U()} · revenus courants et remboursements`)+(F.exc||F.entX?stat('Exceptionnel',fmtM(F.exc),`${U()} dépensés (événements)${F.entX?` · ${fmtM(F.entX)} reçus (ponctuels)`:''}`):'')+
+      statEpargne(items,total,isCur,elapsed,days,stat)+stat('Entrées courantes',fmtM(F.ent),`${U()} · revenus courants et remboursements`)+(F.exc||F.entX?stat('Exceptionnel',fmtM(F.exc),`${U()} dépensés (événements)${F.entX?` · ${fmtM(F.entX)} reçus (ponctuels)`:''}`):'')+
       stat('Investi et prêté',fmtM(F.inv+F.pre),`${U()} · investi ${fmtM(F.inv)} · prêté ${fmtM(F.pre)}`)+
       stat('Solde du mois',sgnM(F.net),`${U()} · toutes entrées − toutes sorties`,false,fluxCol)+semaines(items,days,isCur?now.getDate():0);
   }else{
@@ -1532,13 +1532,16 @@ function revenuAttendu(y,m){
   const M12=moisPrecedents(y,m,12),moy=M12.reduce((a,p)=>a+tot(revCourMois(p.y,p.m)),0)/M12.length;
   return {total:Math.max(t,moy),mode:'moyenne',moy,n:M12.length,manque:t<moy?[{c:'',v:moy-t}]:[]};
 }
-function statEpargne(items,dep,isCur,stat){
+/* Prévisionnel (mois en cours) = (revenu attendu − dépenses prévues) / revenu attendu ; dépenses prévues = dépenses à ce
+   jour + moyenne par jour × jours restants (même projection que la vue Statistiques). */
+function statEpargne(items,dep,isCur,el,days,stat){
   const rev=sum(items.filter(e=>e.nature==='revenu'&&!estExc(e))),te=rev>0?(rev-dep)/rev:null,pc=x=>fmt1(x*100)+' %';
   let sous=rev>0?`revenus courants ${fmtM(rev)} − dépenses courantes`:'pas encore de revenu courant ce mois';
-  const A=isCur?revenuAttendu(cur.y,cur.m):null;
-  if(A&&A.manque.length&&A.total>0){const tp=(A.total-dep)/A.total;
-    const quoi=A.mode==='fixe'?A.manque.map(x=>`${(REV[x.c]||{label:x.c}).label.toLowerCase()} ${fmtM(x.v)}`).join(' + '):`revenu moyen ${fmtM(A.moy)} (${A.n} mois)`;
-    sous=`<strong${tp<0?' style="color:var(--warn)"':''}>prévisionnel ${pc(tp)}</strong> si tombe : ${esc(quoi)} ${U()}`}
+  if(isCur&&el<days){
+    const A=revenuAttendu(cur.y,cur.m),R=A?A.total:rev,reste=days-el,depP=dep+dep/el*reste;
+    if(R>0){const tp=(R-depP)/R;
+      const quoi=!A||!A.manque.length?'':A.mode==='fixe'?A.manque.map(x=>`${(REV[x.c]||{label:x.c}).label.toLowerCase()} ${fmtM(x.v)}`).join(' + '):`revenu moyen ${fmtM(A.moy)} (${A.n} mois)`;
+      sous=`<strong${tp<0?' style="color:var(--warn)"':''}>prévisionnel ${pc(tp)}</strong> · ${quoi?`revenus attendus : ${esc(quoi)} · `:''}dépenses prévues ${fmtM(depP)} (${fmtM(dep/el)} par jour × ${reste} j restants) ${U()}`}}
   return stat("Taux d'épargne",te===null?'—':pc(te),sous,false,te!==null&&te<0?'var(--warn)':'');
 }
 function medianeJours(items,n){

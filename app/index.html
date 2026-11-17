@@ -1443,7 +1443,7 @@ function renderVue(){
     $('hero').innerHTML=partiel+stat('Dépenses courantes du mois',fmtM(total),`${U()}${btot?` · budget ${fmtM(btot)}`:''} · ${deps(items).length} lignes`,true)+
       stat('Moyenne par jour',`${fmtM(total/elapsed)} <span class="sd" title="Médiane des dépenses journalières : un jour sur deux, on dépense moins (jours sans dépense comptés à 0)"><span aria-hidden="true">(médiane ${mdj===null?'—':fmtM(mdj)})</span><span class="sr">, médiane ${mdj===null?'non calculable':fmtM(mdj)+' '+U()}</span></span>`,`${U()} sur ${elapsed} jours`)+
       stat(`Vs ${isCur?'même période':'mois précédent'}`,delta,prevTot?`${fmtM(prevTot)} ${U()} ${isCur?`(1–${elapsed} ${pmName})`:`en ${pmName}`}`:'pas de données',false,dcol)+
-      stat('Entrées courantes',fmtM(F.ent),`${U()} · revenus courants et remboursements`)+(F.exc||F.entX?stat('Exceptionnel',fmtM(F.exc),`${U()} dépensés (événements)${F.entX?` · ${fmtM(F.entX)} reçus (ponctuels)`:''}`):'')+
+      statEpargne(items,total,isCur,stat)+stat('Entrées courantes',fmtM(F.ent),`${U()} · revenus courants et remboursements`)+(F.exc||F.entX?stat('Exceptionnel',fmtM(F.exc),`${U()} dépensés (événements)${F.entX?` · ${fmtM(F.entX)} reçus (ponctuels)`:''}`):'')+
       stat('Investi et prêté',fmtM(F.inv+F.pre),`${U()} · investi ${fmtM(F.inv)} · prêté ${fmtM(F.pre)}`)+
       stat('Solde du mois',sgnM(F.net),`${U()} · toutes entrées − toutes sorties`,false,fluxCol)+semaines(items,days,isCur?now.getDate():0);
   }else{
@@ -1514,6 +1514,33 @@ function renderVue(){
 /* Médiane des dépenses par jour sur les jours 1 … n de la période (un jour sans dépense compte 0, comme dans la moyenne) ;
    remplace l'écart type σ (1.4.6, demande de l'utilisateur) : les dépenses d'un jour sont très asymétriques (quelques
    grosses journées), la moyenne et σ en sont tirés vers le haut, la médiane dit ce qu'est un jour ordinaire. */
+/* Taux d'épargne du mois (1.4.6) = (revenus courants − dépenses courantes) / revenus courants ; remboursements de prêts et
+   revenus ponctuels exclus (ce ne sont pas des revenus réguliers). PRÉVISIONNEL (mois en cours) : même calcul sur les dépenses
+   à ce jour, comme si les revenus courants attendus étaient déjà tombés (revenuAttendu). */
+function revCourMois(y,m){const r={};monthItems(y,m).forEach(e=>{if(e.nature==='revenu'&&!estExc(e)){const c=catRev(e);r[c]=(r[c]||0)+e.montant}});return r}
+// les n mois complets qui précèdent (y, m), en s'arrêtant avant le début du suivi (ou la première opération)
+function moisPrecedents(y,m,n){const deb=DEBUT_SUIVI||all.reduce((a,e)=>!a||e.date<a?e.date:a,''),L=[];
+  for(let i=1;i<=n;i++){const d=new Date(y,m-i,1);if(!deb||iso(new Date(d.getFullYear(),d.getMonth()+1,0))<deb)break;L.push({y:d.getFullYear(),m:d.getMonth()})}return L}
+/* Revenu courant attendu pour le mois. Un type de revenu courant est « fixe » s'il est tombé CHACUN des mois suivis parmi les
+   3 précédents : on l'attend au montant du mois précédent. Sans revenu fixe : moyenne mensuelle des revenus courants des
+   12 derniers mois suivis. manque = ce qui n'est pas encore tombé (vide : le prévisionnel égale le réel). */
+function revenuAttendu(y,m){
+  const tot=o=>Object.values(o).reduce((a,b)=>a+b,0),recu=revCourMois(y,m),M3=moisPrecedents(y,m,3);if(!M3.length)return null;
+  const R3=M3.map(p=>revCourMois(p.y,p.m)),manque=[];let t=tot(recu),fixe=false;
+  for(const c of Object.keys(R3[0]))if(R3.every(x=>x[c]>0)){fixe=true;const v=R3[0][c];if((recu[c]||0)<v){t+=v-(recu[c]||0);manque.push({c,v})}}
+  if(fixe)return {total:t,mode:'fixe',manque};
+  const M12=moisPrecedents(y,m,12),moy=M12.reduce((a,p)=>a+tot(revCourMois(p.y,p.m)),0)/M12.length;
+  return {total:Math.max(t,moy),mode:'moyenne',moy,n:M12.length,manque:t<moy?[{c:'',v:moy-t}]:[]};
+}
+function statEpargne(items,dep,isCur,stat){
+  const rev=sum(items.filter(e=>e.nature==='revenu'&&!estExc(e))),te=rev>0?(rev-dep)/rev:null,pc=x=>fmt1(x*100)+' %';
+  let sous=rev>0?`revenus courants ${fmtM(rev)} − dépenses courantes`:'pas encore de revenu courant ce mois';
+  const A=isCur?revenuAttendu(cur.y,cur.m):null;
+  if(A&&A.manque.length&&A.total>0){const tp=(A.total-dep)/A.total;
+    const quoi=A.mode==='fixe'?A.manque.map(x=>`${(REV[x.c]||{label:x.c}).label.toLowerCase()} ${fmtM(x.v)}`).join(' + '):`revenu moyen ${fmtM(A.moy)} (${A.n} mois)`;
+    sous=`<strong${tp<0?' style="color:var(--warn)"':''}>prévisionnel ${pc(tp)}</strong> si tombe : ${esc(quoi)} ${U()}`}
+  return stat("Taux d'épargne",te===null?'—':pc(te),sous,false,te!==null&&te<0?'var(--warn)':'');
+}
 function medianeJours(items,n){
   if(n<1)return null;const j=new Array(n).fill(0);
   deps(items).forEach(e=>{const d=+e.date.slice(8,10);if(d>=1&&d<=n)j[d-1]+=e.montant});

@@ -1438,10 +1438,10 @@ function renderVue(){
     let delta='—',dcol='';
     if(prevTot>0){const d=(total-prevTot)/prevTot*100;delta=(d>=0?'+':'')+fmt1(d)+' %';dcol=d>0?'var(--warn)':'var(--ok)'}
     const btot=Object.values(budgets).reduce((a,b)=>a+b,0);
-    const sdj=ecartTypeJours(items,elapsed);
+    const mdj=medianeJours(items,elapsed);
     const partiel=DEBUT_SUIVI&&iso(new Date(cur.y,cur.m+1,0))<DEBUT_SUIVI?`<div class="partiel">Suivi partiel : avant le ${dmy(DEBUT_SUIVI)}, seules les dépenses du véhicule (reprises de son carnet) sont notées.</div>`:'';
     $('hero').innerHTML=partiel+stat('Dépenses courantes du mois',fmtM(total),`${U()}${btot?` · budget ${fmtM(btot)}`:''} · ${deps(items).length} lignes`,true)+
-      stat('Moyenne par jour',`${fmtM(total/elapsed)} <span class="sd" title="Écart type des dépenses journalières (jours sans dépense comptés à 0)"><span aria-hidden="true">(σ ${sdj===null?'—':fmtM(sdj)})</span><span class="sr">, écart type ${sdj===null?'non calculable':fmtM(sdj)+' '+U()}</span></span>`,`${U()} sur ${elapsed} jours`)+
+      stat('Moyenne par jour',`${fmtM(total/elapsed)} <span class="sd" title="Médiane des dépenses journalières : un jour sur deux, on dépense moins (jours sans dépense comptés à 0)"><span aria-hidden="true">(médiane ${mdj===null?'—':fmtM(mdj)})</span><span class="sr">, médiane ${mdj===null?'non calculable':fmtM(mdj)+' '+U()}</span></span>`,`${U()} sur ${elapsed} jours`)+
       stat(`Vs ${isCur?'même période':'mois précédent'}`,delta,prevTot?`${fmtM(prevTot)} ${U()} ${isCur?`(1–${elapsed} ${pmName})`:`en ${pmName}`}`:'pas de données',false,dcol)+
       stat('Entrées courantes',fmtM(F.ent),`${U()} · revenus courants et remboursements`)+(F.exc||F.entX?stat('Exceptionnel',fmtM(F.exc),`${U()} dépensés (événements)${F.entX?` · ${fmtM(F.entX)} reçus (ponctuels)`:''}`):'')+
       stat('Investi et prêté',fmtM(F.inv+F.pre),`${U()} · investi ${fmtM(F.inv)} · prêté ${fmtM(F.pre)}`)+
@@ -1511,12 +1511,13 @@ function renderVue(){
 }
 /* Petit graphique des dépenses par semaine (1–7, 8–14, 15–21, 22–28, 29–fin), placé dans le résumé du mois ;
    la semaine en cours est mise en avant */
-/* Écart type (échantillon, n − 1) des dépenses par jour sur les jours 1 … n de la période ;
-   un jour sans dépense compte 0, comme dans la moyenne. Null s'il y a moins de 2 jours. */
-function ecartTypeJours(items,n){
-  if(n<2)return null;const j=new Array(n).fill(0);
+/* Médiane des dépenses par jour sur les jours 1 … n de la période (un jour sans dépense compte 0, comme dans la moyenne) ;
+   remplace l'écart type σ (1.4.6, demande de l'utilisateur) : les dépenses d'un jour sont très asymétriques (quelques
+   grosses journées), la moyenne et σ en sont tirés vers le haut, la médiane dit ce qu'est un jour ordinaire. */
+function medianeJours(items,n){
+  if(n<1)return null;const j=new Array(n).fill(0);
   deps(items).forEach(e=>{const d=+e.date.slice(8,10);if(d>=1&&d<=n)j[d-1]+=e.montant});
-  const m=j.reduce((a,b)=>a+b,0)/n;return Math.sqrt(j.reduce((a,v)=>a+(v-m)*(v-m),0)/(n-1));
+  j.sort((a,b)=>a-b);return n%2?j[(n-1)/2]:(j[n/2-1]+j[n/2])/2;
 }
 function semaines(items,days,jour){
   const w=[0,0,0,0,0];deps(items).forEach(e=>{const d=+e.date.slice(8,10);w[Math.min(4,Math.floor((d-1)/7))]+=e.montant});

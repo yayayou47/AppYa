@@ -344,8 +344,10 @@ maison »).
 
 4. CE QUE FAIT LE SUIVI FINANCIER
 ------------------------
-  - Vue Mois : dépenses du mois, moyenne par jour (avec l'écart type entre
-    parenthèses : plus il est grand, plus les dépenses varient d'un jour à l'autre), comparaison avec le mois
+  - Vue Mois : dépenses du mois, moyenne par jour (avec la médiane entre
+    parenthèses : un jour sur deux, on dépense moins que la médiane ; elle
+    dit ce qu'est un jour ordinaire, sans être tirée vers le haut par
+    quelques grosses journées comme la moyenne), comparaison avec le mois
     précédent, entrées, investissements et prêts, solde du mois ;
     petit graphique des dépenses par semaine (semaine en cours en évidence) ;
     répartition des dépenses par poste ; journal.

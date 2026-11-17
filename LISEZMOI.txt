@@ -353,7 +353,9 @@ maison »).
     mois en cours, le taux d'épargne PRÉVISIONNEL de fin de mois : revenus
     courants attendus (comme s'ils étaient déjà tombés) moins dépenses
     prévues (dépenses à ce jour + moyenne par jour × jours restants, la même
-    projection que dans les Statistiques), divisé par les revenus attendus. Revenu attendu : chaque revenu courant reçu chacun des 3 mois
+    projection que dans les Statistiques), divisé par les revenus attendus.
+    Seuls les deux taux s'affichent (« réel · prévisionnel », le second en
+    jaune) ; le détail du calcul apparaît en survolant le taux prévisionnel. Revenu attendu : chaque revenu courant reçu chacun des 3 mois
     précédents (salaire, prime…) au montant du mois dernier ; sans revenu
     fixe, le revenu courant moyen des 12 derniers mois suivis. Comparaison avec le mois
     précédent, entrées, investissements et prêts, solde du mois ;

@@ -1536,13 +1536,15 @@ function revenuAttendu(y,m){
    jour + moyenne par jour × jours restants (même projection que la vue Statistiques). */
 function statEpargne(items,dep,isCur,el,days,stat){
   const rev=sum(items.filter(e=>e.nature==='revenu'&&!estExc(e))),te=rev>0?(rev-dep)/rev:null,pc=x=>fmt1(x*100)+' %';
-  let sous=rev>0?`revenus courants ${fmtM(rev)} − dépenses courantes`:'pas encore de revenu courant ce mois';
+  const reel=`<span${te!==null&&te<0?' style="color:var(--warn)"':''}>${te===null?'—':pc(te)}</span>`;
   if(isCur&&el<days){
     const A=revenuAttendu(cur.y,cur.m),R=A?A.total:rev,reste=days-el,depP=dep+dep/el*reste;
     if(R>0){const tp=(R-depP)/R;
-      const quoi=!A||!A.manque.length?'':A.mode==='fixe'?A.manque.map(x=>`${(REV[x.c]||{label:x.c}).label.toLowerCase()} ${fmtM(x.v)}`).join(' + '):`revenu moyen ${fmtM(A.moy)} (${A.n} mois)`;
-      sous=`<strong${tp<0?' style="color:var(--warn)"':''}>prévisionnel ${pc(tp)}</strong> · ${quoi?`revenus attendus : ${esc(quoi)} · `:''}dépenses prévues ${fmtM(depP)} (${fmtM(dep/el)} par jour × ${reste} j restants) ${U()}`}}
-  return stat("Taux d'épargne",te===null?'—':pc(te),sous,false,te!==null&&te<0?'var(--warn)':'');
+      // seuls les taux sont affichés (demande de l'utilisateur) ; le détail du calcul reste dans la bulle (title)
+      const quoi=!A||!A.manque.length?'':A.mode==='fixe'?A.manque.map(x=>`${(REV[x.c]||{label:x.c}).label.toLowerCase()} ${fmt(x.v)}`).join(' + '):`revenu moyen ${fmt(A.moy)} (${A.n} mois)`,
+        det=`Prévisionnel de fin de mois : ${quoi?`revenus attendus : ${quoi} ; `:''}dépenses prévues ${fmt(depP)} (${fmt(dep/el)} par jour × ${reste} jours restants) ${U()}.`;
+      return stat("Taux d'épargne",`${reel} · <span style="color:var(--jm)" title="${esc(det)}">${pc(tp)}</span>`,`réel · <span style="color:var(--jm)">prévisionnel</span>`)}}
+  return stat("Taux d'épargne",reel,rev>0?'revenus courants − dépenses courantes':'pas encore de revenu courant ce mois');
 }
 function medianeJours(items,n){
   if(n<1)return null;const j=new Array(n).fill(0);

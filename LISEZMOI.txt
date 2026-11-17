@@ -40,6 +40,10 @@ Variantes :
 2. LES RUBRIQUES
 ----------------
   - La barre des rubriques reste en haut de l'écran quand on fait défiler.
+    Toucher une rubrique (Mes finances, Engins, House, Données et réglages,
+    Saisir) l'ouvre toujours en haut de la page. Dans Données et réglages,
+    toucher un onglet (Postes et libellés, Comptes et biens…) amène
+    directement à son contenu.
     Le bouton retour du téléphone ramène à la rubrique, à la vue ou à
     l'onglet précédents (et ferme d'abord une fenêtre ouverte) ; seul le
     premier écran fait sortir de Daftar.
@@ -289,8 +293,8 @@ le montant enregistré reste positif. Un solde noté peut être négatif
 (découvert, compte d'un tiers avancé de votre poche).
 
 Clavier Daftar (téléphone) : toucher un champ de montant ouvre un clavier
-propre à l'application, avec les chiffres, la virgule, le signe −, « 00 » et
-« 000 ». « ⌨ Clavier du téléphone » revient au clavier habituel pour ce
+propre à l'application, avec les chiffres (1 2 3 en haut, comme sur un
+téléphone), la virgule, le signe −, « 00 » et « 000 ». « ⌨ Clavier du téléphone » revient au clavier habituel pour ce
 champ ; « OK » ferme. Actif par défaut sur écran tactile ; à couper dans
 Données et réglages › Saisie (réglage propre à chaque appareil).
 
@@ -476,7 +480,7 @@ il agit toujours sur l'installation réelle. Avant tout retrait, il recopie
 une dernière fois les données dans la copie miroir (disque branché). Il
 ne supprime jamais le dossier d'origine.
 
-Contenu : serveur.py (Daftar Ousnou 1.4.5, Python, bibliothèque standard), app/index.html,
+Contenu : serveur.py (Daftar Ousnou 1.4.6, Python, bibliothèque standard), app/index.html,
 app/moteur.js et app/mode.js (version autonome), app/releve.js et
 app/pdf.min.js + app/pdf.worker.min.js (pdf.js 3.11.174, Mozilla, licence
 Apache 2.0 : app/LICENCE-pdfjs.txt ; lecture des relevés), app/sw.js et

@@ -909,9 +909,9 @@ body.avec-clavier{padding-bottom:290px}
 <div id="clavier" class="clavier" hidden role="group" aria-label="Clavier des montants">
   <div class="clav-h"><button type="button" class="linkbtn" data-c="tel">⌨ Clavier du téléphone</button><span class="hint" id="clavApercu" aria-live="polite"></span></div>
   <div class="clav-g">
-    <button type="button" data-c="7">7</button><button type="button" data-c="8">8</button><button type="button" data-c="9">9</button><button type="button" data-c="del" aria-label="Effacer">⌫</button>
+    <button type="button" data-c="1">1</button><button type="button" data-c="2">2</button><button type="button" data-c="3">3</button><button type="button" data-c="del" aria-label="Effacer">⌫</button>
     <button type="button" data-c="4">4</button><button type="button" data-c="5">5</button><button type="button" data-c="6">6</button><button type="button" data-c="moins" aria-label="Signe moins">−</button>
-    <button type="button" data-c="1">1</button><button type="button" data-c="2">2</button><button type="button" data-c="3">3</button><button type="button" data-c="," aria-label="Virgule">,</button>
+    <button type="button" data-c="7">7</button><button type="button" data-c="8">8</button><button type="button" data-c="9">9</button><button type="button" data-c="," aria-label="Virgule">,</button>
     <button type="button" data-c="00">00</button><button type="button" data-c="0">0</button><button type="button" data-c="000">000</button><button type="button" data-c="ok" class="clav-ok">OK</button>
   </div>
 </div>
@@ -966,7 +966,7 @@ function setProgrammees(l){PROGS=(Array.isArray(l)?l:[]).map(x=>({...x,ignorees:
 const PERIODES={1:'chaque mois',2:'tous les 2 mois',3:'chaque trimestre',6:'chaque semestre',12:'chaque année'};
 const TYPES_EVT={mariage:'Mariage',bapteme:'Baptême',circoncision:'Circoncision',funerailles:'Funérailles',fete:'Fête','voyage-tourisme':'Voyage (tourisme)','voyage-mission':'Voyage (mission)','voyage-vacances':'Voyage (vacances)',sante:'Santé',projet:'Projet',autre:'Autre'};
 /* Nature d'une opération : s = sens sur le compte (+1 entrée, −1 sortie, 0 virement) */
-const VERSION_APP='Ousnou 1.4.5';   // nom et numéro de version (même valeur que VERSION / VERSION_NOM dans serveur.py)
+const VERSION_APP='Ousnou 1.4.6';   // nom et numéro de version (même valeur que VERSION / VERSION_NOM dans serveur.py)
 const NAT={depense:{l:'Dépense',s:-1},revenu:{l:'Revenu',s:1},virement:{l:'Virement',s:0},pret:{l:'Prêt accordé',s:-1},remboursement:{l:'Remboursement reçu',s:1},investissement:{l:'Investissement',s:-1}};
 const TYPES_CPT={especes:'Espèces',courant:'Compte courant',epargne:'Épargne',carte:'Carte prépayée',mobile:'Mobile money',tiers:"Compte d'un tiers"};
 const MOTS_REVENU=['salaire','salary','prime','revenu','interet','honoraire','indemnite','bourse','vacation','perdiem','per diem','prodes','frais de mission','consultance','jury','soutenance','seminaire','atelier'];
@@ -1636,11 +1636,13 @@ $('vMois').onclick=()=>{view='mois';shown=80;render()};
 $('vAn').onclick=()=>{view='annee';shown=80;render()};
 $('vPat').onclick=()=>{view='patrimoine';shown=80;render()};
 $('vStats').onclick=()=>{view='stats';render();window.scrollTo({top:0,behavior:doux()})};
-$('aSaisir').onclick=()=>{navEtape(()=>{retourVue=null;saisieSeule=true;view='donnees';showTab('tOne');render()});$('fAmt').focus()};
-$('aFin').onclick=()=>{view=vueFin;render()};
-$('aVeh').onclick=()=>{view='vehicule';render()};
-$('aMai').onclick=()=>{view='maison';render()};
-$('aDon').onclick=()=>{retourVue=null;saisieSeule=false;view='donnees';render()};
+$('aSaisir').onclick=()=>{navEtape(()=>{retourVue=null;saisieSeule=true;view='donnees';showTab('tOne');render()});window.scrollTo({top:0,behavior:'instant'});$('fAmt').focus({preventScroll:true})};
+// une rubrique s'ouvre toujours en haut de la page (la barre figée la laisse toucher depuis n'importe où)
+const enHaut=()=>window.scrollTo({top:0,behavior:'instant'});
+$('aFin').onclick=()=>{view=vueFin;render();enHaut()};
+$('aVeh').onclick=()=>{view='vehicule';render();enHaut()};
+$('aMai').onclick=()=>{view='maison';render();enHaut()};
+$('aDon').onclick=()=>{retourVue=null;saisieSeule=false;view='donnees';render();enHaut()};
 function openMonth(ev){const t=ev.target.closest('[data-m]');if(!t)return;cur.m=+t.dataset.m;view='mois';render();window.scrollTo({top:0,behavior:doux()})}
 $('chart').addEventListener('click',openMonth);$('yearTbl').addEventListener('click',openMonth);
 $('accFermer').onclick=()=>{memo('appya-accueil-vu','1');render()};
@@ -1980,7 +1982,9 @@ document.querySelector('.tabs').addEventListener('keydown',ev=>{
   const i=tabs.findIndex(([t])=>t===ev.target.id);if(i<0)return;
   const j={ArrowRight:i+1,ArrowLeft:i-1,Home:0,End:tabs.length-1}[ev.key];if(j===undefined)return;
   ev.preventDefault();showTab(tabs[(j+tabs.length)%tabs.length][0],true)});
-tabs.forEach(([t])=>$(t).onclick=()=>{if(t==='tSav')renderHistorique();if(t==='tEvt'&&!evtDirty)openEvt();if(t==='tProg'&&!progDirty)openProg();if(t==='tRel')initReleve();showTab(t)});showTab('tOne');
+tabs.forEach(([t])=>$(t).onclick=()=>{if(t==='tSav')renderHistorique();if(t==='tEvt'&&!evtDirty)openEvt();if(t==='tProg'&&!progDirty)openProg();if(t==='tRel')initReleve();showTab(t);
+  // amener le contenu de l'onglet touché sous la barre figée (scroll-padding-top), sans attendre l'animation
+  const p=tabs.find(x=>x[0]===t)[1];$(p).scrollIntoView({block:'start',behavior:'instant'})});showTab('tOne');
 /* modifications non enregistrées : point orange sur l'onglet et bouton « Enregistrer » mis en évidence ; avertissement si on ferme la page */
 const BROUILLONS=[['tPostes',()=>dirty,['savePostes']],['tCB',()=>cbDirty,['saveCpt','saveBien']],['tEvt',()=>evtDirty,['evtSave','revSave']],['tProg',()=>progDirty,['progSave']],['tPar',()=>devDirty,['saveDev']]];
 function majBrouillons(){BROUILLONS.forEach(([t,d,bs])=>{const on=!!d();$(t).classList.toggle('brouillon',on);$(t).title=on?'Modifications non enregistrées':'';bs.forEach(b=>$(b).classList.toggle('brouillon',on))})}
@@ -2007,19 +2011,21 @@ majSaisie();
 /* clavier Daftar des montants : remplace le clavier du téléphone (qui n'a pas toujours le signe −) dans les champs de montant ;
    chiffres, virgule, signe −, 00 et 000. Réglage par appareil (Données et réglages › Saisie), actif par défaut sur écran tactile. */
 let CLAVIER=(()=>{try{const v=localStorage.getItem('daftar-clavier');if(v!==null)return v==='1'}catch(e){}return matchMedia('(pointer:coarse)').matches})();
-let clavCible=null;
+let clavCible=null,clavTel=null;
 const champClav=el=>!!el&&el.tagName==='INPUT'&&(el.getAttribute('inputmode')==='decimal'||el.dataset.clav==='1')&&!el.closest('dialog')&&!el.disabled&&!el.readOnly;
 function clavApercu(){const el=clavCible;$('clavApercu').textContent=el?(el.getAttribute('aria-label')||(el.labels&&el.labels[0]?el.labels[0].textContent:'')||'').trim():''}
 function clavOuvrir(el){clavCible=el;el.dataset.clav='1';el.setAttribute('inputmode','none');$('clavier').hidden=false;document.body.classList.add('avec-clavier');clavApercu();
   setTimeout(()=>el.scrollIntoView({block:'center',behavior:doux()}),50)}
 function clavFermer(){const el=clavCible;clavCible=null;$('clavier').hidden=true;document.body.classList.remove('avec-clavier');if(el)el.setAttribute('inputmode','decimal')}
 document.addEventListener('focusin',ev=>{const el=ev.target;if(CLAVIER&&champClav(el)&&el.dataset.telephone!=='1')clavOuvrir(el);else if(clavCible&&el!==clavCible)clavFermer()});
-document.addEventListener('focusout',ev=>{const el=ev.target;if(el.dataset&&el.dataset.telephone==='1'){delete el.dataset.telephone}
+document.addEventListener('focusout',ev=>{const el=ev.target;if(el!==clavTel&&el.dataset&&el.dataset.telephone==='1'){delete el.dataset.telephone}
   setTimeout(()=>{if(clavCible&&document.activeElement!==clavCible)clavFermer()},0)});
 $('clavier').addEventListener('pointerdown',ev=>{if(ev.target.closest('button'))ev.preventDefault()});   // garde le curseur dans le champ
 $('clavier').addEventListener('click',ev=>{const b=ev.target.closest('[data-c]'),el=clavCible;if(!b||!el)return;const c=b.dataset.c;
   if(c==='ok'){el.blur();clavFermer();return}
-  if(c==='tel'){el.dataset.telephone='1';clavFermer();el.blur();setTimeout(()=>el.focus(),0);return}
+  /* clavier du téléphone pour ce champ : on le quitte puis on y revient DANS le même toucher (sinon Android n'ouvre pas son
+     clavier) ; clavTel empêche la sortie du champ d'effacer la marque « telephone » (avant 1.4.6, le clavier Daftar revenait) */
+  if(c==='tel'){el.dataset.telephone='1';clavTel=el;clavFermer();el.blur();el.focus({preventScroll:true});clavTel=null;return}
   let a=el.selectionStart??el.value.length,z=el.selectionEnd??a;
   if(c==='del'){if(a===z&&a>0)a--;el.setRangeText('',a,z,'end')}
   else if(c==='moins'){const neg=/^\s*[-−]/.test(el.value);el.value=neg?el.value.replace(/^\s*[-−]\s*/,''):'-'+el.value;const p=el.value.length;el.setSelectionRange(p,p)}

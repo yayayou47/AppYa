@@ -1415,7 +1415,10 @@ function renderVue(){
   if(isD){openVidange();openProjet();return}
   if(!tableau){if(isS)renderStats();return}
   const items=sorted(isP?all.filter(e=>perso(e)||(filtre&&filtre==='c:'+e.compte)):isM?monthItems(cur.y,cur.m):yearItems(cur.y));   // Patrimoine : opérations des tiers seulement sur leur compte
-  const F=flux(items);const total=F.dep;
+  /* indicateurs (résumé, postes) : seulement les opérations à partir du début du suivi quotidien (DEBUT_SUIVI, 02/10/2026) ;
+     avant, seules les dépenses du véhicule étaient notées : non significatif (demande du 2026-11-17). Le journal garde tout. */
+  const suivi=e=>!DEBUT_SUIVI||e.date>=DEBUT_SUIVI,itemsI=isP?items:items.filter(suivi);
+  const F=flux(itemsI);const total=F.dep;
 
   /* résumé */
   const stat=(l,v,s,big,col)=>`<div class="stat"><span class="label">${l}</span><span class="${big?'big':'v'}"${col?` style="color:${col}"`:''}>${v}</span><span class="s">${s}</span></div>`;
@@ -1433,26 +1436,30 @@ function renderVue(){
     const elapsed=isCur?now.getDate():days;
     const pm=cur.m===0?{y:cur.y-1,m:11}:{y:cur.y,m:cur.m-1};
     // mois en cours : on compare à la même période du mois précédent (1er → même jour)
-    const prevTot=sum(deps(monthItems(pm.y,pm.m).filter(e=>!isCur||+e.date.slice(8,10)<=elapsed)));
+    const prevTot=sum(deps(monthItems(pm.y,pm.m).filter(e=>suivi(e)&&(!isCur||+e.date.slice(8,10)<=elapsed))));
     const pmName=new Date(pm.y,pm.m,1).toLocaleDateString('fr-FR',{month:'long'});
     let delta='—',dcol='';
     if(prevTot>0){const d=(total-prevTot)/prevTot*100;delta=(d>=0?'+':'')+fmt1(d)+' %';dcol=d>0?'var(--warn)':'var(--ok)'}
     const btot=Object.values(budgets).reduce((a,b)=>a+b,0);
-    const mdj=medianeJours(items,elapsed);
+    // mois du début du suivi : les jours comptent à partir de ce jour-là (le 1er octobre 2026 n'était pas suivi)
+    const j0=DEBUT_SUIVI&&DEBUT_SUIVI.slice(0,7)===`${cur.y}-${pad(cur.m+1)}`?+DEBUT_SUIVI.slice(8,10):1,nj=Math.max(1,elapsed-j0+1);
+    const mdj=medianeJours(items,elapsed,j0);
     const partiel=DEBUT_SUIVI&&iso(new Date(cur.y,cur.m+1,0))<DEBUT_SUIVI?`<div class="partiel">Suivi partiel : avant le ${dmy(DEBUT_SUIVI)}, seules les dépenses du véhicule (reprises de son carnet) sont notées.</div>`:'';
-    $('hero').innerHTML=partiel+stat('Dépenses courantes du mois',fmtM(total),`${U()}${btot?` · budget ${fmtM(btot)}`:''} · ${deps(items).length} lignes`,true)+
-      stat('Moyenne par jour',`${fmtM(total/elapsed)} <span class="sd" title="Médiane des dépenses journalières : un jour sur deux, on dépense moins (jours sans dépense comptés à 0)"><span aria-hidden="true">(médiane ${mdj===null?'—':fmtM(mdj)})</span><span class="sr">, médiane ${mdj===null?'non calculable':fmtM(mdj)+' '+U()}</span></span>`,`${U()} sur ${elapsed} jours`)+
+    if(partiel){$('hero').innerHTML=`<div class="partiel">Mois antérieur au suivi quotidien (commencé le ${dmy(DEBUT_SUIVI)}) : seules les dépenses du véhicule y sont notées, d'où aucun indicateur. Le journal ci-dessous les montre.</div>`}
+    else $('hero').innerHTML=stat('Dépenses courantes du mois',fmtM(total),`${U()}${btot?` · budget ${fmtM(btot)}`:''} · ${deps(items).length} lignes`,true)+
+      stat('Moyenne par jour',`${fmtM(total/nj)} <span class="sd" title="Médiane des dépenses journalières : un jour sur deux, on dépense moins (jours sans dépense comptés à 0)"><span aria-hidden="true">(médiane ${mdj===null?'—':fmtM(mdj)})</span><span class="sr">, médiane ${mdj===null?'non calculable':fmtM(mdj)+' '+U()}</span></span>`,`${U()} sur ${nj} jours${j0>1?` (depuis le ${j0})`:""}`)+
       stat(`Vs ${isCur?'même période':'mois précédent'}`,delta,prevTot?`${fmtM(prevTot)} ${U()} ${isCur?`(1–${elapsed} ${pmName})`:`en ${pmName}`}`:'pas de données',false,dcol)+
-      statEpargne(items,total,isCur,elapsed,days,stat)+stat('Entrées courantes',fmtM(F.ent),`${U()} · revenus courants et remboursements`)+(F.exc||F.entX?stat('Exceptionnel',fmtM(F.exc),`${U()} dépensés (événements)${F.entX?` · ${fmtM(F.entX)} reçus (ponctuels)`:''}`):'')+
+      statEpargne(items,total,isCur,elapsed,days,stat,nj)+stat('Entrées courantes',fmtM(F.ent),`${U()} · revenus courants et remboursements`)+(F.exc||F.entX?stat('Exceptionnel',fmtM(F.exc),`${U()} dépensés (événements)${F.entX?` · ${fmtM(F.entX)} reçus (ponctuels)`:''}`):'')+
       stat('Investi et prêté',fmtM(F.inv+F.pre),`${U()} · investi ${fmtM(F.inv)} · prêté ${fmtM(F.pre)}`)+
       stat('Solde du mois',sgnM(F.net),`${U()} · toutes entrées − toutes sorties`,false,fluxCol)+semaines(items,days,isCur?now.getDate():0);
   }else{
-    const months=[...Array(12)].map((_,i)=>sum(deps(monthItems(cur.y,i))));
+    const months=[...Array(12)].map((_,i)=>sum(deps(monthItems(cur.y,i).filter(suivi))));
     const used=months.filter(v=>v>0).length;const mx=Math.max(...months),mi=months.indexOf(mx);
-    const partielA=DEBUT_SUIVI&&`${cur.y}-01-01`<DEBUT_SUIVI?`<div class="partiel">Suivi partiel : avant le ${dmy(DEBUT_SUIVI)}, seules les dépenses du véhicule sont notées.</div>`:'';
-    $('hero').innerHTML=partielA+stat(`Dépenses courantes ${cur.y}`,fmtM(total),U(),true)+
+    const partielA=DEBUT_SUIVI&&`${cur.y}-01-01`<DEBUT_SUIVI?`<div class="partiel">Suivi partiel : avant le ${dmy(DEBUT_SUIVI)}, seules les dépenses du véhicule sont notées ; les indicateurs ne comptent qu'à partir de cette date.</div>`:'';
+    if(DEBUT_SUIVI&&`${cur.y}-12-31`<DEBUT_SUIVI)$('hero').innerHTML=`<div class="partiel">Année antérieure au suivi quotidien (commencé le ${dmy(DEBUT_SUIVI)}) : seules les dépenses du véhicule y sont notées, d'où aucun indicateur. Le journal ci-dessous les montre.</div>`;
+    else $('hero').innerHTML=partielA+stat(`Dépenses courantes ${cur.y}`,fmtM(total),U(),true)+
       stat('Moyenne mensuelle',used?fmtM(total/used):'—',`sur ${used} mois saisis`)+
-      stat('Mois le plus cher',mx?fmtM(mx):'—',mx?new Date(cur.y,mi,1).toLocaleDateString('fr-FR',{month:'long'}):'')+
+      stat('Mois le plus cher',mx?fmtM(mx):'—',mx?new Date(cur.y,mi,1).toLocaleDateString('fr-FR',{month:'long'}):'')+statEpargneAn(itemsI,total,stat)+
       stat('Entrées courantes',fmtM(F.ent),`${U()} · revenus courants et remboursements`)+(F.exc||F.entX?stat('Exceptionnel',fmtM(F.exc),`${U()} dépensés (événements)${F.entX?` · ${fmtM(F.entX)} reçus (ponctuels)`:''}`):'')+
       stat('Investi et prêté',fmtM(F.inv+F.pre),`${U()} · investi ${fmtM(F.inv)} · prêté ${fmtM(F.pre)}`)+
       stat("Solde de l'année",sgnM(F.net),`${U()} · toutes entrées − toutes sorties`,false,fluxCol);
@@ -1460,7 +1467,7 @@ function renderVue(){
 
   if(!isP){
     /* postes */
-    const bc=byCat(items);const cats=Object.entries(bc).sort((a,b)=>b[1]-a[1]);
+    const bc=byCat(itemsI);const cats=Object.entries(bc).sort((a,b)=>b[1]-a[1]);
     if(isM)Object.keys(budgets).forEach(k=>{if(!bc[k]&&CAT[k])cats.push([k,0])});
     const scale=Math.max(1,...cats.map(([k,v])=>Math.max(v,isM?(budgets[k]||0):0)));
     const fk=filtre.startsWith('k:')?filtre.slice(2):null;
@@ -1528,28 +1535,42 @@ function revenuAttendu(y,m){
   const tot=o=>Object.values(o).reduce((a,b)=>a+b,0),recu=revCourMois(y,m),M3=moisPrecedents(y,m,3);if(!M3.length)return null;
   const R3=M3.map(p=>revCourMois(p.y,p.m)),manque=[];let t=tot(recu),fixe=false;
   for(const c of Object.keys(R3[0]))if(R3.every(x=>x[c]>0)){fixe=true;const v=R3[0][c];if((recu[c]||0)<v){t+=v-(recu[c]||0);manque.push({c,v})}}
-  if(fixe)return {total:t,mode:'fixe',manque};
+  if(fixe)return {total:t,mode:'fixe',manque,mensuel:Object.keys(R3[0]).filter(c=>R3.every(x=>x[c]>0)).reduce((a,c)=>a+R3[0][c],0)};
   const M12=moisPrecedents(y,m,12),moy=M12.reduce((a,p)=>a+tot(revCourMois(p.y,p.m)),0)/M12.length;
-  return {total:Math.max(t,moy),mode:'moyenne',moy,n:M12.length,manque:t<moy?[{c:'',v:moy-t}]:[]};
+  return {total:Math.max(t,moy),mode:'moyenne',moy,n:M12.length,mensuel:moy,manque:t<moy?[{c:'',v:moy-t}]:[]};
 }
 /* Prévisionnel (mois en cours) = (revenu attendu − dépenses prévues) / revenu attendu ; dépenses prévues = dépenses à ce
    jour + moyenne par jour × jours restants (même projection que la vue Statistiques). */
-function statEpargne(items,dep,isCur,el,days,stat){
+function statEpargne(items,dep,isCur,el,days,stat,nj=el){
   const rev=sum(items.filter(e=>e.nature==='revenu'&&!estExc(e))),te=rev>0?(rev-dep)/rev:null,pc=x=>fmt1(x*100)+' %';
   const reel=`<span${te!==null&&te<0?' style="color:var(--warn)"':''}>${te===null?'—':pc(te)}</span>`;
   if(isCur&&el<days){
-    const A=revenuAttendu(cur.y,cur.m),R=A?A.total:rev,reste=days-el,depP=dep+dep/el*reste;
+    const A=revenuAttendu(cur.y,cur.m),R=A?A.total:rev,reste=days-el,depP=dep+dep/nj*reste;
     if(R>0){const tp=(R-depP)/R;
       // seuls les taux sont affichés (demande de l'utilisateur) ; le détail du calcul reste dans la bulle (title)
       const quoi=!A||!A.manque.length?'':A.mode==='fixe'?A.manque.map(x=>`${(REV[x.c]||{label:x.c}).label.toLowerCase()} ${fmt(x.v)}`).join(' + '):`revenu moyen ${fmt(A.moy)} (${A.n} mois)`,
-        det=`Prévisionnel de fin de mois : ${quoi?`revenus attendus : ${quoi} ; `:''}dépenses prévues ${fmt(depP)} (${fmt(dep/el)} par jour × ${reste} jours restants) ${U()}.`;
+        det=`Prévisionnel de fin de mois : ${quoi?`revenus attendus : ${quoi} ; `:''}dépenses prévues ${fmt(depP)} (${fmt(dep/nj)} par jour × ${reste} jours restants) ${U()}.`;
       return stat("Taux d'épargne",`${reel} · <span style="color:var(--jm)" title="${esc(det)}">${pc(tp)}</span>`,`réel · <span style="color:var(--jm)">prévisionnel</span>`)}}
   return stat("Taux d'épargne",reel,rev>0?'revenus courants − dépenses courantes':'pas encore de revenu courant ce mois');
 }
-function medianeJours(items,n){
-  if(n<1)return null;const j=new Array(n).fill(0);
-  deps(items).forEach(e=>{const d=+e.date.slice(8,10);if(d>=1&&d<=n)j[d-1]+=e.montant});
-  j.sort((a,b)=>a-b);return n%2?j[(n-1)/2]:(j[n/2-1]+j[n/2])/2;
+/* Taux d'épargne de l'année (sur la période suivie). Prévisionnel (année en cours) : revenus = reçus + ce qui manque ce mois
+   + revenu mensuel attendu × mois restants ; dépenses = à ce jour + moyenne par jour suivi × jours restants de l'année. */
+function statEpargneAn(itemsI,dep,stat){
+  const rev=sum(itemsI.filter(e=>e.nature==='revenu'&&!estExc(e))),te=rev>0?(rev-dep)/rev:null,pc=x=>fmt1(x*100)+' %';
+  const reel=`<span${te!==null&&te<0?' style="color:var(--warn)"':''}>${te===null?'—':pc(te)}</span>`;
+  if(cur.y===now.getFullYear()){
+    const d0=DEBUT_SUIVI&&DEBUT_SUIVI>`${cur.y}-01-01`?DEBUT_SUIVI:`${cur.y}-01-01`,js=d0<=today?nbJ(d0,today):0,jr=nbJ(today,`${cur.y}-12-31`)-1;
+    const A=revenuAttendu(cur.y,now.getMonth());
+    if(js>0&&A){const manque=A.manque.reduce((a,x)=>a+x.v,0),mr=11-now.getMonth(),revP=rev+manque+A.mensuel*mr,depP=dep+dep/js*jr;
+      if(revP>0){const tp=(revP-depP)/revP,
+        det=`Prévisionnel de fin d'année : revenus ${fmt(revP)} (reçus ${fmt(rev)} + attendus ce mois ${fmt(manque)} + ${fmt(A.mensuel)} × ${mr} mois) ; dépenses ${fmt(depP)} (${fmt(dep/js)} par jour suivi × ${jr} jours restants) ${U()}.`;
+        return stat("Taux d'épargne",`${reel} · <span style="color:var(--jm)" title="${esc(det)}">${pc(tp)}</span>`,`réel · <span style="color:var(--jm)">prévisionnel</span>`)}}}
+  return stat("Taux d'épargne",reel,rev>0?'revenus courants − dépenses courantes':'pas de revenu courant noté');
+}
+function medianeJours(items,n,j0=1){
+  const k=n-j0+1;if(k<1)return null;const j=new Array(k).fill(0);
+  deps(items).forEach(e=>{const d=+e.date.slice(8,10);if(d>=j0&&d<=n)j[d-j0]+=e.montant});
+  j.sort((a,b)=>a-b);return k%2?j[(k-1)/2]:(j[k/2-1]+j[k/2])/2;
 }
 function semaines(items,days,jour){
   const w=[0,0,0,0,0];deps(items).forEach(e=>{const d=+e.date.slice(8,10);w[Math.min(4,Math.floor((d-1)/7))]+=e.montant});

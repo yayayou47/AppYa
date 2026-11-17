@@ -197,7 +197,11 @@ d'accueil »). Daftar s'ouvre alors comme une application, même sans réseau.
     internet, Tailscale actif, ordinateur allumé).
   - La synchronisation est automatique (ouverture, retour du réseau, toutes
     les 2 minutes) ; le bouton en haut (« ✓ À jour », « 3 en attente »,
-    « Hors ligne ») la lance tout de suite.
+    « Hors ligne ») la lance tout de suite. Ces vérifications automatiques se
+    font en silence : le bouton garde « ✓ À jour » ; « Synchronisation… »
+    ne s'affiche que s'il y a des saisies à envoyer ou quand on touche le
+    bouton. Si l'ordinateur ne répond pas dans les 20 secondes, le bouton
+    passe à « Hors ligne » au lieu de rester bloqué.
   - Une ligne modifiée des deux côtés : la modification la plus récente gagne
     et un message le signale. Une ligne refusée par l'ordinateur (montant
     nul…) reste dans le téléphone, signalée « refusée », à corriger.
@@ -472,7 +476,7 @@ il agit toujours sur l'installation réelle. Avant tout retrait, il recopie
 une dernière fois les données dans la copie miroir (disque branché). Il
 ne supprime jamais le dossier d'origine.
 
-Contenu : serveur.py (Daftar Ousnou 1.4.4, Python, bibliothèque standard), app/index.html,
+Contenu : serveur.py (Daftar Ousnou 1.4.5, Python, bibliothèque standard), app/index.html,
 app/moteur.js et app/mode.js (version autonome), app/releve.js et
 app/pdf.min.js + app/pdf.worker.min.js (pdf.js 3.11.174, Mozilla, licence
 Apache 2.0 : app/LICENCE-pdfjs.txt ; lecture des relevés), app/sw.js et

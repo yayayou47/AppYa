@@ -365,9 +365,7 @@ maison »).
     petit graphique des dépenses par semaine (semaine en cours en évidence) ;
     répartition des dépenses par poste ; journal.
   - Vue Mois, aussi : jours sans dépense ; plus grosse journée (montant,
-    date, part du mois) ; pour le mois en cours, « Reste à dépenser » par
-    jour jusqu'à la fin du mois sans dépasser le budget total (ou, sans
-    budget, les revenus courants attendus du mois).
+    date, part du mois).
   - Vue Patrimoine, aussi : « Mois d'autonomie » (vos comptes divisés par
     vos dépenses courantes mensuelles moyennes : combien de mois vous
     tiendriez sans revenu) et « Non saisi » (somme des écarts de vos soldes

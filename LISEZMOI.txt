@@ -404,7 +404,14 @@ maison »).
     projection, dépenses et entrées par mois, histogramme des dépenses par jour,
     moyenne par jour de la semaine, libellés les plus coûteux, composition du
     patrimoine, puis conclusions et perspectives. Chaque graphique a un
-    « Voir les données ». Comme les vues Mois et Année, les Statistiques ne
+    « Voir les données ». Les alertes tiennent dans une seule carte (une
+    ligne par type). « Bilan de la période » : revenus et dépenses cumulés
+    (et par mois dès 4 semaines), épargne nette, mis de côté (virements vers
+    l'épargne), investissements (et total investi dans vos biens), biens
+    acquis, prêts et remboursements, solde des opérations. Le graphique
+    « Cumuls sur la période » additionne jour après jour revenus, dépenses
+    et investissements : choisir « Tout » pour suivre le long terme.
+    Comme les vues Mois et Année, les Statistiques ne
     comptent que les jours suivis (depuis le 02/10/2026). Les conclusions
     donnent la moyenne ET la médiane par jour, le taux d'épargne de la
     période, et les postes en nette hausse ou en baisse par rapport à la

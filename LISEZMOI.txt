@@ -501,12 +501,13 @@ il agit toujours sur l'installation réelle. Avant tout retrait, il recopie
 une dernière fois les données dans la copie miroir (disque branché). Il
 ne supprime jamais le dossier d'origine.
 
-Contenu : serveur.py (Daftar Ousnou 1.4.7, Python, bibliothèque standard), app/index.html,
+Contenu : serveur.py (Daftar Ousnou 1.4.8, Python, bibliothèque standard), app/index.html,
 app/moteur.js et app/mode.js (version autonome), app/releve.js et
 app/pdf.min.js + app/pdf.worker.min.js (pdf.js 3.11.174, Mozilla, licence
 Apache 2.0 : app/LICENCE-pdfjs.txt ; lecture des relevés), app/sw.js et
 app/manifest.webmanifest (téléphone), app/xlsx.full.min.js
 (SheetJS 0.18.5, licence Apache 2.0), appya (la commande daftar), installer.sh, desinstaller.sh,
+outils/logo.py (dessine le logo et produit toutes ses images ; nécessite Google Chrome),
 donnees/ (copie miroir de vos données, voir la partie 7).
 Code de Daftar sous licence MIT (fichier LICENSE).
 

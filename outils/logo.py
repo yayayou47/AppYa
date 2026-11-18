@@ -2,10 +2,10 @@
 """Logo Daftar (monogramme D) : produit les SVG et, avec Chrome sans interface, toutes les images PNG.
 
 Dessin (unités 0–64, centre 32,32) :
-  - D doré : fût de x 12 à 25, panse de rayon 22 (y 10 → 54) ; creux : rayon 12 (y 20 → 44).
+  - D doré d'épaisseur égale (10) : fût de x 12 à 22, panse de rayon 22 (y 10 → 54) ; creux : rayon 12 (y 20 → 44).
   - deux barres du $, dorées elles aussi (demande du 2026-11-18), au MILIEU de la lettre : elles la traversent sans
     apparaître dans le creux ; on n'en voit que les bouts arrondis qui dépassent d'environ 5 en haut et en bas.
-  - livre ouvert crème dans le creux, chaque page portant des chiffres (style afficheur) en bleu.
+  - livre ouvert crème centré dans le creux, reliure marquée d'un trait discret, chiffres (style afficheur) en bleu.
 Le tout est mis à l'échelle s autour du centre selon l'usage (icône arrondie, icône masquable, avant-plan Android…).
 
 Usage : python3 outils/logo.py    (réécrit app/daftar.svg, assets/*.svg, les PNG de app/ et assets/)
@@ -32,21 +32,37 @@ def chiffres(texte, x, y, l=1.5, h=2.6, pas=2.2):
     return ''.join(d)
 
 
+def page(x0, haut, l, h, gauche):
+    """Une page du livre ouvert : bord supérieur et inférieur bombés, plus hauts côté reliure."""
+    k = l / 5.9
+    if gauche:
+        return (f'M{x0:.2f} {haut}c{2.1*k:.2f}-{1.2*k:.2f} {4.3*k:.2f}-{1.2*k:.2f} {l:.2f} 0v{h}'
+                f'c-{1.6*k:.2f}-{1.05*k:.2f}-{3.8*k:.2f}-{1.05*k:.2f}-{l:.2f} 0z')
+    return (f'M{x0:.2f} {haut}c{1.6*k:.2f}-{1.2*k:.2f} {3.8*k:.2f}-{1.2*k:.2f} {l:.2f} 0v{h}'
+            f'c-{2.1*k:.2f}-{1.05*k:.2f}-{4.3*k:.2f}-{1.05*k:.2f}-{l:.2f} 0z')
+
+
 def monogramme():
-    """Le D, ses barres et le livre, en unités 0–64 (sans fond)."""
+    """Le D, ses barres et le livre, en unités 0–64 (sans fond).
+    Épaisseur égale partout (demande du 2026-11-18) : fût x 12–22 = 10, panse 22 − 12 = 10. Creux x 22–42, centré sur 32."""
     d = ('M12 10h18a22 22 0 0 1 0 44H12z'          # contour du D
-         'M25 20h5a12 12 0 0 1 0 24h-5z')           # creux
+         'M22 20h8a12 12 0 0 1 0 24h-8z')           # creux
     # barres au milieu de la lettre (x 28–31 et 33–36, centre 32) : elles « traversent » le D de haut en bas, mais seuls
     # leurs bouts, au-dessus et au-dessous, se voient ; dans le creux elles sont interrompues (deux morceaux par barre,
     # qui s'arrêtent dans l'épaisseur dorée du haut et du bas).
     barres = ''.join(f'<rect x="{x}" y="{y}" width="3" height="10" rx="1.5"/>' for x in (28, 33) for y in (5, 49))
-    pages = ('M27.4 26c2.1-1.2 4.3-1.2 5.9 0v12.2c-1.6-1.05-3.8-1.05-5.9 0z'
-             'M33.3 26c1.6-1.2 3.8-1.2 5.9 0v12.2c-2.1-1.05-4.3-1.05-5.9 0z')
-    num = (chiffres('12', 28.5, 28.2) + chiffres('34', 28.5, 32.6) +
-           chiffres('56', 34.4, 28.2) + chiffres('78', 34.4, 32.6))
+    # livre ouvert centré sur x 32 (axe des barres), pages de 6,6 × 13
+    cx, l, haut, h = 32, 6.6, 25.6, 13
+    pages = page(cx - l, haut, l, h, True) + page(cx, haut, l, h, False)
+    # reliure : séparation discrète au centre (trait beige un peu plus foncé que la page)
+    reliure = f'M{cx} {haut - .5}V{haut + h - .4}'
+    dx = (l - 3.7) / 2
+    num = (chiffres('12', cx - l + dx, haut + 2.4) + chiffres('34', cx - l + dx, haut + 7) +
+           chiffres('56', cx + dx, haut + 2.4) + chiffres('78', cx + dx, haut + 7))
     return (f'<path fill-rule="evenodd" fill="{OR}" d="{d}"/>'
             f'<g fill="{OR}">{barres}</g>'
             f'<path fill="{CREME}" d="{pages}"/>'
+            f'<path fill="none" stroke="#c9bfa8" stroke-width=".45" stroke-linecap="round" d="{reliure}"/>'
             f'<path fill="none" stroke="{BLEU}" stroke-width=".42" stroke-linecap="round" stroke-linejoin="round" d="{num}"/>')
 
 

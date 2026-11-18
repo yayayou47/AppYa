@@ -5,7 +5,8 @@ Dessin (unités 0–64, centre 32,32) :
   - D doré d'épaisseur égale (10) : fût de x 12 à 22, panse de rayon 22 (y 10 → 54) ; creux : rayon 12 (y 20 → 44).
   - deux barres du $, dorées elles aussi (demande du 2026-11-18), au MILIEU de la lettre : elles la traversent sans
     apparaître dans le creux ; on n'en voit que les bouts arrondis qui dépassent d'environ 5 en haut et en bas.
-  - livre ouvert crème centré dans le creux, reliure marquée d'un trait discret, chiffres (style afficheur) en bleu.
+  - livre ouvert crème centré dans le creux, reliure marquée d'un trait discret ; pages de registre (lignes, filet de
+    colonne, libellés en « mots » et petits montants chiffrés en bleu : une texture, pas un texte à lire).
 Le tout est mis à l'échelle s autour du centre selon l'usage (icône arrondie, icône masquable, avant-plan Android…).
 
 Usage : python3 outils/logo.py    (réécrit app/daftar.svg, assets/*.svg, les PNG de app/ et assets/)
@@ -56,14 +57,32 @@ def monogramme():
     pages = page(cx - l, haut, l, h, True) + page(cx, haut, l, h, False)
     # reliure : séparation discrète au centre (trait beige un peu plus foncé que la page)
     reliure = f'M{cx} {haut - .5}V{haut + h - .4}'
-    dx = (l - 3.7) / 2
-    num = (chiffres('12', cx - l + dx, haut + 2.4) + chiffres('34', cx - l + dx, haut + 7) +
-           chiffres('56', cx + dx, haut + 2.4) + chiffres('78', cx + dx, haut + 7))
+    # page de registre (demande du 2026-11-18) : lignes et colonnes d'écritures — libellés (traits de longueurs variées) et
+    # montants (traits courts alignés à droite) —, filet de colonne ; une texture, pas un texte à lire
+    LIB = (((1.2, .9), '250'), ((1.6,), '1200'), ((.8, 1.3), '75'), ((1.1, .5), '900'), ((1.7, .6), '3400'), ((1.0, 1.0), '60'))
+    ecr, chif, filets = [], [], []
+    for g, x0 in ((True, cx - l), (False, cx)):
+        gch, dte = x0 + (.75 if g else .95), x0 + l - (.95 if g else .75)   # marges (plus larges côté reliure)
+        col = gch + (dte - gch) * .5
+        filets.append(f'M{col:.2f} {haut + 1.2}V{haut + h - 1.1}')
+        for i, (mots, montant) in enumerate(LIB if g else LIB[2:] + LIB[:2]):
+            y = haut + 1.9 + i * 1.75
+            x = gch
+            for m in mots:                                    # libellé : un ou deux « mots »
+                m = min(m, col - .45 - x)
+                if m > .2: ecr.append(f'M{x:.2f} {y:.2f}h{m:.2f}')
+                x += m + .4
+            # montant : petits chiffres à 7 segments, alignés à droite de la colonne
+            chif.append(chiffres(montant, dte - len(montant) * .56 + .18, y - .42, l=.38, h=.84, pas=.56))
+            filets.append(f'M{gch - .2:.2f} {y + .85:.2f}H{dte + .2:.2f}')
+    num = ''.join(ecr)
     return (f'<path fill-rule="evenodd" fill="{OR}" d="{d}"/>'
             f'<g fill="{OR}">{barres}</g>'
             f'<path fill="{CREME}" d="{pages}"/>'
             f'<path fill="none" stroke="#c9bfa8" stroke-width=".45" stroke-linecap="round" d="{reliure}"/>'
-            f'<path fill="none" stroke="{BLEU}" stroke-width=".42" stroke-linecap="round" stroke-linejoin="round" d="{num}"/>')
+            f'<path fill="none" stroke="#c9bfa8" stroke-width=".18" d="{"".join(filets)}"/>'
+            f'<path fill="none" stroke="{BLEU}" stroke-width=".5" stroke-linecap="round" opacity=".8" d="{num}"/>'
+            f'<path fill="none" stroke="{BLEU}" stroke-width=".2" stroke-linecap="round" stroke-linejoin="round" d="{"".join(chif)}"/>')
 
 
 def svg(s=1.0, fond='arrondi', taille=None):

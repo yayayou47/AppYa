@@ -1458,7 +1458,7 @@ function renderVue(){
     else $('hero').innerHTML=stat('Dépenses courantes du mois',fmtM(total),`${U()}${btot?` · budget ${fmtM(btot)}`:''} · ${deps(items).length} lignes`,true)+
       stat('Moyenne par jour',`${fmtM(total/nj)} <span class="sd" title="Médiane des dépenses journalières : un jour sur deux, on dépense moins (jours sans dépense comptés à 0)"><span aria-hidden="true">(médiane ${mdj===null?'—':fmtM(mdj)})</span><span class="sr">, médiane ${mdj===null?'non calculable':fmtM(mdj)+' '+U()}</span></span>`,`${U()} sur ${nj} jours${j0>1?` (depuis le ${j0})`:""}`)+
       stat(`Vs ${isCur?'même période':'mois précédent'}`,delta,prevTot?`${fmtM(prevTot)} ${U()} ${isCur?`(1–${elapsed} ${pmName})`:`en ${pmName}`}`:'pas de données',false,dcol)+
-      statEpargne(items,total,isCur,elapsed,days,stat,nj)+statsJours(items,`${cur.y}-${pad(cur.m+1)}-${pad(j0)}`,`${cur.y}-${pad(cur.m+1)}-${pad(elapsed)}`,total,stat,'du mois')+stat('Entrées courantes',fmtM(F.ent),`${U()} · revenus courants et remboursements`)+(F.exc||F.entX?stat('Exceptionnel',fmtM(F.exc),`${U()} dépensés (événements)${F.entX?` · ${fmtM(F.entX)} reçus (ponctuels)`:''}`):'')+
+      statEpargne(items,total,isCur,elapsed,days,stat,nj)+statsJours(items,`${cur.y}-${pad(cur.m+1)}-${pad(j0)}`,`${cur.y}-${pad(cur.m+1)}-${pad(elapsed)}`,total,stat,'du mois')+stat('Entrées courantes',fmtM(F.ent),`${U()} · revenus courants et remboursements`)+(F.exc||F.entX?stat('Exceptionnel',`${fmtM(F.exc)} · <span style="color:var(--ok)">+${fmtM(F.entX)}</span>`,`${U()} · dépensés (événements) · <span style="color:var(--ok)">reçus (revenus ponctuels)</span>`):'')+
       stat('Investi et prêté',fmtM(F.inv+F.pre),`${U()} · investi ${fmtM(F.inv)} · prêté ${fmtM(F.pre)}`)+
       stat('Solde du mois',sgnM(F.net),`${U()} · toutes entrées − toutes sorties`,false,fluxCol)+semaines(items,days,isCur?now.getDate():0);
   }else{
@@ -1469,7 +1469,7 @@ function renderVue(){
     else $('hero').innerHTML=partielA+stat(`Dépenses courantes ${cur.y}`,fmtM(total),U(),true)+
       stat('Moyenne mensuelle',used?fmtM(total/used):'—',`sur ${used} mois saisis`)+
       stat('Mois le plus cher',mx?fmtM(mx):'—',mx?new Date(cur.y,mi,1).toLocaleDateString('fr-FR',{month:'long'}):'')+statEpargneAn(itemsI,total,stat)+statsJours(itemsI,DEBUT_SUIVI&&DEBUT_SUIVI>`${cur.y}-01-01`?DEBUT_SUIVI:`${cur.y}-01-01`,cur.y===now.getFullYear()?today:`${cur.y}-12-31`,total,stat,"de l'année")+
-      stat('Entrées courantes',fmtM(F.ent),`${U()} · revenus courants et remboursements`)+(F.exc||F.entX?stat('Exceptionnel',fmtM(F.exc),`${U()} dépensés (événements)${F.entX?` · ${fmtM(F.entX)} reçus (ponctuels)`:''}`):'')+
+      stat('Entrées courantes',fmtM(F.ent),`${U()} · revenus courants et remboursements`)+(F.exc||F.entX?stat('Exceptionnel',`${fmtM(F.exc)} · <span style="color:var(--ok)">+${fmtM(F.entX)}</span>`,`${U()} · dépensés (événements) · <span style="color:var(--ok)">reçus (revenus ponctuels)</span>`):'')+
       stat('Investi et prêté',fmtM(F.inv+F.pre),`${U()} · investi ${fmtM(F.inv)} · prêté ${fmtM(F.pre)}`)+
       stat("Solde de l'année",sgnM(F.net),`${U()} · toutes entrées − toutes sorties`,false,fluxCol);
   }

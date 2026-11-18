@@ -586,8 +586,7 @@ body.avec-clavier{padding-bottom:290px}
     <div class="scard alertes-carte"><b>Alertes</b><ul id="statsAlertes" class="alertes"></ul></div>
     <div class="sgrid">
       <section class="scard large" aria-labelledby="bilanTitre"><div><b id="bilanTitre">Bilan de la période</b><span class="hint" id="bilanSous"></span></div><div class="hero" id="statsBilan"></div></section>
-      <figure class="scard large" id="figCumuls"><figcaption><b>Cumuls sur la période</b><span class="hint">Revenus, dépenses et investissements additionnés jour après jour, même échelle</span></figcaption><div class="slegende"><span><i class="lk k-l2" aria-hidden="true"></i>Revenus</span><span><i class="lk k-l1" aria-hidden="true"></i>Dépenses</span><span><i class="lk k-l3" aria-hidden="true"></i>Investissements</span></div><div class="plot"></div><div class="vd"></div></figure>
-      <figure class="scard large" id="figCumul"><figcaption><b>Dépenses cumulées du mois</b><span class="hint"></span></figcaption><div class="slegende"></div><div class="plot"></div><div class="vd"></div></figure>
+      <figure class="scard large" id="figCumuls"><figcaption><b>Cumuls sur la période</b><span class="hint"></span></figcaption><div class="slegende"></div><div class="plot"></div><div class="vd"></div></figure>
       <figure class="scard large" id="figMensuel"><figcaption><b>Dépenses et entrées par mois</b><span class="hint">Dépenses courantes et entrées (revenus, remboursements), même échelle</span></figcaption><div class="slegende"><span><i class="lk k-s1" aria-hidden="true"></i>Dépenses</span><span><i class="lk k-s2" aria-hidden="true"></i>Entrées</span></div><div class="plot"></div><div class="vd"></div></figure>
       <figure class="scard" id="figHisto"><figcaption><b>Histogramme des dépenses journalières</b><span class="hint">Part des jours selon le montant dépensé ce jour-là</span></figcaption><div class="plot"></div><div class="vd"></div></figure>
       <figure class="scard" id="figSemaine"><figcaption><b>Moyenne par jour de la semaine</b><span class="hint">Jours sans dépense comptés à 0</span></figcaption><div class="plot"></div><div class="vd"></div></figure>
@@ -2736,7 +2735,7 @@ const figure=(id,titre,sous,legende)=>`<figure class="scard" id="${id}"><figcapt
 const legendeHTML=items=>`<div class="slegende">${items.map(x=>`<span><i class="lk ${x.cls}" aria-hidden="true"></i>${esc(x.lab)}</span>`).join('')}</div>`;
 
 /* ---------- 1. dépenses cumulées sur la période, période précédente de même nature, projection ---------- */
-function serieCumul(debut,n){const j=new Array(Math.max(0,n)).fill(0);deps(all).forEach(e=>{if(e.date>=debut){const k=nbJ(debut,e.date);if(k<=n)j[k-1]+=e.montant}});let s=0;return {j,c:j.map(v=>s+=v)}}
+function serieCumul(debut,n){const j=new Array(Math.max(0,n)).fill(0),prem=debutSuivi();deps(all).forEach(e=>{if(e.date>=debut&&e.date>=prem){const k=nbJ(debut,e.date);if(k<=n)j[k-1]+=e.montant}});let s=0;return {j,c:j.map(v=>s+=v)}}
 function analyseCumul(P){
   const N=nbJ(P.debut,P.finPer),el=P.fin<P.debut?0:nbJ(P.debut,P.fin),A=serieCumul(P.debut,el),tot=el?A.c[el-1]:0;
   // la période de comparaison n'est retenue que si au moins 90 % de ses jours étaient suivis (sinon sa courbe serait faussement basse)
@@ -2746,39 +2745,6 @@ function analyseCumul(P){
   let proj=null;if(enCours&&P.n>=3){const r=N-el,e=1.2816*sd*Math.sqrt(r);proj={fin:tot+moy*r,bas:Math.max(tot,tot+moy*r-e),haut:tot+moy*r+e}}
   const btot=statsMode==='mois'?Object.values(budgets).reduce((a,b)=>a+b,0):0;
   return {N,el,A,tot,C,Nb,B,moy,sd,proj,enCours,btot,prevTot:B?B.c[Nb-1]:0,prevMeme:B&&el?B.c[Math.min(el,Nb)-1]:0};
-}
-function dessinerCumul(w,P){
-  const M=analyseCumul(P),h=240,nx=Math.max(2,M.N,M.Nb),fig=$('figCumul');
-  fig.querySelector('figcaption b').textContent=statsMode==='annee'?"Dépenses cumulées de l'année":statsMode==='mois'?'Dépenses cumulées du mois':'Dépenses cumulées sur la période';
-  if(!M.el){fig.querySelector('.plot').innerHTML='<div class="empty">Période à venir : aucune dépense possible.</div>';fig.querySelector('.slegende').innerHTML='';fig.querySelector('.vd').innerHTML='';return M}
-  const max=Math.max(1,...M.A.c,...(M.B?M.B.c:[]),M.proj?M.proj.haut:0,M.btot),tk=graduations(max),top=tk[tk.length-1]*DEV.taux;
-  const ih=h-PAD.t-PAD.b,X=d=>PAD.l+(d-1)/(nx-1)*(w-PAD.l-PAD.r),Y=v=>PAD.t+ih-(v/top)*ih;
-  const pl=c=>c.map((v,i)=>`${X(i+1).toFixed(1)},${Y(v).toFixed(1)}`).join(' ');
-  const dateJ=d=>addJ(P.debut,d-1),etiqX=d=>statsMode==='mois'?String(d):dmy(dateJ(d)).slice(0,5);
-  let g=grilleY(w,h,tk,Y)+`<line class="base" x1="${PAD.l}" x2="${w-PAD.r}" y1="${PAD.t+ih}" y2="${PAD.t+ih}"/>`;
-  const marques=statsMode==='mois'?[1,8,15,22,nx]:[...new Set([0,.25,.5,.75,1].map(f=>Math.round(1+f*(nx-1))))];
-  marques.forEach((d,k)=>g+=`<text class="axe" x="${X(d)}" y="${h-8}" text-anchor="${k===0?'start':k===marques.length-1?'end':'middle'}">${etiqX(d)}</text>`);
-  if(M.btot)g+=`<line class="budget-l" x1="${PAD.l}" x2="${w-PAD.r}" y1="${Y(M.btot)}" y2="${Y(M.btot)}"/><text class="axe" x="${w-PAD.r}" y="${Y(M.btot)-5}" text-anchor="end">budget ${fmtAxe(M.btot/DEV.taux)}</text>`;
-  if(M.B)g+=`<polyline class="ln-prev" points="${pl(M.B.c)}"/>`;
-  if(M.proj){const x1=X(M.el),x2=X(M.N);g+=`<polygon class="band" points="${x1},${Y(M.tot)} ${x2},${Y(M.proj.haut)} ${x2},${Y(M.proj.bas)}"/><line class="ln-proj" x1="${x1}" y1="${Y(M.tot)}" x2="${x2}" y2="${Y(M.proj.fin)}"/>`}
-  g+=`<polyline class="ln-cur" points="${pl(M.A.c)}"/><circle class="pt" cx="${X(M.el)}" cy="${Y(M.tot)}" r="5"/>`;
-  const lx=X(M.el),anc=(M.proj||lx>w-120)?'end':'start';g+=`<text class="val" x="${lx+(anc==='end'?-9:9)}" y="${Y(M.tot)-10}" text-anchor="${anc}">${esc(fmt(M.tot))}</text>`;
-  g+=`<line class="cross" x1="0" x2="0" y1="${PAD.t}" y2="${PAD.t+ih}" visibility="hidden"/><rect class="hit ov" tabindex="0" role="img" aria-label="${esc(`Dépenses cumulées de ${P.nom} : ${fmt(M.tot)} ${U()} au ${dmy(P.fin)}${M.B?`, contre ${fmt(M.prevMeme)} ${U()} au même stade pour ${M.C.nom}`:''}. Flèches gauche et droite pour parcourir les jours.`)}" x="${PAD.l}" y="${PAD.t}" width="${w-PAD.l-PAD.r}" height="${ih}"/>`;
-  fig.querySelector('.plot').innerHTML=`<svg width="${w}" height="${h}" viewBox="0 0 ${w} ${h}">${g}</svg>`;
-  const ov=fig.querySelector('.ov'),cr=fig.querySelector('.cross');let jour=M.el;
-  const montrer=(d,cx,cy)=>{d=Math.max(1,Math.min(nx,d));jour=d;const x=X(d);cr.setAttribute('x1',x);cr.setAttribute('x2',x);cr.setAttribute('visibility','visible');
-    const l=[];if(d<=M.el)l.push({cls:'k-cur',val:`${fmt(M.A.c[d-1])} ${U()}`,lab:P.court});
-    else if(M.proj&&d<=M.N)l.push({cls:'k-proj',val:`${fmt(M.tot+M.moy*(d-M.el))} ${U()}`,lab:'projection'});
-    if(M.B&&d<=M.Nb)l.push({cls:'k-prev',val:`${fmt(M.B.c[d-1])} ${U()}`,lab:`${M.C.court}${statsMode==='mois'?'':' (au '+dmy(addJ(M.C.debut,d-1))+')'}`});
-    const r=ov.getBoundingClientRect();montrerTip(cx??(r.left+(x-PAD.l)),cy??r.top+20,statsMode==='mois'?`Jour ${d}`:`${dmy(dateJ(d))} (jour ${d})`,l)};
-  ov.addEventListener('pointermove',ev=>{const r=ov.getBoundingClientRect(),d=Math.round(1+(ev.clientX-r.left)/r.width*(nx-1));montrer(d,ev.clientX,ev.clientY)});
-  ov.addEventListener('pointerleave',()=>{cr.setAttribute('visibility','hidden');cacherTip()});
-  ov.addEventListener('focus',()=>setTimeout(()=>{if(document.activeElement===ov)montrer(jour)},60));ov.addEventListener('blur',()=>{cr.setAttribute('visibility','hidden');cacherTip()});
-  ov.addEventListener('keydown',ev=>{const k={ArrowRight:1,ArrowLeft:-1}[ev.key];if(k){ev.preventDefault();montrer(jour+k)}});
-  fig.querySelector('figcaption .hint').textContent=(M.C?`${P.court} comparé à ${M.C.court}`:P.court)+(M.proj?' · projection jusqu\'à la fin de la période':'');
-  fig.querySelector('.slegende').innerHTML=[{cls:'k-cur',lab:P.court+(M.enCours?' (en cours)':'')}].concat(M.B?[{cls:'k-prev',lab:M.C.court}]:[],M.proj?[{cls:'k-proj',lab:'projection (fourchette 80 %)'}]:[]).map(x=>`<span><i class="lk ${x.cls}" aria-hidden="true"></i>${esc(x.lab)}</span>`).join('');
-  fig.querySelector('.vd').innerHTML=tableDonnees([statsMode==='mois'?'Jour':'Date',`${P.court} (${U()})`].concat(M.B?[`${M.C.court} (${U()})`]:[]),[...Array(nx)].map((_,i)=>[statsMode==='mois'?i+1:dmy(dateJ(i+1)),i<M.el?fmt(M.A.c[i]):'–'].concat(M.B?[i<M.Nb?fmt(M.B.c[i]):'–']:[])));
-  return M;
 }
 
 /* ---------- 2. dépenses et entrées par semaine (période ≤ 62 jours) ou par mois ---------- */
@@ -2865,30 +2831,45 @@ function bilanStats(P){
     st('Solde des opérations',sgn(F.net),`${U()} · toutes entrées − toutes sorties (dépenses, investissements, prêts)`,F.net<0?'var(--warn)':'')
     :'<p class="hint">Aucun jour suivi sur cette période.</p>';
 }
-function dessinerCumuls(w,P){
-  const fig=$('figCumuls'),n=P.n,h=230;if(!n){fig.querySelector('.plot').innerHTML='<div class="empty">Aucun jour suivi sur cette période.</div>';fig.querySelector('.vd').innerHTML='';return}
-  const S=[{cls:'ln1',k:'k-l1',lab:'Dépenses',cum:'Dépenses cumulées',f:e=>e.nature==='depense'},{cls:'ln2',k:'k-l2',lab:'Revenus',cum:'Revenus cumulés',f:e=>e.nature==='revenu'},{cls:'ln3',k:'k-l3',lab:'Investissements',cum:'Investissements cumulés',f:e=>e.nature==='investissement'}]
-    .map(x=>{const j=new Array(n).fill(0);P.ops.forEach(e=>{if(x.f(e))j[nbJ(P.d0,e.date)-1]+=e.montant});let c=0;return {...x,c:j.map(v=>c+=v)}});
-  const max=Math.max(1,...S.map(x=>x.c[n-1])),tk=graduations(max),top=tk[tk.length-1]*DEV.taux,ih=h-PAD.t-PAD.b;
-  const X=d=>PAD.l+(n<2?0:(d-1)/(n-1))*(w-PAD.l-PAD.r-70),Y=v=>PAD.t+ih-(v/top)*ih;
+/* Cumuls (fusion de « Dépenses cumulées » et « Cumuls sur la période », 2026-11-18) : dépenses courantes (comparées à la
+   période précédente au même stade, projection et fourchette 80 %, budget), revenus et investissements additionnés jour après
+   jour, une seule échelle. Axe : du début du suivi dans la période jusqu'à la fin de la période (la projection y tient). */
+function dessinerCumuls(w,P,M){
+  const fig=$('figCumuls'),h=250,N=M.N,el=M.el,off=Math.max(0,nbJ(P.debut,P.d0)-1),nx=N-off;
+  fig.querySelector('figcaption b').textContent=statsMode==='annee'?"Cumuls de l'année":statsMode==='mois'?'Cumuls du mois':'Cumuls sur la période';
+  if(!el||!P.n){fig.querySelector('.plot').innerHTML='<div class="empty">Aucun jour suivi sur cette période.</div>';fig.querySelector('.slegende').innerHTML='';fig.querySelector('.vd').innerHTML='';return}
+  const cum=f=>{const j=new Array(el).fill(0);P.ops.forEach(e=>{if(f(e)){const k=nbJ(P.debut,e.date);if(k>=1&&k<=el)j[k-1]+=e.montant}});let c=0;return j.map(v=>c+=v)};
+  const S=[{cls:'ln1',k:'k-l1',lab:'Dépenses courantes',c:M.A.c},{cls:'ln2',k:'k-l2',lab:'Revenus',c:cum(e=>e.nature==='revenu')},{cls:'ln3',k:'k-l3',lab:'Investissements',c:cum(e=>e.nature==='investissement')}];
+  const Bc=M.B?M.B.c:null,max=Math.max(1,...S.map(x=>x.c[el-1]),...(Bc?Bc.slice(off,N):[]),M.proj?M.proj.haut:0,M.btot);
+  const tk=graduations(max),top=tk[tk.length-1]*DEV.taux,ih=h-PAD.t-PAD.b,X=d=>PAD.l+(nx<2?0:(d-off-1)/(nx-1))*(w-PAD.l-PAD.r-70),Y=v=>PAD.t+ih-(v/top)*ih;
+  const pl=(c,a,b)=>c.slice(a,b).map((v,i)=>`${X(a+i+1).toFixed(1)},${Y(v).toFixed(1)}`).join(' ');
   let g=grilleY(w,h,tk,Y)+`<line class="base" x1="${PAD.l}" x2="${w-PAD.r}" y1="${PAD.t+ih}" y2="${PAD.t+ih}"/>`;
-  [1,n].forEach(d=>{g+=`<text class="axe" x="${X(d)}" y="${h-8}" text-anchor="${d===1?'start':'end'}">${dmy(addJ(P.d0,d-1)).slice(0,8)}</text>`});
-  // étiquettes directes en bout de courbe (écartées si elles se chevauchent)
-  const fins=S.map(x=>({x,y:Y(x.c[n-1])})).sort((a,b)=>a.y-b.y);for(let i=1;i<fins.length;i++)if(fins[i].y-fins[i-1].y<14)fins[i].y=fins[i-1].y+14;
-  S.forEach(x=>{g+=`<polyline class="${x.cls}" points="${x.c.map((v,i)=>`${X(i+1).toFixed(1)},${Y(v).toFixed(1)}`).join(' ')}"/>`});
-  fins.forEach(f=>{g+=`<text class="val" x="${X(n)+6}" y="${f.y+4}">${esc(fmt(f.x.c[n-1]))}</text>`});
-  g+=`<line class="cross" x1="0" x2="0" y1="${PAD.t}" y2="${PAD.t+ih}" visibility="hidden"/><rect class="hit ov" tabindex="0" role="img" aria-label="${esc(`Cumuls du ${dmy(P.d0)} au ${dmy(P.fin)} : `+S.map(x=>`${x.lab.toLowerCase()} ${fmt(x.c[n-1])} ${U()}`).join(', ')+'. Flèches gauche et droite pour parcourir les jours.')}" x="${PAD.l}" y="${PAD.t}" width="${Math.max(1,X(n)-PAD.l)}" height="${ih}"/>`;
+  [off+1,N].forEach((d,i)=>{g+=`<text class="axe" x="${X(d)}" y="${h-8}" text-anchor="${i?'end':'start'}">${dmy(addJ(P.debut,d-1)).slice(0,8)}</text>`});
+  if(M.btot)g+=`<line class="budget-l" x1="${PAD.l}" x2="${X(N)}" y1="${Y(M.btot)}" y2="${Y(M.btot)}"/><text class="axe" x="${X(N)}" y="${Y(M.btot)-5}" text-anchor="end">budget ${fmtAxe(M.btot/DEV.taux)}</text>`;
+  if(Bc)g+=`<polyline class="ln-prev" points="${pl(Bc,off,Math.min(N,Bc.length))}"/>`;
+  if(M.proj){const x1=X(el),x2=X(N);g+=`<polygon class="band" points="${x1},${Y(M.tot)} ${x2},${Y(M.proj.haut)} ${x2},${Y(M.proj.bas)}"/><line class="ln-proj" x1="${x1}" y1="${Y(M.tot)}" x2="${x2}" y2="${Y(M.proj.fin)}"/>`}
+  S.forEach(x=>{g+=`<polyline class="${x.cls}" points="${pl(x.c,off,el)}"/>`});
+  // étiquettes directes au dernier jour connu (écartées si elles se chevauchent)
+  const fins=S.filter(x=>x.c[el-1]>0).map(x=>({x,y:Y(x.c[el-1])})).sort((a,b)=>a.y-b.y);for(let i=1;i<fins.length;i++)if(fins[i].y-fins[i-1].y<14)fins[i].y=fins[i-1].y+14;
+  const xe=M.proj?X(el)-6:X(el)+6,an=M.proj?'end':'start';
+  fins.forEach(f=>{g+=`<text class="val" x="${xe}" y="${f.y+(M.proj?-6:4)}" text-anchor="${an}">${esc(fmt(f.x.c[el-1]))}</text>`});
+  g+=`<line class="cross" x1="0" x2="0" y1="${PAD.t}" y2="${PAD.t+ih}" visibility="hidden"/><rect class="hit ov" tabindex="0" role="img" aria-label="${esc(`Cumuls au ${dmy(P.fin)} : `+S.map(x=>`${x.lab.toLowerCase()} ${fmt(x.c[el-1])} ${U()}`).join(', ')+(M.B?` ; dépenses au même stade pour ${M.C.nom} : ${fmt(M.prevMeme)} ${U()}`:'')+(M.proj?` ; projection de fin de période ${fmt(M.proj.fin)} ${U()}`:'')+'. Flèches gauche et droite pour parcourir les jours.')}" x="${PAD.l}" y="${PAD.t}" width="${Math.max(1,X(N)-PAD.l)}" height="${ih}"/>`;
   fig.querySelector('.plot').innerHTML=`<svg width="${w}" height="${h}" viewBox="0 0 ${w} ${h}">${g}</svg>`;
-  const ov=fig.querySelector('.ov'),cr=fig.querySelector('.cross');let jour=n;
-  const montrer=(d,cx,cy)=>{d=Math.max(1,Math.min(n,d));jour=d;const x=X(d);cr.setAttribute('x1',x);cr.setAttribute('x2',x);cr.setAttribute('visibility','visible');
-    const r=ov.getBoundingClientRect();montrerTip(cx??(r.left+(x-PAD.l)),cy??r.top+20,dmy(addJ(P.d0,d-1)),S.map(s=>({cls:s.k,val:`${fmt(s.c[d-1])} ${U()}`,lab:s.lab.toLowerCase()})))};
-  ov.addEventListener('pointermove',ev=>{const r=ov.getBoundingClientRect();montrer(Math.round(1+(ev.clientX-r.left)/r.width*(n-1)),ev.clientX,ev.clientY)});
+  const ov=fig.querySelector('.ov'),cr=fig.querySelector('.cross');let jour=el;
+  const montrer=(d,cx,cy)=>{d=Math.max(off+1,Math.min(N,d));jour=d;const x=X(d);cr.setAttribute('x1',x);cr.setAttribute('x2',x);cr.setAttribute('visibility','visible');
+    const l=[];if(d<=el)S.forEach(s=>l.push({cls:s.k,val:`${fmt(s.c[d-1])} ${U()}`,lab:s.lab.toLowerCase()}));
+    else if(M.proj)l.push({cls:'k-proj',val:`${fmt(M.tot+M.moy*(d-el))} ${U()}`,lab:'dépenses, projection'});
+    if(Bc&&d<=Bc.length)l.push({cls:'k-prev',val:`${fmt(Bc[d-1])} ${U()}`,lab:`dépenses, ${M.C.court}`});
+    const r=ov.getBoundingClientRect();montrerTip(cx??(r.left+(x-PAD.l)),cy??r.top+20,dmy(addJ(P.debut,d-1)),l)};
+  ov.addEventListener('pointermove',ev=>{const r=ov.getBoundingClientRect();montrer(Math.round(off+1+(ev.clientX-r.left)/r.width*(nx-1)),ev.clientX,ev.clientY)});
   ov.addEventListener('pointerleave',()=>{cr.setAttribute('visibility','hidden');cacherTip()});
   ov.addEventListener('focus',()=>setTimeout(()=>{if(document.activeElement===ov)montrer(jour)},60));ov.addEventListener('blur',()=>{cr.setAttribute('visibility','hidden');cacherTip()});
   ov.addEventListener('keydown',ev=>{const k={ArrowRight:1,ArrowLeft:-1}[ev.key];if(k){ev.preventDefault();montrer(jour+k)}});
-  // tableau : une ligne par mois (fin de mois) pour rester lisible sur une longue période
-  const lignes=[];for(let d=1;d<=n;d++){const dt=addJ(P.d0,d-1);if(d===n||addJ(dt,1).slice(8)==='01')lignes.push([dmy(dt),...S.map(s=>fmt(s.c[d-1]))])}
-  fig.querySelector('.vd').innerHTML=tableDonnees(['Au',...S.map(s=>`${s.cum} (${U()})`)],lignes);
+  fig.querySelector('figcaption .hint').textContent=`Additionnés jour après jour, même échelle${M.C?` · dépenses comparées à ${M.C.court}`:''}${M.proj?' · projection jusqu\'à la fin de la période':''}`;
+  fig.querySelector('.slegende').innerHTML=S.map(x=>({cls:x.k,lab:x.lab})).concat(M.B?[{cls:'k-prev',lab:`dépenses ${M.C.court}`}]:[],M.proj?[{cls:'k-proj',lab:'projection (fourchette 80 %)'}]:[]).map(x=>`<span><i class="lk ${x.cls}" aria-hidden="true"></i>${esc(x.lab)}</span>`).join('');
+  // tableau : chaque jour pour un mois, sinon chaque fin de mois (et le dernier jour connu)
+  const lignes=[];for(let d=off+1;d<=el;d++){const dt=addJ(P.debut,d-1);if(statsMode==='mois'||d===el||addJ(dt,1).slice(8)==='01')lignes.push([dmy(dt),...S.map(s=>fmt(s.c[d-1]))].concat(Bc?[d<=Bc.length?fmt(Bc[d-1]):'–']:[]))}
+  fig.querySelector('.vd').innerHTML=tableDonnees(['Au','Dépenses courantes cumulées','Revenus cumulés','Investissements cumulés'].concat(Bc?[`Dépenses ${M.C.court}`]:[]),lignes);
 }
 
 /* ---------- alertes, conclusions, perspectives (règles explicites, chiffres tirés des mêmes calculs) ---------- */
@@ -2962,15 +2943,15 @@ function renderStats(){
   const box=$('statsBox');if(box.hidden||!ready)return;
   $('statsPer').querySelectorAll('[data-p]').forEach(x=>x.setAttribute('aria-pressed',x.dataset.p===statsMode));
   $('statsDates').hidden=statsMode!=='periode';$('statsDu').value=statsDu;$('statsAu').value=statsAu;
-  const w=Math.max(240,Math.floor($('figCumul').querySelector('.plot').clientWidth)),wl=Math.max(240,Math.floor($('figHisto').querySelector('.plot').clientWidth));
+  const w=Math.max(240,Math.floor($('figCumuls').querySelector('.plot').clientWidth)),wl=Math.max(240,Math.floor($('figHisto').querySelector('.plot').clientWidth));
   const P=periodeStats();
-  const M=dessinerCumul(w,P);dessinerMensuel(w,P);const H=dessinerHisto(wl,P),S=dessinerSemaine(wl,P),L=dessinerLibelles(w,P);dessinerPatrimoine();
+  const M=analyseCumul(P);dessinerCumuls(w,P,M);dessinerMensuel(w,P);const H=dessinerHisto(wl,P),S=dessinerSemaine(wl,P),L=dessinerLibelles(w,P);dessinerPatrimoine();
   $('statsBase').textContent=`Période analysée : ${P.nom}${statsMode==='periode'?'':` (du ${dmy(P.debut)} au ${dmy(P.finPer)})`}`+(P.n?` · ${P.n} jour${P.n>1?'s':''} de dépenses notées, du ${dmy(P.d0)} au ${dmy(P.fin)}`:' · aucune dépense notée')+` · montants en ${DEV.code==='XAF'?'francs CFA':DEV.nom.toLowerCase()}.`;
   const A=analyser(P,M,H,S,L);
   // une seule carte, une ligne par type d'alerte (les alertes de même type sont regroupées)
   const grp=[];A.al.forEach(a=>{const g=grp.find(x=>x.t===a.t);if(g){g.m.push(a.m);g.n=Math.max(g.n,a.n)}else grp.push({t:a.t,n:a.n,m:[a.m]})});
   $('statsAlertes').innerHTML=grp.length?grp.map(a=>`<li class="${NIV[a.n].cls}"><span class="aic" aria-hidden="true">${NIV[a.n].ic}</span><span><span class="sr">${NIV[a.n].lab} : </span><b>${esc(a.t)}</b> — ${esc(a.m.join(' · '))}</span></li>`).join(''):'<li class="info"><span class="aic" aria-hidden="true">✓</span><span>Aucune alerte : rien d\'anormal détecté.</span></li>';
-  bilanStats(P);dessinerCumuls(w,P);
+  bilanStats(P);
   $('statsConclusions').innerHTML=A.co.map(t=>`<li>${esc(t)}</li>`).join('');
   $('statsPersp').innerHTML=A.pe.map(t=>`<li>${esc(t)}</li>`).join('');
 }

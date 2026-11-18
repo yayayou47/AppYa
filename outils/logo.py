@@ -3,8 +3,8 @@
 
 Dessin (unités 0–64, centre 32,32) :
   - D doré : fût de x 12 à 25, panse de rayon 22 (y 10 → 54) ; creux : rayon 12 (y 20 → 44).
-  - deux barres du $, dorées elles aussi (demande du 2026-11-18), centrées sur le fût (jamais dans le creux) : on n'en
-    voit que les bouts arrondis qui dépassent de 5 en haut et en bas (un liseré bleu sur le fût hachait le dessin).
+  - deux barres du $, dorées elles aussi (demande du 2026-11-18), au MILIEU de la lettre : elles la traversent sans
+    apparaître dans le creux ; on n'en voit que les bouts arrondis qui dépassent d'environ 5 en haut et en bas.
   - livre ouvert crème dans le creux, chaque page portant des chiffres (style afficheur) en bleu.
 Le tout est mis à l'échelle s autour du centre selon l'usage (icône arrondie, icône masquable, avant-plan Android…).
 
@@ -36,7 +36,10 @@ def monogramme():
     """Le D, ses barres et le livre, en unités 0–64 (sans fond)."""
     d = ('M12 10h18a22 22 0 0 1 0 44H12z'          # contour du D
          'M25 20h5a12 12 0 0 1 0 24h-5z')           # creux
-    barres = ''.join(f'<rect x="{x}" y="5" width="3" height="54" rx="1.5"/>' for x in (14.5, 19.5))
+    # barres au milieu de la lettre (x 28–31 et 33–36, centre 32) : elles « traversent » le D de haut en bas, mais seuls
+    # leurs bouts, au-dessus et au-dessous, se voient ; dans le creux elles sont interrompues (deux morceaux par barre,
+    # qui s'arrêtent dans l'épaisseur dorée du haut et du bas).
+    barres = ''.join(f'<rect x="{x}" y="{y}" width="3" height="10" rx="1.5"/>' for x in (28, 33) for y in (5, 49))
     pages = ('M27.4 26c2.1-1.2 4.3-1.2 5.9 0v12.2c-1.6-1.05-3.8-1.05-5.9 0z'
              'M33.3 26c1.6-1.2 3.8-1.2 5.9 0v12.2c-2.1-1.05-4.3-1.05-5.9 0z')
     num = (chiffres('12', 28.5, 28.2) + chiffres('34', 28.5, 32.6) +

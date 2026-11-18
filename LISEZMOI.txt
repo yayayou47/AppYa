@@ -40,6 +40,9 @@ Variantes :
 2. LES RUBRIQUES
 ----------------
   - La barre des rubriques reste en haut de l'écran quand on fait défiler.
+    Laissée ouverte d'un jour à l'autre, l'application passe d'elle-même au
+    nouveau jour : la date de Saisir devient celle du jour (sauf pendant la
+    modification d'une ligne), le mois en cours avance.
     Toucher une rubrique (Mes finances, Engins, House, Données et réglages,
     Saisir) l'ouvre toujours en haut de la page. Dans Données et réglages,
     toucher un onglet (Postes et libellés, Comptes et biens…) amène
@@ -498,7 +501,7 @@ il agit toujours sur l'installation réelle. Avant tout retrait, il recopie
 une dernière fois les données dans la copie miroir (disque branché). Il
 ne supprime jamais le dossier d'origine.
 
-Contenu : serveur.py (Daftar Ousnou 1.4.6, Python, bibliothèque standard), app/index.html,
+Contenu : serveur.py (Daftar Ousnou 1.4.7, Python, bibliothèque standard), app/index.html,
 app/moteur.js et app/mode.js (version autonome), app/releve.js et
 app/pdf.min.js + app/pdf.worker.min.js (pdf.js 3.11.174, Mozilla, licence
 Apache 2.0 : app/LICENCE-pdfjs.txt ; lecture des relevés), app/sw.js et

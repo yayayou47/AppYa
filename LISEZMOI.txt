@@ -377,7 +377,14 @@ maison »).
     répartition des dépenses par poste ; journal.
   - Vue Mois, aussi : jours sans dépense ; plus grosse journée (montant,
     date, part du mois).
-  - Vue Patrimoine, aussi : « Mois d'autonomie » (vos comptes divisés par
+  - Chaque case d'indicateur (Mes finances, Engins, House, Statistiques)
+    porte une petite icône colorée : patrimoine, comptes, biens, on vous
+    doit, dépenses, entrées, épargne, carburant, entretien, consommation,
+    vidange, km, coût…
+  - Vue Patrimoine, aussi : barre colorée de répartition (comptes, biens,
+    on vous doit) ; « Disponible » (espèces, comptes courants, cartes,
+    mobile money) et « Épargne » (comptes épargne) ; « Intérêts attendus »
+    sur un an au taux de vos comptes rémunérés ; « Mois d'autonomie » (vos comptes divisés par
     vos dépenses courantes mensuelles moyennes : combien de mois vous
     tiendriez sans revenu) et « Non saisi » (somme des écarts de vos soldes
     notés : sorties et entrées qui n'ont pas été saisies). Masqués comme

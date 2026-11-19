@@ -1545,12 +1545,21 @@ function renderVue(){
     const used=months.filter(v=>v>0).length;const mx=Math.max(...months),mi=months.indexOf(mx);
     const partielA=DEBUT_SUIVI&&`${cur.y}-01-01`<DEBUT_SUIVI?`<div class="partiel">Suivi partiel : avant le ${dmy(DEBUT_SUIVI)}, seules les dépenses du véhicule sont notées ; les indicateurs ne comptent qu'à partir de cette date.</div>`:'';
     if(DEBUT_SUIVI&&`${cur.y}-12-31`<DEBUT_SUIVI)$('hero').innerHTML=`<div class="partiel">Année antérieure au suivi quotidien (commencé le ${dmy(DEBUT_SUIVI)}) : seules les dépenses du véhicule y sont notées, d'où aucun indicateur. Le journal ci-dessous les montre.</div>`;
-    else $('hero').innerHTML=partielA+stat(`Dépenses courantes ${cur.y}`,fmtM(total),U(),true)+
+    else{const J=statsJours(itemsI,DEBUT_SUIVI&&DEBUT_SUIVI>`${cur.y}-01-01`?DEBUT_SUIVI:`${cur.y}-01-01`,cur.y===now.getFullYear()?today:`${cur.y}-12-31`,total,stat,"de l'année")||{vides:'',gros:''};
+      // même présentation que la vue Mois (demande du 2026-11-19) ; comparaison avec l'année précédente à la même date, jours suivis seulement
+      const y0=cur.y-1,isCurY=cur.y===now.getFullYear(),lim=isCurY?`${y0}${today.slice(4)}`:`${y0}-12-31`,av=sum(deps(yearItems(y0).filter(e=>suivi(e)&&e.date<=lim)));
+      let dA='—',cA='';if(av>0){const d=(total-av)/av*100;dA=(d>=0?'+':'')+fmt1(d)+' %';cA=d>0?'var(--warn)':'var(--ok)'}
+      const mm=months.map((v,i)=>({v,i})).filter(x=>x.v>0||(isCurY&&x.i<=now.getMonth()&&(!DEBUT_SUIVI||`${cur.y}-${pad(x.i+1)}-31`>=DEBUT_SUIVI))),mmx=Math.max(1,...months);
+      const barresMois=mm.length?`<div class="stat semaine"><span class="label">Dépenses par mois</span><div class="hsem">`+mm.map(x=>`<div class="hs${isCurY&&x.i===now.getMonth()?' now':''}" title="${new Date(cur.y,x.i,1).toLocaleDateString('fr-FR',{month:'long'})} : ${fmtM(x.v)} ${U()}"><span class="d">${MOIS[x.i].slice(0,4)}</span><span class="tr"><span class="col" style="width:${x.v?Math.max(1,x.v/mmx*100):0}%"></span></span><span class="v">${x.v?fmtM(x.v):'–'}</span></div>`).join('')+'</div></div>':'';
+      $('hero').innerHTML=partielA+stat(`Dépenses courantes ${cur.y}`,fmtM(total),U(),true)+
+      stat('Entrées courantes',fmtM(F.ent),`${U()} · revenus courants et remboursements`,true)+
+      stat("Solde de l'année",sgnM(F.net),`${U()} · toutes entrées − toutes sorties`,false,fluxCol)+
+      stat(`Vs ${y0}${isCurY?' même période':''}`,dA,av?`${fmtM(av)} ${U()} en ${y0}${isCurY?` (au ${dmy(lim)})`:''}`:'pas de données suivies',false,cA)+
+      statEpargneAn(itemsI,total,stat)+
+      stat('Investi et prêté',fmtM(F.inv+F.pre),`${U()} · investi ${fmtM(F.inv)} · prêté ${fmtM(F.pre)}`)+J.gros+J.vides+
       stat('Moyenne mensuelle',used?fmtM(total/used):'—',`sur ${used} mois saisis`)+
-      stat('Mois le plus cher',mx?fmtM(mx):'—',mx?new Date(cur.y,mi,1).toLocaleDateString('fr-FR',{month:'long'}):'')+statEpargneAn(itemsI,total,stat)+(J=>J?J.vides+J.gros:'')(statsJours(itemsI,DEBUT_SUIVI&&DEBUT_SUIVI>`${cur.y}-01-01`?DEBUT_SUIVI:`${cur.y}-01-01`,cur.y===now.getFullYear()?today:`${cur.y}-12-31`,total,stat,"de l'année"))+
-      stat('Entrées courantes',fmtM(F.ent),`${U()} · revenus courants et remboursements`)+(F.exc||F.entX?stat('Exceptionnel',`${fmtM(F.exc)} · <span style="color:var(--ok)">+${fmtM(F.entX)}</span>`,`${U()} · dépensés (événements) · <span style="color:var(--ok)">reçus (revenus ponctuels)</span>`):'')+
-      stat('Investi et prêté',fmtM(F.inv+F.pre),`${U()} · investi ${fmtM(F.inv)} · prêté ${fmtM(F.pre)}`)+
-      stat("Solde de l'année",sgnM(F.net),`${U()} · toutes entrées − toutes sorties`,false,fluxCol);
+      stat('Mois le plus cher',mx?fmtM(mx):'—',mx?new Date(cur.y,mi,1).toLocaleDateString('fr-FR',{month:'long'}):'')+
+      (F.exc||F.entX?stat('Exceptionnel',`${fmtM(F.exc)} · <span style="color:var(--ok)">+${fmtM(F.entX)}</span>`,`${U()} · dépensés (événements) · <span style="color:var(--ok)">reçus (revenus ponctuels)</span>`):'')+barresMois}
   }
 
   if(!isP){
@@ -1651,7 +1660,7 @@ function epargneAn(y,itemsI,dep){
         o.det=`Prévisionnel de fin d'année : revenus ${fmt(revP)} (reçus ${fmt(rev)} + attendus ce mois ${fmt(manque)} + ${fmt(A.mensuel)} × ${mr} mois) ; dépenses ${fmt(depP)} (${fmt(dep/js)} par jour suivi × ${jr} jours restants) ${U()}.`}}}
   return o;
 }
-function pcE(x){return fmt1(x*100)+' %'}
+function pcE(x){return fmt1(x*100)+'\u00a0%'}   // espace insécable : « 6,9 % » ne se coupe pas
 // case « Taux d'épargne » : seuls les taux à l'écran (réel · prévisionnel en jaune), le détail dans la bulle
 function caseEpargne(o,stat,sansRev){
   const reel=`<span${o.te!==null&&o.te<0?' style="color:var(--warn)"':''}${o.attente?' title="Taux réel affiché quand les revenus attendus du mois (salaire, prime…) seront tombés"':''}>${o.te===null?'—':pcE(o.te)}</span>`;

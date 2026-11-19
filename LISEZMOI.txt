@@ -397,8 +397,12 @@ maison »).
     tiendriez sans revenu) et « Non saisi » (somme des écarts de vos soldes
     notés : sorties et entrées qui n'ont pas été saisies). Masqués comme
     les autres montants du Patrimoine.
-  - Vue Année : les mêmes totaux, jours sans dépense, plus grosse journée,
-    le taux d'épargne de l'année (réel ·
+  - Vue Année, même présentation que la vue Mois : dépenses et entrées
+    côte à côte, solde, comparaison avec l'année précédente à la même date
+    (jours suivis seulement), taux d'épargne, investi et prêté, plus grosse
+    journée, jours sans dépense, moyenne mensuelle, mois le plus cher,
+    exceptionnel, puis les dépenses par mois en barres horizontales. Le
+    taux d'épargne de l'année (réel ·
     prévisionnel de fin d'année, en jaune), et un tableau mois × poste.
   - Début du suivi quotidien (02/10/2026) : avant cette date, seules les
     dépenses du véhicule sont notées. Les indicateurs des vues Mois et Année

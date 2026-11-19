@@ -110,7 +110,13 @@ header{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-betw
 
 .chart{display:grid;gap:6.3px;align-items:end;height:136.5px}
 .stat .sd{font-size:.72em;color:var(--muted);white-space:nowrap}
-.stat.semaine{grid-column:span 2;gap:4px}   /* à droite de « Solde du mois », dans les deux colonnes libres */
+.stat.semaine{grid-column:1/-1;gap:6px}
+.hsem{display:flex;flex-direction:column;gap:6px}
+.hs{display:grid;grid-template-columns:4.2em 1fr 6.5em;align-items:center;gap:8px;font-size:.8rem}
+.hs .d{color:var(--muted);white-space:nowrap}.hs .v{font-family:var(--f-num);text-align:right;white-space:nowrap}
+.hs .tr{height:14px;border-radius:4px;background:var(--line);overflow:hidden;display:block}
+.hs .col{display:block;height:100%;background:var(--accent);opacity:.55;border-radius:4px}
+.hs.now .col{opacity:1}.hs.now .d{color:var(--ink);font-weight:600}
 .spark{height:74px;gap:8px}
 .spark .col{max-width:40px}
 .spark .wk .v,.spark .wk .d{font-size:.64rem}
@@ -1522,12 +1528,18 @@ function renderVue(){
     const mdj=medianeJours(items,elapsed,j0);
     const partiel=DEBUT_SUIVI&&iso(new Date(cur.y,cur.m+1,0))<DEBUT_SUIVI?`<div class="partiel">Suivi partiel : avant le ${dmy(DEBUT_SUIVI)}, seules les dépenses du véhicule (reprises de son carnet) sont notées.</div>`:'';
     if(partiel){$('hero').innerHTML=`<div class="partiel">Mois antérieur au suivi quotidien (commencé le ${dmy(DEBUT_SUIVI)}) : seules les dépenses du véhicule y sont notées, d'où aucun indicateur. Le journal ci-dessous les montre.</div>`}
-    else $('hero').innerHTML=stat('Dépenses courantes du mois',fmtM(total),`${U()}${btot?` · budget ${fmtM(btot)}`:''} · ${deps(items).length} lignes`,true)+
-      stat('Moyenne par jour',`${fmtM(total/nj)} <span class="sd" title="Médiane des dépenses journalières : un jour sur deux, on dépense moins (jours sans dépense comptés à 0)"><span aria-hidden="true">(médiane ${mdj===null?'—':fmtM(mdj)})</span><span class="sr">, médiane ${mdj===null?'non calculable':fmtM(mdj)+' '+U()}</span></span>`,`${U()} sur ${nj} jours${j0>1?` (depuis le ${j0})`:""}`)+
+    else{const J=statsJours(items,`${cur.y}-${pad(cur.m+1)}-${pad(j0)}`,`${cur.y}-${pad(cur.m+1)}-${pad(elapsed)}`,total,stat,'du mois')||{vides:'',gros:''};
+      // ordre demandé le 2026-11-19 : dépenses et entrées côte à côte, solde, comparaison, épargne, investi et prêté,
+      // plus grosse journée, jours sans dépense ; puis moyenne par jour et exceptionnel ; dépenses par semaine
+      $('hero').innerHTML=stat('Dépenses courantes du mois',fmtM(total),`${U()}${btot?` · budget ${fmtM(btot)}`:''} · ${deps(items).length} lignes`,true)+
+      stat('Entrées courantes',fmtM(F.ent),`${U()} · revenus courants et remboursements`,true)+
+      stat('Solde du mois',sgnM(F.net),`${U()} · toutes entrées − toutes sorties`,false,fluxCol)+
       stat(`Vs ${isCur?'même période':'mois précédent'}`,delta,prevTot?`${fmtM(prevTot)} ${U()} ${isCur?`(1–${elapsed} ${pmName})`:`en ${pmName}`}`:'pas de données',false,dcol)+
-      statEpargne(items,total,isCur,elapsed,days,stat,nj)+statsJours(items,`${cur.y}-${pad(cur.m+1)}-${pad(j0)}`,`${cur.y}-${pad(cur.m+1)}-${pad(elapsed)}`,total,stat,'du mois')+stat('Entrées courantes',fmtM(F.ent),`${U()} · revenus courants et remboursements`)+(F.exc||F.entX?stat('Exceptionnel',`${fmtM(F.exc)} · <span style="color:var(--ok)">+${fmtM(F.entX)}</span>`,`${U()} · dépensés (événements) · <span style="color:var(--ok)">reçus (revenus ponctuels)</span>`):'')+
-      stat('Investi et prêté',fmtM(F.inv+F.pre),`${U()} · investi ${fmtM(F.inv)} · prêté ${fmtM(F.pre)}`)+
-      stat('Solde du mois',sgnM(F.net),`${U()} · toutes entrées − toutes sorties`,false,fluxCol)+semaines(items,days,isCur?now.getDate():0);
+      statEpargne(items,total,isCur,elapsed,days,stat,nj)+
+      stat('Investi et prêté',fmtM(F.inv+F.pre),`${U()} · investi ${fmtM(F.inv)} · prêté ${fmtM(F.pre)}`)+J.gros+J.vides+
+      stat('Moyenne par jour',`${fmtM(total/nj)} <span class="sd" title="Médiane des dépenses journalières : un jour sur deux, on dépense moins (jours sans dépense comptés à 0)"><span aria-hidden="true">(médiane ${mdj===null?'—':fmtM(mdj)})</span><span class="sr">, médiane ${mdj===null?'non calculable':fmtM(mdj)+' '+U()}</span></span>`,`${U()} sur ${nj} jours${j0>1?` (depuis le ${j0})`:""}`)+
+      (F.exc||F.entX?stat('Exceptionnel',`${fmtM(F.exc)} · <span style="color:var(--ok)">+${fmtM(F.entX)}</span>`,`${U()} · dépensés (événements) · <span style="color:var(--ok)">reçus (revenus ponctuels)</span>`):'')+
+      semaines(items,days,isCur?now.getDate():0)}
   }else{
     const months=[...Array(12)].map((_,i)=>sum(deps(monthItems(cur.y,i).filter(suivi))));
     const used=months.filter(v=>v>0).length;const mx=Math.max(...months),mi=months.indexOf(mx);
@@ -1535,7 +1547,7 @@ function renderVue(){
     if(DEBUT_SUIVI&&`${cur.y}-12-31`<DEBUT_SUIVI)$('hero').innerHTML=`<div class="partiel">Année antérieure au suivi quotidien (commencé le ${dmy(DEBUT_SUIVI)}) : seules les dépenses du véhicule y sont notées, d'où aucun indicateur. Le journal ci-dessous les montre.</div>`;
     else $('hero').innerHTML=partielA+stat(`Dépenses courantes ${cur.y}`,fmtM(total),U(),true)+
       stat('Moyenne mensuelle',used?fmtM(total/used):'—',`sur ${used} mois saisis`)+
-      stat('Mois le plus cher',mx?fmtM(mx):'—',mx?new Date(cur.y,mi,1).toLocaleDateString('fr-FR',{month:'long'}):'')+statEpargneAn(itemsI,total,stat)+statsJours(itemsI,DEBUT_SUIVI&&DEBUT_SUIVI>`${cur.y}-01-01`?DEBUT_SUIVI:`${cur.y}-01-01`,cur.y===now.getFullYear()?today:`${cur.y}-12-31`,total,stat,"de l'année")+
+      stat('Mois le plus cher',mx?fmtM(mx):'—',mx?new Date(cur.y,mi,1).toLocaleDateString('fr-FR',{month:'long'}):'')+statEpargneAn(itemsI,total,stat)+(J=>J?J.vides+J.gros:'')(statsJours(itemsI,DEBUT_SUIVI&&DEBUT_SUIVI>`${cur.y}-01-01`?DEBUT_SUIVI:`${cur.y}-01-01`,cur.y===now.getFullYear()?today:`${cur.y}-12-31`,total,stat,"de l'année"))+
       stat('Entrées courantes',fmtM(F.ent),`${U()} · revenus courants et remboursements`)+(F.exc||F.entX?stat('Exceptionnel',`${fmtM(F.exc)} · <span style="color:var(--ok)">+${fmtM(F.entX)}</span>`,`${U()} · dépensés (événements) · <span style="color:var(--ok)">reçus (revenus ponctuels)</span>`):'')+
       stat('Investi et prêté',fmtM(F.inv+F.pre),`${U()} · investi ${fmtM(F.inv)} · prêté ${fmtM(F.pre)}`)+
       stat("Solde de l'année",sgnM(F.net),`${U()} · toutes entrées − toutes sorties`,false,fluxCol);
@@ -1669,10 +1681,10 @@ function depParJour(items,d0,d1){const m=new Map();if(!d0||d1<d0)return m;for(le
   deps(items).forEach(e=>{if(m.has(e.date))m.set(e.date,m.get(e.date)+e.montant)});return m}
 // jours sans dépense ; plus grosse journée et sa part de la période
 function statsJours(items,d0,d1,total,stat,quand){
-  const m=depParJour(items,d0,d1);if(!m.size)return '';
+  const m=depParJour(items,d0,d1);if(!m.size)return null;
   const vides=[...m.values()].filter(v=>v===0).length;let jx='',vx=0;m.forEach((v,d)=>{if(v>vx){vx=v;jx=d}});
-  return stat('Jours sans dépense',`${vides}`,`sur ${m.size} jours suivis`)+
-    (vx?stat('Plus grosse journée',fmtM(vx),`${U()} · ${new Date(jx+'T12:00:00').toLocaleDateString('fr-FR',{day:'numeric',month:'long'})} · ${total?Math.round(vx/total*100):0} % ${quand}`):'');
+  return {vides:stat('Jours sans dépense',`${vides}`,`sur ${m.size} jours suivis`),gros:
+    (vx?stat('Plus grosse journée',fmtM(vx),`${U()} · ${new Date(jx+'T12:00:00').toLocaleDateString('fr-FR',{day:'numeric',month:'long'})} · ${total?Math.round(vx/total*100):0} % ${quand}`):'')};
 }
 // Patrimoine : mois d'autonomie (comptes ÷ dépenses courantes mensuelles moyennes) ; écarts des soldes notés (opérations non saisies)
 function statsPatrimoine(P,stat){
@@ -1694,12 +1706,12 @@ function medianeJours(items,n,j0=1){
   deps(items).forEach(e=>{const d=+e.date.slice(8,10);if(d>=j0&&d<=n)j[d-j0]+=e.montant});
   j.sort((a,b)=>a-b);return k%2?j[(k-1)/2]:(j[k/2-1]+j[k/2])/2;
 }
+/* Dépenses par semaine (2026-11-19) : 4 semaines (1–7, 8–14, 15–21, 22–fin du mois), barres horizontales */
 function semaines(items,days,jour){
-  const w=[0,0,0,0,0];deps(items).forEach(e=>{const d=+e.date.slice(8,10);w[Math.min(4,Math.floor((d-1)/7))]+=e.montant});
-  const wl=['1–7','8–14','15–21','22–28',`29–${days}`];const wm=Math.max(1,...w);const sc=jour?Math.min(4,Math.floor((jour-1)/7)):-1;
-  const n=days<29?4:5;
-  return `<div class="stat semaine"><span class="label">Dépenses par semaine</span><div class="chart spark${sc>=0?' encours':''}" style="grid-template-columns:repeat(${n},1fr)">`+
-    w.slice(0,n).map((v,i)=>`<div class="wk${i===sc?' now':''}" title="Du ${wl[i].replace('–',' au ')} : ${fmtM(v)} ${U()}"><span class="v">${v?fmtM(v):''}</span><div class="col" style="height:${v/wm*70}%"></div><span class="d">${wl[i]}</span></div>`).join('')+'</div></div>';
+  const w=[0,0,0,0];deps(items).forEach(e=>{const d=+e.date.slice(8,10);w[Math.min(3,Math.floor((d-1)/7))]+=e.montant});
+  const wl=['1–7','8–14','15–21',`22–${days}`],wm=Math.max(1,...w),sc=jour?Math.min(3,Math.floor((jour-1)/7)):-1;
+  return `<div class="stat semaine"><span class="label">Dépenses par semaine</span><div class="hsem">`+
+    w.map((v,i)=>`<div class="hs${i===sc?' now':''}" title="Du ${wl[i].replace('–',' au ')} : ${fmtM(v)} ${U()}"><span class="d">${wl[i]}</span><span class="tr"><span class="col" style="width:${v?Math.max(1,v/wm*100):0}%"></span></span><span class="v">${v?fmtM(v):'–'}</span></div>`).join('')+'</div></div>';
 }
 /* Niveau de dépense d'une journée (dépenses courantes), règle choisie par l'utilisateur le 2026-11-13 : on prend la
    journée la moins chère et la plus chère depuis le début du suivi (jours avec dépense), et on partage cet écart en

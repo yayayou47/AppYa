@@ -375,8 +375,12 @@ maison »).
     précédent, entrées, investissements et prêts, solde du mois ;
     petit graphique des dépenses par semaine (semaine en cours en évidence) ;
     répartition des dépenses par poste ; journal.
-  - Vue Mois, aussi : jours sans dépense ; plus grosse journée (montant,
-    date, part du mois).
+  - Vue Mois, dans cet ordre : dépenses courantes et entrées courantes côte
+    à côte, solde du mois, comparaison avec le mois précédent, taux
+    d'épargne, investi et prêté, plus grosse journée (montant, date, part du
+    mois), jours sans dépense, moyenne par jour (et médiane), exceptionnel ;
+    puis les dépenses par semaine en 4 barres horizontales (1–7, 8–14,
+    15–21, 22–fin du mois ; la semaine en cours en foncé).
   - En bas de page, trois boutons à icône : « © Licence » (licence MIT et
     composants inclus), « À propos » (ce qu'est Daftar, où sont vos
     données, liens du code et de la version web) et « Démo » (trois ans de

@@ -426,6 +426,9 @@ maison »).
   - Budgets : un montant mensuel par poste ; un dépassement s'affiche en rouge.
   - Touchez une ligne pour la modifier ; ✕ puis « Supprimer ? » pour l'effacer.
   - Touchez un compte, une personne ou un bien pour filtrer le journal.
+    Toucher un filtre (poste de « Dépenses par poste », compte, personne,
+    bien, mois ou année des carnets Engins et House) amène directement au
+    journal filtré, sans avoir à défiler.
   - « Exporter Excel » ouvre un menu : Tout (toutes les rubriques, 12
     feuilles), Suivi financier (journal de la période affichée, postes,
     récapitulatif mensuel, comptes, prêts, biens), Carnet du véhicule (journal

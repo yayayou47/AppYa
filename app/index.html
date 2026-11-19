@@ -1387,7 +1387,15 @@ function filtreOk(e,f){
 function filtreNom(f){const t=f[0],v=f.slice(2);
   if(t==='k')return (CAT[v]||CAT.autre).label;if(t==='n')return NAT[v].l;if(t==='e')return '★ '+((EVT[v]||{}).nom||v);if(t==='r')return (REV[v]||{label:v}).label;if(t==='x')return 'Exceptionnel';if(t==='c')return nomCpt(v);
   if(t==='p'){const c=creances().find(x=>x.key===v);return c?c.nom:v}if(t==='b')return (BIEN[v]||{}).nom||v;return f}
-function voirJournal(f){filtre=f;query='';$('q').value='';shown=80;render();$('list').scrollIntoView({behavior:doux(),block:'start'})}
+/* Filtrer un journal l'amène tout de suite à l'écran (titre, filtre actif et premières lignes), sous la barre figée
+   (scroll-padding-top) : poste, compte, personne, bien, mois ou année d'un carnet (demande du 2026-11-19).
+   Saut direct puis recalage : les panneaux du dessus (content-visibility:auto) prennent leur vraie hauteur pendant le
+   défilement, ce qui décalait la cible (Patrimoine : le journal finissait 400 px trop haut). */
+function allerJournal(id){const el=$(id);if(!el||el.hidden)return;let n=0;
+  const caler=()=>{el.scrollIntoView({block:'start'});const pad=parseFloat(getComputedStyle(document.documentElement).scrollPaddingTop)||0;
+    if(++n<4&&Math.abs(el.getBoundingClientRect().top-pad)>4)requestAnimationFrame(caler)};
+  requestAnimationFrame(caler)}
+function voirJournal(f){filtre=f;query='';$('q').value='';shown=80;render();allerJournal('journal')}
 
 function render(){try{renderVue()}finally{navNoter()}}
 function renderVue(){
@@ -1737,7 +1745,7 @@ $('accSaisir').onclick=()=>{nouveauJour();navEtape(()=>{saisieSeule=true;view='d
 $('demoRecreer').onclick=async()=>{if(!confirm('Effacer les données de démo modifiées et recréer les trois années simulées ?'))return;await locCharger();LOC.donnees=await donneesDemo();await locSauver();await charger();status('Données de démo recréées.')};
 $('segEngins').addEventListener('click',ev=>{const b=ev.target.closest('[data-v]');if(!b)return;choisirEngin(b.dataset.v);render()});
 $('segMaisons').addEventListener('click',ev=>{const b=ev.target.closest('[data-h]');if(!b)return;choisirMaison(b.dataset.h);render()});
-$('bars').addEventListener('click',ev=>{const b=ev.target.closest('[data-c]');if(!b)return;filtre=filtre===b.dataset.c?'':b.dataset.c;render()});
+$('bars').addEventListener('click',ev=>{const b=ev.target.closest('[data-c]');if(!b)return;filtre=filtre===b.dataset.c?'':b.dataset.c;render();if(filtre)allerJournal('journal')});
 let qT;$('q').addEventListener('input',()=>{clearTimeout(qT);qT=setTimeout(()=>{query=$('q').value.trim();render()},200)});
 $('more').onclick=()=>{shown+=150;render()};
 
@@ -1852,8 +1860,9 @@ function renderVehicule(){
   $('vehList').innerHTML=jl.length?html:'<div class="empty">Aucune dépense du véhicule pour ce filtre.</div>';
   $('vehMore').hidden=jl.length<=vehShown;$('vehMore').textContent=`Afficher plus (${jl.length-vehShown} restantes)`;
 }
-$('vehChart').addEventListener('click',ev=>{const b=ev.target.closest('[data-k]');if(!b)return;const k=vehAll?b.dataset.k:+b.dataset.k;if(vehAll){cur.y=+k;vehAll=false;vehSel=null}else vehSel=vehSel===k?null:k;render()});
-$('vehTbl').addEventListener('click',ev=>{const t=ev.target.closest('tr[data-k]');if(!t)return;const k=vehAll?t.dataset.k:+t.dataset.k;if(vehAll){cur.y=+k;vehAll=false;vehSel=null}else vehSel=vehSel===k?null:k;render()});
+function choixBucketVeh(k){if(vehAll){cur.y=+k;vehAll=false;vehSel=null}else vehSel=vehSel===k?null:k;render();if(vehSel!==null)allerJournal('vehJournal')}
+$('vehChart').addEventListener('click',ev=>{const b=ev.target.closest('[data-k]');if(b)choixBucketVeh(vehAll?b.dataset.k:+b.dataset.k)});
+$('vehTbl').addEventListener('click',ev=>{const t=ev.target.closest('tr[data-k]');if(t)choixBucketVeh(vehAll?t.dataset.k:+t.dataset.k)});
 let vqT;$('vq').addEventListener('input',()=>{clearTimeout(vqT);vqT=setTimeout(()=>{vehQ=$('vq').value.trim();render()},200)});
 $('vehMore').onclick=()=>{vehShown+=150;render()};
 $('vehAn').onclick=()=>{vehAll=false;vehSel=null;render()};
@@ -1967,7 +1976,7 @@ function renderMaison(){
   $('maiJSub').textContent=`${jl.length} lignes · ${fmt(sum(jl))} ${U()}`;
   $('maiList').innerHTML=jl.length?jl.map(e=>`<div class="item${editId===e.id?' editing':''}" data-id="${e.id}"><button type="button" class="lib"><span class="sr">Modifier : </span><span>${esc(e.libelle)}</span><span class="tag"><span class="dot" aria-hidden="true" style="background:${colM(e.cat_maison)}"></span>${esc((CATM[e.cat_maison]||CATM.autre).l)} · ${dmy(e.date)} · ${esc(nomCpt(e.compte))}${e.remarque?` · ${esc(e.remarque)}`:''}</span></button><span class="amt">${fmt(e.montant)}<span class="sr"> ${U()}</span></span><button type="button" class="del" data-del="${e.id}" aria-label="Supprimer ${esc(e.libelle)}">✕</button></div>`).join(''):'<div class="empty">Aucuns travaux pour ce filtre.</div>';
 }
-function choixBucketMai(k){if(maiAll){cur.y=+k;maiAll=false;maiSel=null}else maiSel=maiSel===k?null:k;render()}
+function choixBucketMai(k){if(maiAll){cur.y=+k;maiAll=false;maiSel=null}else maiSel=maiSel===k?null:k;render();if(maiSel!==null)allerJournal('maiJournal')}
 $('maiChart').addEventListener('click',ev=>{const b=ev.target.closest('[data-k]');if(b)choixBucketMai(maiAll?b.dataset.k:+b.dataset.k)});
 $('maiTbl').addEventListener('click',ev=>{const t=ev.target.closest('tr[data-k]');if(t)choixBucketMai(maiAll?t.dataset.k:+t.dataset.k)});
 $('maiAn').onclick=()=>{maiAll=false;maiSel=null;render()};

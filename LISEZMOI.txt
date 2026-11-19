@@ -377,6 +377,10 @@ maison »).
     répartition des dépenses par poste ; journal.
   - Vue Mois, aussi : jours sans dépense ; plus grosse journée (montant,
     date, part du mois).
+  - En bas de page, trois boutons à icône : « © Licence » (licence MIT et
+    composants inclus), « À propos » (ce qu'est Daftar, où sont vos
+    données, liens du code et de la version web) et « Démo » (trois ans de
+    données simulées ; dans la démo, « Quitter la démo »).
   - Chaque case d'indicateur (Mes finances, Engins, House, Statistiques)
     porte une petite icône colorée : patrimoine, comptes, biens, on vous
     doit, dépenses, entrées, épargne, carburant, entretien, consommation,

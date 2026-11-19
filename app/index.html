@@ -207,6 +207,9 @@ textarea{min-height:147px;font-family:var(--f-num);font-size:.85rem;resize:verti
   .pact{grid-column:2;justify-content:flex-start}
 }
 footer{font-size:.8rem;color:var(--muted);display:flex;flex-direction:column;gap:4.2px}
+.footnav{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:6px}
+.footnav .btn{display:inline-flex;align-items:center;gap:6px;text-decoration:none}
+pre.licence{white-space:pre-wrap;font-size:.75rem;max-height:40vh;overflow:auto;background:var(--bg);padding:10px;border-radius:8px}
 footer code{font-family:var(--f-num);overflow-wrap:anywhere}
 @media (max-width:504px){.bar{grid-template-columns:minmax(0,7.5em) 1fr auto}.bar .name{white-space:normal;align-items:flex-start;line-height:1.2}.bar .name .dot{margin-top:4.2px}.hero .big{font-size:1.7rem}.nav span{min-width:7em}}
 @media (prefers-reduced-motion:no-preference){.fill,.wk .col{transition:width .3s,height .3s}}
@@ -530,6 +533,9 @@ body.avec-clavier{padding-bottom:290px}
     <symbol id="i-jauge" viewBox="0 0 24 24"><path d="M3.5 17a8.5 8.5 0 1 1 17 0"/><path d="m12 17 4.2-5.2"/><circle cx="12" cy="17" r="1.3"/><path d="M6.5 13.5h.01M12 8.5h.01M17.5 13.5h.01"/></symbol>
     <symbol id="i-route" viewBox="0 0 24 24"><path d="M8.5 3 5 21M15.5 3 19 21"/><path d="M12 4.5v2.5M12 10.5V13M12 16.5V19"/></symbol>
     <symbol id="i-pieces" viewBox="0 0 24 24"><circle cx="9" cy="10" r="5.5"/><path d="M14.3 5.6a5.5 5.5 0 1 1-3.4 10.2"/><path d="M9 7.5v5"/></symbol>
+    <symbol id="i-copyright" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M14.8 9.4a3.8 3.8 0 1 0 0 5.2"/></symbol>
+    <symbol id="i-info" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 11v5.5M12 7.5h.01"/></symbol>
+    <symbol id="i-demo" viewBox="0 0 24 24"><rect x="3" y="4.5" width="18" height="13" rx="2"/><path d="m10.5 8.5 4 2.5-4 2.5z"/><path d="M8 21h8M12 17.5V21"/></symbol>
     <symbol id="i-sauve" viewBox="0 0 24 24"><path d="M12 3v11M7.5 9.5 12 14l4.5-4.5"/><path d="M4 15v3.5A2.5 2.5 0 0 0 6.5 21h11a2.5 2.5 0 0 0 2.5-2.5V15"/></symbol>
     <symbol id="i-excel" viewBox="0 0 24 24"><rect x="2" y="3" width="14" height="18" rx="2.2" fill="#1d6f42" stroke="none"/><path d="M5.6 8.2l6.8 7.6M12.4 8.2l-6.8 7.6" stroke="#fff" stroke-width="2.2"/><path d="M14 12h7.5M18.5 8.7 21.8 12l-3.3 3.3"/></symbol>
   </defs>
@@ -902,8 +908,44 @@ body.avec-clavier{padding-bottom:290px}
     <span class="hint">Touchez une ligne pour la modifier.</span>
   </section>
 
-  <footer><span><b id="footVer"></b></span><span id="footTxt">Daftar · suivi financier, engins et maison · version locale, les données restent sur cet ordinateur.</span><span id="footFile"></span></footer>
+  <footer><nav class="footnav" aria-label="Informations sur Daftar"><button type="button" class="btn ghost small" id="footLic"><svg class="ic" aria-hidden="true" focusable="false"><use href="#i-copyright"/></svg>Licence</button><button type="button" class="btn ghost small" id="footApropos"><svg class="ic" aria-hidden="true" focusable="false"><use href="#i-info"/></svg>À propos</button><a class="btn ghost small" id="footDemo" href="?demo"><svg class="ic" aria-hidden="true" focusable="false"><use href="#i-demo"/></svg><span>Démo</span></a></nav><span><b id="footVer"></b></span><span id="footTxt">Daftar · suivi financier, engins et maison · version locale, les données restent sur cet ordinateur.</span><span id="footFile"></span></footer>
 </main>
+<dialog id="dlgLic" class="confirm large" aria-labelledby="dlgLicTitre">
+  <h3 id="dlgLicTitre"><svg class="ic" aria-hidden="true" focusable="false"><use href="#i-copyright"/></svg> Licence</h3>
+  <p>© 2026 yayayou47. Daftar est un logiciel libre, publié sous <b>licence MIT</b> : vous pouvez l'utiliser, le copier, le modifier et le redistribuer, y compris à des fins commerciales, à condition de conserver la mention de copyright et le texte de la licence. Il est fourni « tel quel », sans aucune garantie.</p>
+  <details class="aide"><summary>Texte de la licence (anglais)</summary><pre class="licence">MIT License
+
+Copyright (c) 2026 yayayou47
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.</pre></details>
+  <p class="hint">Composants inclus : pdf.js 3.11.174 (Mozilla, licence Apache 2.0) pour lire les relevés ; SheetJS 0.18.5 (licence Apache 2.0) pour l'export Excel ; tesseract.js 5.1.1 (licence Apache 2.0), chargé seulement pour lire un relevé photographié.</p>
+  <div class="row"><button class="btn" type="button" data-fermer>Fermer</button></div>
+</dialog>
+<dialog id="dlgApropos" class="confirm large" aria-labelledby="dlgAproposTitre">
+  <h3 id="dlgAproposTitre"><svg class="ic" aria-hidden="true" focusable="false"><use href="#i-info"/></svg> À propos de Daftar</h3>
+  <p><b id="apVer"></b> · <i>daftar</i> : le carnet, le registre.</p>
+  <p>Suivi des finances personnelles en francs CFA (dépenses, revenus, comptes, épargne, prêts, biens, comptes gérés pour des tiers), carnet des engins (carburant, kilomètres, vidanges) et de la maison (travaux, projet). Statistiques, alertes et perspectives sont calculées sur l'appareil.</p>
+  <p id="apMode"></p>
+  <ul class="analyse"><li>Code source : <a href="https://github.com/yayayou47/Daftar" target="_blank" rel="noopener">github.com/yayayou47/Daftar</a></li><li>Version web : <a href="https://yayayou47.github.io/Daftar/" target="_blank" rel="noopener">yayayou47.github.io/Daftar</a></li><li>Téléchargements (application Android et Ubuntu) : page « Releases » du dépôt.</li></ul>
+  <p class="hint">Aucune publicité, aucun compte à créer, aucune donnée envoyée à un tiers. Pensez à exporter une sauvegarde de temps en temps (Données et réglages › Sauvegarde).</p>
+  <div class="row"><button class="btn" type="button" data-fermer>Fermer</button></div>
+</dialog>
 <dialog id="dlgProg" class="confirm large" aria-labelledby="dlgProgTitre">
   <h3 id="dlgProgTitre">Opérations programmées à confirmer</h3>
   <p class="hint">Rien n'est enregistré sans vous : cochez, corrigez la date ou le montant si le relevé diffère, puis enregistrez. « Ignorer » écarte l'échéance pour de bon (frais non prélevés ce mois-là).</p>
@@ -3456,7 +3498,13 @@ if(MODE_SYNC){
 }
 $('footVer').textContent='Daftar '+VERSION_APP;
 req('GET','/api/info').then(i=>{$('footFile').innerHTML=MODE_AUTONOME?`Données : <b>${esc(i.fichier)}</b> · copies de sécurité : <b>${esc(i.sauvegardes)}</b>`:`Fichier de données : <code>${esc(i.fichier)}</code> · sauvegarde automatique chaque jour dans <code>${esc(i.sauvegardes)}</code>`}).catch(()=>{});
-if(!MODE_DEMO)$('footFile').insertAdjacentHTML('afterend',' <a href="?demo" style="color:var(--accent)">Voir la démo</a>');
+// bas de page : Licence, À propos, Démo (ou « Quitter la démo » dans la démo)
+if(MODE_DEMO){$('footDemo').href='./';$('footDemo').querySelector('span').textContent='Quitter la démo'}
+$('footLic').onclick=()=>$('dlgLic').showModal();
+$('footApropos').onclick=()=>{$('apVer').textContent='Daftar '+VERSION_APP;
+  $('apMode').textContent=MODE_DEMO?'Vous êtes dans la démonstration : trois ans de données simulées, rangées à part de vos données.':MODE_SYNC?'Version du téléphone : vos données sont gardées dans le téléphone et synchronisées avec votre ordinateur.':MODE_AUTONOME?'Version autonome : vos données restent dans cet appareil (navigateur ou application Android).':'Version de l\'ordinateur : vos données restent sur cet ordinateur, dans le fichier indiqué en bas de page.';
+  $('dlgApropos').showModal()};
+['dlgLic','dlgApropos'].forEach(i=>$(i).addEventListener('click',ev=>{if(ev.target.closest('[data-fermer]')||ev.target===$(i))$(i).close()}));
 if(MODE_DEMO)$('footTxt').textContent='Daftar · version de démonstration · données simulées, rangées à part de vos données.';
 /* démo : le bouton « précédent » (navigateur, téléphone) ne fait pas sortir de la démo ; seul « Quitter la démo » en sort */
 if(MODE_DEMO&&window.history&&history.pushState){

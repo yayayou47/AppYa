@@ -358,7 +358,10 @@ maison »).
     prévues (dépenses à ce jour + moyenne par jour × jours restants, la même
     projection que dans les Statistiques), divisé par les revenus attendus.
     Seuls les deux taux s'affichent (« réel · prévisionnel », le second en
-    jaune) ; le détail du calcul apparaît en survolant le taux prévisionnel. Revenu attendu : chaque revenu courant reçu chacun des 3 mois
+    jaune) ; le détail du calcul apparaît en survolant le taux prévisionnel.
+    Pour le mois en cours, le taux réel reste « — » tant que les revenus
+    habituels (salaire, prime…) ne sont pas arrivés : quelques intérêts face
+    aux dépenses du mois donneraient un taux absurde. Revenu attendu : chaque revenu courant reçu chacun des 3 mois
     précédents (salaire, prime…) au montant du mois dernier ; sans revenu
     fixe, le revenu courant moyen des 12 derniers mois suivis. Comparaison avec le mois
     précédent, entrées, investissements et prêts, solde du mois ;
@@ -524,7 +527,7 @@ il agit toujours sur l'installation réelle. Avant tout retrait, il recopie
 une dernière fois les données dans la copie miroir (disque branché). Il
 ne supprime jamais le dossier d'origine.
 
-Contenu : serveur.py (Daftar Ousnou 1.4.8, Python, bibliothèque standard), app/index.html,
+Contenu : serveur.py (Daftar Ousnou 1.4.9, Python, bibliothèque standard), app/index.html,
 app/moteur.js et app/mode.js (version autonome), app/releve.js et
 app/pdf.min.js + app/pdf.worker.min.js (pdf.js 3.11.174, Mozilla, licence
 Apache 2.0 : app/LICENCE-pdfjs.txt ; lecture des relevés), app/sw.js et

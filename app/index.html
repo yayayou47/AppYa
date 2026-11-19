@@ -974,7 +974,7 @@ function setProgrammees(l){PROGS=(Array.isArray(l)?l:[]).map(x=>({...x,ignorees:
 const PERIODES={1:'chaque mois',2:'tous les 2 mois',3:'chaque trimestre',6:'chaque semestre',12:'chaque année'};
 const TYPES_EVT={mariage:'Mariage',bapteme:'Baptême',circoncision:'Circoncision',funerailles:'Funérailles',fete:'Fête','voyage-tourisme':'Voyage (tourisme)','voyage-mission':'Voyage (mission)','voyage-vacances':'Voyage (vacances)',sante:'Santé',projet:'Projet',autre:'Autre'};
 /* Nature d'une opération : s = sens sur le compte (+1 entrée, −1 sortie, 0 virement) */
-const VERSION_APP='Ousnou 1.4.8';   // nom et numéro de version (même valeur que VERSION / VERSION_NOM dans serveur.py)
+const VERSION_APP='Ousnou 1.4.9';   // nom et numéro de version (même valeur que VERSION / VERSION_NOM dans serveur.py)
 const NAT={depense:{l:'Dépense',s:-1},revenu:{l:'Revenu',s:1},virement:{l:'Virement',s:0},pret:{l:'Prêt accordé',s:-1},remboursement:{l:'Remboursement reçu',s:1},investissement:{l:'Investissement',s:-1}};
 const TYPES_CPT={especes:'Espèces',courant:'Compte courant',epargne:'Épargne',carte:'Carte prépayée',mobile:'Mobile money',tiers:"Compte d'un tiers"};
 const MOTS_REVENU=['salaire','salary','prime','revenu','interet','honoraire','indemnite','bourse','vacation','perdiem','per diem','prodes','frais de mission','consultance','jury','soutenance','seminaire','atelier'];
@@ -1553,6 +1553,9 @@ function revenuAttendu(y,m){
 function epargneMois(y,m,items,dep,isCur,el,days,nj=el){
   const rev=sum(items.filter(e=>e.nature==='revenu'&&!estExc(e))),o={rev,te:rev>0?(rev-dep)/rev:null,tp:null,det:''};
   if(isCur&&el<days){const A=revenuAttendu(y,m),R=A?A.total:rev,reste=days-el,depP=dep+dep/nj*reste;
+    /* mois en cours, revenus attendus pas encore tous tombés : le taux réel n'a pas de sens (25 559 d'intérêts face à
+       355 000 de dépenses donnaient −1 289,6 %, 19/11/2026) ; « — » jusqu'à leur arrivée, le prévisionnel reste */
+    if(A&&A.manque.length&&o.te!==null){o.te=null;o.attente=true}
     if(R>0){o.tp=(R-depP)/R;
       const quoi=!A||!A.manque.length?'':A.mode==='fixe'?A.manque.map(x=>`${(REV[x.c]||{label:x.c}).label.toLowerCase()} ${fmt(x.v)}`).join(' + '):`revenu moyen ${fmt(A.moy)} (${A.n} mois)`;
       o.det=`Prévisionnel de fin de mois : ${quoi?`revenus attendus : ${quoi} ; `:''}dépenses prévues ${fmt(depP)} (${fmt(dep/nj)} par jour × ${reste} jours restants) ${U()}.`}}
@@ -1571,7 +1574,7 @@ function epargneAn(y,itemsI,dep){
 function pcE(x){return fmt1(x*100)+' %'}
 // case « Taux d'épargne » : seuls les taux à l'écran (réel · prévisionnel en jaune), le détail dans la bulle
 function caseEpargne(o,stat,sansRev){
-  const reel=`<span${o.te!==null&&o.te<0?' style="color:var(--warn)"':''}>${o.te===null?'—':pcE(o.te)}</span>`;
+  const reel=`<span${o.te!==null&&o.te<0?' style="color:var(--warn)"':''}${o.attente?' title="Taux réel affiché quand les revenus attendus du mois (salaire, prime…) seront tombés"':''}>${o.te===null?'—':pcE(o.te)}</span>`;
   if(o.tp!==null)return stat("Taux d'épargne",`${reel} · <span style="color:var(--jm)" title="${esc(o.det)}">${pcE(o.tp)}</span>`,`réel · <span style="color:var(--jm)">prévisionnel</span>`);
   return stat("Taux d'épargne",reel,o.rev>0?'revenus courants − dépenses courantes':sansRev);
 }
@@ -2913,6 +2916,7 @@ function analyser(P,M,H,S,L){
   else if(statsMode==='annee')E=epargneAn(cur.y,P.ops,depP);
   else{const rv=sum(P.ops.filter(e=>e.nature==='revenu'&&!estExc(e)));E={rev:rv,te:rv>0?(rv-depP)/rv:null,tp:null}}
   if(E.te!==null)co.push(`Taux d'épargne de ${P.nom} : ${pcE(E.te)} (revenus courants ${fmt(E.rev)} ${U()}, dépenses courantes ${fmt(depP)} ${U()}).`);
+  else if(E.attente)co.push(`Taux d'épargne réel de ${P.nom} : en attente des revenus habituels du mois (${fmt(E.rev)} ${U()} de revenus courants reçus pour l'instant, ${fmt(depP)} ${U()} de dépenses courantes).`);
   else if(P.n)co.push(`Aucun revenu courant noté sur ${P.nom} : le taux d'épargne réel ne peut pas encore être calculé.`);
   if(E.tp!==null)pe.push(`Taux d'épargne prévisionnel : ${pcE(E.tp)}. ${E.det}`);
   // évolution des postes par rapport à la période précédente, au même stade

@@ -385,6 +385,12 @@ maison »).
     composants inclus), « À propos » (ce qu'est Daftar, où sont vos
     données, liens du code et de la version web) et « Démo » (trois ans de
     données simulées ; dans la démo, « Quitter la démo »).
+  - Montants abrégés dans les cartes d'indicateurs, par défaut : 355 K
+    (milliers), 1,28 M (millions), avec 3 chiffres significatifs ; le
+    montant exact apparaît en survolant le chiffre (ordinateur). Les km,
+    jours, mois, le journal et les tableaux restent en entier. Pour tout
+    afficher en entier : Données et réglages › Saisie › « Montants abrégés
+    dans les cartes » (réglage propre à chaque appareil).
   - Chaque case d'indicateur (Mes finances, Engins, House, Statistiques)
     porte une petite icône colorée : patrimoine, comptes, biens, on vous
     doit, dépenses, entrées, épargne, carburant, entretien, consommation,

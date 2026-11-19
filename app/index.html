@@ -894,6 +894,9 @@ body.avec-clavier{padding-bottom:290px}
     <div class="hint" id="saisieKInfo"></div>
     <label class="check"><input type="checkbox" id="clavierK"> Clavier Daftar pour les montants (chiffres, signe −, 00 et 000)</label>
     <div class="hint" id="clavierKInfo"></div>
+    <div class="phead"><h3 class="sub">Affichage des montants</h3></div>
+    <label class="check"><input type="checkbox" id="abregeK"> Montants abrégés dans les cartes d'indicateurs (355 K, 1,28 M)</label>
+    <div class="hint" id="abregeKInfo"></div>
     </div>
     <div id="paritesBox" hidden style="display:flex;flex-direction:column;gap:12px">
     <div class="phead"><h3 class="sub">Parités des devises</h3><span class="hint">1 unité de la devise = … francs CFA</span></div>
@@ -1503,7 +1506,7 @@ function renderVue(){
   const F=flux(itemsI);const total=F.dep;
 
   /* résumé */
-  const stat=(l,v,s,big,col)=>`<div class="stat"><span class="label">${lblIc(l)}</span><span class="${big?'big':'v'}"${col?` style="color:${col}"`:''}>${v}</span><span class="s">${s}</span></div>`;
+  const stat=(l,v,s,big,col)=>`<div class="stat"><span class="label">${lblIc(l)}</span><span class="${big?'big':'v'}"${col?` style="color:${col}"`:''}>${valAbr(l,v)}</span><span class="s">${s}</span></div>`;
   const fluxCol=F.net>=0?'var(--ok)':'var(--warn)';
   if(isP){
     const P=patrimoine();
@@ -1682,6 +1685,17 @@ const IC_STAT=[[/^Patrimoine net/,'patrimoine','var(--accent)'],[/^Comptes/,'ban
   [/^Carburant/,'pompe','var(--cv-carburant)'],[/^Entretien/,'cle','var(--cv-reparation)'],[/^Prix moyen du litre/,'tag','var(--cv-carburant)'],
   [/^Consommation/,'jauge','var(--accent)'],[/^Prochaine vidange/,'huile','var(--jm)'],[/^(Km parcourus|Heures de marche)/,'route','var(--viz1)'],
   [/^Coût/,'pieces','var(--viz2)'],[/^Poste principal/,'tag','var(--accent)'],[/^Part du terrain/,'house','var(--viz3)']];
+/* Montants abrégés dans les cartes (2026-11-19) : 355 162 → 355 K, 1 282 962 → 1,28 M (3 chiffres significatifs), par
+   défaut ; réglage par appareil (Données et réglages › Saisie, localStorage daftar-abrege) pour tout afficher. Ne touche
+   que la valeur principale des cases (pas le journal, les tableaux, les sous-titres), et pas les km, heures, jours ni mois.
+   Le montant complet reste dans la bulle (title). */
+let ABREGE=(()=>{try{return localStorage.getItem('daftar-abrege')!=='0'}catch(e){return true}})();
+function abr(n){const a=Math.abs(n),sg=n<0?'−':'',[d,u]=a>=1e9?[1e9,' Md']:a>=1e6?[1e6,' M']:[1e3,' K'],q=a/d;
+  return sg+q.toLocaleString('fr-FR',{maximumFractionDigits:q>=100?0:q>=10?1:2})+u}
+const RE_NB=/([−+-]?)(\d{1,3}(?:[\u202f\u00a0 ]\d{3})+)(?![\d,])/g,SANS_ABR=/^(Km|Heures|Jours|Mois d'autonomie|Consommation|Biens acquis|Prochaine vidange)/;
+function valAbr(l,v){if(!ABREGE||SANS_ABR.test(String(l).replace(/<[^>]*>/g,'')))return v;
+  return String(v).replace(/(<[^>]*>)|([^<]+)/g,(m,tag,txt)=>tag?tag:txt.replace(RE_NB,(t,sg,ch)=>{const n=+ch.replace(/\D/g,'')*(sg==='−'||sg==='-'?-1:1);
+    return n>-1000&&n<1000?t:`<span title="${t.trim()}">${sg==='+'?'+':''}${abr(n)}</span>`}))}
 function lblIc(l){const t=String(l).replace(/<[^>]*>/g,''),x=IC_STAT.find(([re])=>re.test(t));
   return x?`<svg class="ic sic" style="color:${x[2]}" aria-hidden="true" focusable="false"><use href="#i-${x[1]}"/></svg>${l}`:l}
 /* ---- indicateurs complémentaires (1.4.8, liste du 2026-11-17) ---- */
@@ -1923,7 +1937,7 @@ function renderVehicule(){
   $('vehTitre').innerHTML=`<svg class="ic" style="color:var(--accent);margin-right:6px" aria-hidden="true" focusable="false"><use href="#i-car"/></svg>${esc(v.nom)} · ${vehAll?'toutes les années':cur.y}`;
   // plus de ligne « N lignes, du … au … » sous le titre (demande du 2026-11-19)
   // couleur : liseré de la catégorie (carburant, entretien) ; comparaisons en vert (mieux) ou rouge (moins bien), avec le signe
-  const tile=(l,val,s,o={})=>`<div class="stat"${o.lis?` style="border-left:4px solid ${o.lis};padding-left:8px"`:''}><span class="label">${lblIc(l)}</span><span class="v"${o.col?` style="color:${o.col}"`:''}>${val}</span><span class="s">${s}</span></div>`;
+  const tile=(l,val,s,o={})=>`<div class="stat"${o.lis?` style="border-left:4px solid ${o.lis};padding-left:8px"`:''}><span class="label">${lblIc(l)}</span><span class="v"${o.col?` style="color:${o.col}"`:''}>${valAbr(l,val)}</span><span class="s">${s}</span></div>`;
   const ent=items.filter(e=>['entretien','reparation','service'].includes(e.cat_vehicule)).reduce((a,e)=>a+e.montant,0);
   const glob=statsVeh(list,v),consoCol=st.conso&&glob.conso&&!vehAll?(st.conso>glob.conso*1.1?'var(--warn)':st.conso<glob.conso*.9?'var(--ok)':''):'';
   // même période de l'année précédente (année en cours : jusqu'au même jour)
@@ -2048,7 +2062,7 @@ function renderMaison(){
   const pc={};items.forEach(e=>pc[e.cat_maison||'autre']=(pc[e.cat_maison||'autre']||0)+e.montant);const top=Object.entries(pc).sort((a,b)=>b[1]-a[1])[0];
   $('maiTitre').textContent=`${m.nom} · ${maiAll?'depuis le début':cur.y}`;
   $('maiSub').textContent=items.length?`${items.length} dépense${items.length>1?'s':''} de travaux, du ${dmy(items[0].date)} au ${dmy(items[items.length-1].date)}`:'';
-  const tile=(l,val,sub)=>`<div class="stat"><span class="label">${lblIc(l)}</span><span class="v">${val}</span><span class="s">${sub}</span></div>`;
+  const tile=(l,val,sub)=>`<div class="stat"><span class="label">${lblIc(l)}</span><span class="v">${valAbr(l,val)}</span><span class="s">${sub}</span></div>`;
   $('maiHero').innerHTML=tile('Travaux',fmtM(tot),`${U()} · ${items.length} opérations`)+tile('Par mois de travaux',nmois?fmtM(tot/nmois):'—',`${U()} · ${nmois} mois avec dépense`)+
     tile('Poste principal',top?`<span style="font-family:var(--f-body)">${esc(CATM[top[0]].l)}</span>`:'—',top?`${fmtM(top[1])} ${U()} · ${Math.round(top[1]/tot*100)} %`:'')+
     tile('Part du terrain',s.cout?Math.round(m.prix_achat/s.cout*100)+' %':'—','du coût de revient');
@@ -2263,6 +2277,9 @@ $('clavier').addEventListener('click',ev=>{const b=ev.target.closest('[data-c]')
 function majClavier(){$('clavierK').checked=CLAVIER;$('clavierKInfo').textContent=CLAVIER?'Activé : toucher un champ de montant ouvre le clavier Daftar ; « ⌨ Clavier du téléphone » revient au clavier habituel.':'Désactivé : le clavier du téléphone s\'ouvre dans les champs de montant.'}
 $('clavierK').addEventListener('change',()=>{CLAVIER=$('clavierK').checked;try{localStorage.setItem('daftar-clavier',CLAVIER?'1':'0')}catch(e){}majClavier();status(CLAVIER?'Clavier Daftar activé sur cet appareil.':'Clavier du téléphone sur cet appareil.')});
 majClavier();
+function majAbrege(){$('abregeK').checked=ABREGE;$('abregeKInfo').textContent=ABREGE?'Activé : les grands montants des cartes sont abrégés (K = milliers, M = millions) ; le montant exact apparaît en survolant le chiffre. Le journal et les tableaux restent en entier.':'Désactivé : les cartes affichent les montants en entier.'}
+$('abregeK').addEventListener('change',()=>{ABREGE=$('abregeK').checked;try{localStorage.setItem('daftar-abrege',ABREGE?'1':'0')}catch(e){}majAbrege();render();status(ABREGE?'Montants abrégés dans les cartes.':'Montants en entier dans les cartes.')});
+majAbrege();
 function resetForm(){['fAmt','fLib','fRem','fPers','fEch','fKm','fQty'].forEach(i=>$(i).value='');$('fTiers').value='';$('fLibHint').textContent='';$('fUnit').value='L';$('fVid').checked=true;touched={};$('fVidNext').value='';$('fNat').value='depense';$('fCpt').value='especes';$('fCat').value='autre';$('fEvt').value='';editId=null;$('editBar').hidden=true;$('addBtn').textContent='Ajouter';majChamps();amtHint();render()}
 /* fenêtre de confirmation : résumé lisible de l'opération avant l'enregistrement (Échap ou « Modifier » = annuler) */
 /* ================= annuler : message en bas de l'écran, 10 secondes ================= */
@@ -2948,7 +2965,7 @@ function bilanStats(P){
   const rem=ofNat(ops,'remboursement'),mois=Math.max(1,P.n/30.44);
   const acquis=BIENS.filter(b=>b.date_achat&&b.date_achat>=P.d0&&b.date_achat<=P.fin),investiTout=BIENS.reduce((a,b)=>a+etatBien(b).cout,0);
   const parMois=v=>P.n>=28?` · ${fmt(v/mois)} par mois`:'',part=v=>revC>0?` · ${pcE(v/rev)} des revenus`:'';
-  const st=(l,v,sub,col)=>`<div class="stat"><span class="label">${lblIc(l)}</span><span class="v"${col?` style="color:${col}"`:''}>${v}</span><span class="s">${sub}</span></div>`;
+  const st=(l,v,sub,col)=>`<div class="stat"><span class="label">${lblIc(l)}</span><span class="v"${col?` style="color:${col}"`:''}>${valAbr(l,v)}</span><span class="s">${sub}</span></div>`;
   $('bilanSous').textContent=` · du ${dmy(P.d0)} au ${dmy(P.fin)} (${P.n} jours suivis)`;
   $('statsBilan').innerHTML=P.n?
     st('Revenus cumulés',fmt(rev),`${U()}${parMois(rev)}${rev>revC?` · dont ${fmt(rev-revC)} ponctuels`:''}`)+

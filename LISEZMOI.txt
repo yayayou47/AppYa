@@ -388,7 +388,8 @@ maison »).
   - Montants abrégés dans les cartes d'indicateurs, par défaut : 355 K
     (milliers), 1,28 M (millions), avec 3 chiffres significatifs ; le
     montant exact apparaît en survolant le chiffre (ordinateur). Les km,
-    jours, mois, le journal et les tableaux restent en entier. Pour tout
+    jours, mois, le journal et les tableaux restent en entier. Même
+    abrègement pour « Dépenses par poste » et les cartes des biens. Pour tout
     afficher en entier : Données et réglages › Saisie › « Montants abrégés
     dans les cartes » (réglage propre à chaque appareil).
   - Chaque case d'indicateur (Mes finances, Engins, House, Statistiques)

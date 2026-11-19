@@ -645,7 +645,7 @@ body.avec-clavier{padding-bottom:290px}
   </section>
 
   <section class="panel" aria-label="Indicateurs du véhicule" id="vehStats" hidden>
-    <div class="phead"><h2 id="vehTitre">Véhicule</h2><span class="muted" id="vehSub" style="font-size:.85rem"></span></div>
+    <div class="phead"><h2 id="vehTitre">Véhicule</h2></div>
     <div class="hero" id="vehHero"></div>
   </section>
 
@@ -1820,7 +1820,7 @@ function renderVehicule(){
   /* indicateurs de la période */
   const items=vehAll?list:list.filter(e=>e.date.startsWith(cur.y+'-')),st=statsVeh(items);
   $('vehTitre').textContent=`${v.nom} · ${vehAll?'toutes les années':cur.y}`;
-  $('vehSub').textContent=items.length?`${st.n} lignes, du ${dmy(items[0].date)} au ${dmy(items[items.length-1].date)}${st.inv?` · dont ${fmtM(st.inv)} ${U()} investis (coût du véhicule)`:''}`:'';
+  // plus de ligne « N lignes, du … au … » sous le titre (demande du 2026-11-19)
   // couleur : liseré de la catégorie (carburant, entretien) ; comparaisons en vert (mieux) ou rouge (moins bien), avec le signe
   const tile=(l,val,s,o={})=>`<div class="stat"${o.lis?` style="border-left:4px solid ${o.lis};padding-left:8px"`:''}><span class="label">${l}</span><span class="v"${o.col?` style="color:${o.col}"`:''}>${val}</span><span class="s">${s}</span></div>`;
   const ent=items.filter(e=>['entretien','reparation','service'].includes(e.cat_vehicule)).reduce((a,e)=>a+e.montant,0);

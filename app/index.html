@@ -309,9 +309,12 @@ h1.titre{display:flex;align-items:center;gap:10px}
 .odo2 .big small{font-size:1rem;margin-left:4px;opacity:.75}
 .odo .big small{font-size:1.1rem;margin-left:4px;opacity:.75}
 .kmnow{font-size:1.2rem}
-.gauge{height:12px;border-radius:6px;background:rgba(255,255,255,.18);overflow:hidden}
-.gauge div{height:100%;background:#f0a83a;border-radius:6px}
-.gauge.warn div{background:#ef7a6b}
+.gauge{height:24px;border-radius:7px;background:rgba(255,255,255,.18);overflow:hidden;display:flex;margin:6px 0 2px}
+.gauge>div{height:100%;display:flex;align-items:center;justify-content:center;min-width:0;font-family:var(--f-num);font-size:.78rem;font-weight:700;white-space:nowrap;overflow:hidden}
+.gauge .gfait{background:#f0a83a;color:#1d2129;border-radius:7px}.gauge .greste{flex:1;color:#fff;opacity:.9}
+.gauge.warn .gfait{background:#ef7a6b}
+/* rubrique Engins : « + engin », « Par année », « Toutes les années » sur une ligne au téléphone */
+@media (max-width:567px){.lgEng{display:none}#addEngin{padding:6px 12px}#segVeh button,#segMai button{padding:6px 10px}}
 .ticks{display:flex;justify-content:space-between;gap:10px;font-family:var(--f-num);font-size:.78rem;opacity:.85;flex-wrap:wrap}
 .pill{display:inline-block;padding:3px 10px;border-radius:99px;font-size:.78rem;font-weight:600;background:#f0a83a;color:#1d2126}
 .pill.warn{background:#ef7a6b;color:#1d2126}
@@ -568,7 +571,7 @@ body.avec-clavier{padding-bottom:290px}
   <div class="ctl subctl" id="subCtl">
     <div class="seg segic" role="group" aria-label="Vue de Mes finances" id="segFin"><button id="vMois" aria-pressed="true"><svg class="ic" aria-hidden="true" focusable="false"><use href="#i-mois"/></svg><span>Mois</span></button><button id="vAn" aria-pressed="false"><svg class="ic" aria-hidden="true" focusable="false"><use href="#i-annee"/></svg><span>Année</span></button><button id="vPat" aria-pressed="false"><svg class="ic" aria-hidden="true" focusable="false"><use href="#i-patrimoine"/></svg><span>Patrimoine</span></button><button id="vStats" aria-pressed="false"><svg class="ic" aria-hidden="true" focusable="false"><use href="#i-stats"/></svg><span>Statistiques</span></button></div>
     <div class="seg" role="group" aria-label="Engin affiché" id="segEngins" hidden></div>
-    <button type="button" class="btn ghost" id="addEngin" hidden>+ Ajouter un engin</button>
+    <button type="button" class="btn ghost" id="addEngin" aria-label="Ajouter un engin" hidden>+ <span class="lgEng">Ajouter un </span>engin</button>
     <div class="seg" role="group" aria-label="Maison affichée" id="segMaisons" hidden></div>
     <div class="seg" role="group" aria-label="Période du véhicule" id="segVeh" hidden><button id="vehAn" aria-pressed="true">Par année</button><button id="vehTout" aria-pressed="false">Toutes les années</button></div>
     <div class="seg" role="group" aria-label="Période de la maison" id="segMai" hidden><button id="maiAn" aria-pressed="false">Par année</button><button id="maiTout" aria-pressed="true">Depuis le début</button></div>
@@ -637,8 +640,7 @@ body.avec-clavier{padding-bottom:290px}
     <div class="odo">
       <div class="label"><span id="vehDashNom"></span></div><span class="pill" id="vPill" hidden></span>
     </div>
-    <div class="odo2"><span class="label">Prochaine vidange dans</span><span class="big" id="kmLeft">—<small>km</small></span></div>
-    <div class="gauge" id="gauge" role="meter" aria-label="Avancement vers la prochaine vidange" aria-valuemin="0" aria-valuemax="100"><div style="width:0"></div></div>
+    <div class="gauge" id="gauge" role="meter" aria-label="Avancement vers la prochaine vidange" aria-valuemin="0" aria-valuemax="100"><div class="gfait" style="width:0"><span></span></div><div class="greste"><span></span></div></div>
     <div class="ticks"><span id="tLast"></span><span>compteur <b class="num" id="kmNow">—</b></span><span id="tNext"></span></div>
   </section>
 
@@ -1807,22 +1809,37 @@ function renderVehicule(){
   $('kmNow').textContent=k?nb(k)+' '+UK(v):'—';
   if(vd.prochain&&k){
     const left=vd.prochain-k,span=Math.max(1,vd.prochain-vd.dernier),p=Math.min(100,Math.max(0,(k-vd.dernier)/span*100)),warn=left<=500;
-    $('kmLeft').innerHTML=`${nb(left)}<small>${UK(v)}</small>`;$('gauge').firstElementChild.style.width=p+'%';$('gauge').classList.toggle('warn',warn);
+    // pourcentages écrits dans la barre (demande du 2026-11-19) : effectué / restant de l'intervalle ; un segment trop court reste muet
+    const pf=Math.round(p),g=$('gauge');g.querySelector('.gfait').style.width=p+'%';g.querySelector('.gfait span').textContent=pf>=10?pf+' %':'';
+    g.querySelector('.greste span').textContent=100-pf>=10?(100-pf)+' %':'';g.classList.toggle('warn',warn);
     $('gauge').setAttribute('aria-valuenow',Math.round(p));$('gauge').setAttribute('aria-valuetext',`${Math.round(p)} % de l'intervalle, ${nb(left)} ${UK(v)} avant la vidange`);
-    const pill=$('vPill');pill.hidden=false;pill.className='pill'+(warn?' warn':'');pill.textContent=left<=0?'Vidange dépassée':warn?'Vidange bientôt':Math.round(p)+' % de l\'intervalle';
-  }else{$('kmLeft').innerHTML=`—<small>${UK(v)}</small>`;$('vPill').hidden=true}
+    const pill=$('vPill');pill.hidden=!warn;pill.className='pill warn';pill.textContent=left<=0?'Vidange dépassée':'Vidange bientôt';
+  }else{const g=$('gauge');g.querySelector('.gfait').style.width='0';g.querySelectorAll('span').forEach(x=>x.textContent='');$('vPill').hidden=true}
   $('tLast').textContent='dernière '+(vd.dernier?nb(vd.dernier)+' '+UK(v):'—');$('tNext').textContent='prochaine '+(vd.prochain?nb(vd.prochain)+' '+UK(v):'—');
   $('vehDashNom').textContent=`${v.nom} · ${ENGINS[v.engin]||'Engin'}`;
   /* indicateurs de la période */
   const items=vehAll?list:list.filter(e=>e.date.startsWith(cur.y+'-')),st=statsVeh(items);
   $('vehTitre').textContent=`${v.nom} · ${vehAll?'toutes les années':cur.y}`;
   $('vehSub').textContent=items.length?`${st.n} lignes, du ${dmy(items[0].date)} au ${dmy(items[items.length-1].date)}${st.inv?` · dont ${fmtM(st.inv)} ${U()} investis (coût du véhicule)`:''}`:'';
-  const tile=(l,val,s)=>`<div class="stat"><span class="label">${l}</span><span class="v">${val}</span><span class="s">${s}</span></div>`;
-  $('vehHero').innerHTML=tile('Dépenses',fmtM(st.total),`${U()}${st.mois?` · ${fmtM(st.total/st.mois)} par mois`:''}`)+
-    tile('Carburant',fmtM(st.fuelTot),`${U()} · ${nb(st.litres)} L${st.total?` · ${Math.round(st.fuelTot/st.total*100)} %`:''}`)+
-    tile('Prix moyen du litre',st.prix?fmtM(st.prix):'—',`${U()}/L`)+tile('Consommation',st.conso?nb(st.conso,1):'—',UK(v)==='h'?'L/h':'L/100 km')+
+  // couleur : liseré de la catégorie (carburant, entretien) ; comparaisons en vert (mieux) ou rouge (moins bien), avec le signe
+  const tile=(l,val,s,o={})=>`<div class="stat"${o.lis?` style="border-left:4px solid ${o.lis};padding-left:8px"`:''}><span class="label">${l}</span><span class="v"${o.col?` style="color:${o.col}"`:''}>${val}</span><span class="s">${s}</span></div>`;
+  const ent=items.filter(e=>['entretien','reparation','service'].includes(e.cat_vehicule)).reduce((a,e)=>a+e.montant,0);
+  const glob=statsVeh(list,v),consoCol=st.conso&&glob.conso&&!vehAll?(st.conso>glob.conso*1.1?'var(--warn)':st.conso<glob.conso*.9?'var(--ok)':''):'';
+  // même période de l'année précédente (année en cours : jusqu'au même jour)
+  let vs='';if(!vehAll){const y0=cur.y-1,lim=cur.y===now.getFullYear()?`${y0}${today.slice(4)}`:`${y0}-12-31`,av=list.filter(e=>e.date.startsWith(y0+'-')&&e.date<=lim),ta=sum(av);
+    if(ta>0){const d=st.total/ta-1;vs=tile(`Vs ${y0}${cur.y===now.getFullYear()?' même période':''}`,pct(d),`${fmtM(ta)} ${U()} en ${y0}`,{col:d>0?'var(--warn)':'var(--ok)'})}}
+  // prochaine vidange : date estimée au rythme des 6 derniers mois (km ou heures par jour)
+  let pvid='';if(vd.prochain&&k){const left=vd.prochain-k,d0=addJ(today,-182),anc=list.filter(e=>e.km&&e.date>=d0).sort((a,b)=>a.km-b.km)[0];
+    const rythme=anc&&k>anc.km?(k-anc.km)/Math.max(1,nbJ(anc.date,today)-1):0;
+    if(left<=0)pvid=tile('Prochaine vidange','dépassée',`de ${nb(-left)} ${UK(v)}`,{col:'var(--warn)'});
+    else if(rythme>0){const dt=addJ(today,Math.round(left/rythme)),j=nbJ(today,dt)-1;
+      pvid=tile('Prochaine vidange',`vers le ${dmy(dt)}`,`dans ${j} jours environ · ${nb(rythme,1)} ${UK(v)}/jour`,{col:j<=30?'var(--warn)':''})}}
+  $('vehHero').innerHTML=tile('Dépenses',fmtM(st.total),`${U()}${st.mois?` · ${fmtM(st.total/st.mois)} par mois`:''}`)+vs+
+    tile('Carburant',fmtM(st.fuelTot),`${U()} · ${nb(st.litres)} L${st.total?` · ${Math.round(st.fuelTot/st.total*100)} %`:''}`,{lis:colV('carburant')})+
+    tile('Entretien et réparations',fmtM(ent),`${U()}${st.total?` · ${Math.round(ent/st.total*100)} % des dépenses`:''}`,{lis:colV('reparation')})+
+    tile('Prix moyen du litre',st.prix?fmtM(st.prix):'—',`${U()}/L`)+tile('Consommation',st.conso?nb(st.conso,1):'—',`${UK(v)==='h'?'L/h':'L/100 km'}${consoCol?` · moyenne ${nb(glob.conso,1)}`:''}`,{col:consoCol})+pvid+
     (UK(v)==='h'?tile('Heures de marche',st.km?nb(st.km):'—',st.km&&st.mois?`h · ${nb(st.km/st.mois)} h/mois`:'h')+tile('Coût par heure',st.km?fmtM(st.total/st.km):'—',`${U()}/h`)
-    :tile('Km parcourus',st.km?nb(st.km):'—',st.km&&st.mois?`km · ${nb(st.km/st.mois)} km/mois`:'km')+tile('Coût total par km',st.km?fmtM(st.total/st.km):'—',`${U()}/km`));
+    :tile('Km parcourus',st.km?nb(st.km):'—',st.km&&st.mois?`km · ${nb(st.km/st.mois)} km/mois`:'km')+tile('Coût total par km',st.km?fmtM(st.total/st.km):'—',`${U()}/km${st.km?` · ${fmtM((st.total-st.fuelTot)/st.km)} hors carburant`:''}`));
   /* récapitulatif : mois de l'année, ou années */
   let bk;
   if(vehAll){const ys=[...new Set(list.map(e=>e.date.slice(0,4)))].sort();bk=ys.map(y=>({key:y,label:y,court:y,items:list.filter(e=>e.date.startsWith(y+'-'))}))}

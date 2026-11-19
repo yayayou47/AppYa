@@ -55,10 +55,18 @@ Variantes :
     (coller une liste, relevé, réglages…) sont dans Données et réglages.
   - Mes finances : vues Mois, Année, Patrimoine et Statistiques, avec le
     journal de toutes les opérations.
-  - My Car : kilomètres avant la prochaine vidange, dépenses,
-    carburant, prix moyen du litre, consommation (L/100 km), km parcourus,
-    coût par km, récapitulatif mensuel ou annuel, liste des vidanges et
-    journal du véhicule (par année avec ‹ ›, ou toutes les années).
+  - Engins : barre d'avancement vers la prochaine vidange (part effectuée
+    et part restante de l'intervalle, en %, écrites dans la barre),
+    dépenses (et comparaison avec l'année précédente à la même date, en vert
+    si elles baissent, en rouge si elles montent), carburant et entretien et
+    réparations (liseré de la couleur de leur catégorie), prix moyen du
+    litre, consommation (en vert ou en rouge si elle s'écarte de plus de
+    10 % de la moyenne de l'engin), date estimée de la prochaine vidange (au
+    rythme des 6 derniers mois), km parcourus, coût par km (et hors
+    carburant), récapitulatif mensuel ou annuel, liste des vidanges et
+    journal du véhicule (par année avec ‹ ›, ou toutes les années). Au
+    téléphone, « + engin », « Par année » et « Toutes les années » tiennent
+    sur une ligne.
   - House (un terrain, une construction) : coût de revient (terrain +
     travaux), valeur actuelle et appréciation, travaux par année ou par mois
     et par catégorie (arrosage, eau-pompe-forage, maçonnerie, matériaux,

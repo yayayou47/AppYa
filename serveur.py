@@ -39,7 +39,7 @@ from http.cookies import SimpleCookie
 from http.server import SimpleHTTPRequestHandler, ThreadingHTTPServer
 from urllib.parse import parse_qs, urlparse
 
-VERSION = "1.4.9"
+VERSION = "1.4.10"
 VERSION_NOM = "Ousnou"   # nom de la version (même valeur que VERSION_APP dans app/index.html)
 RACINE = os.path.dirname(os.path.abspath(__file__))
 APP = os.path.join(RACINE, "app")

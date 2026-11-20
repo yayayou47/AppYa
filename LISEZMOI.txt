@@ -380,7 +380,8 @@ maison »).
     d'épargne, investi et prêté, plus grosse journée (montant, date, part du
     mois), jours sans dépense, moyenne par jour (et médiane), exceptionnel ;
     puis les dépenses par semaine en 4 barres horizontales (1–7, 8–14,
-    15–21, 22–fin du mois ; la semaine en cours en foncé).
+    15–21, 22–fin du mois ; la semaine en cours en foncé), en carte compacte
+    avec montants abrégés (182 K) ; de même « Dépenses par mois » de la vue Année.
   - En bas de page, trois boutons à icône : « © Licence » (licence MIT et
     composants inclus), « À propos » (ce qu'est Daftar, où sont vos
     données, liens du code et de la version web) et « Démo » (trois ans de
@@ -564,7 +565,7 @@ il agit toujours sur l'installation réelle. Avant tout retrait, il recopie
 une dernière fois les données dans la copie miroir (disque branché). Il
 ne supprime jamais le dossier d'origine.
 
-Contenu : serveur.py (Daftar Ousnou 1.4.9, Python, bibliothèque standard), app/index.html,
+Contenu : serveur.py (Daftar Ousnou 1.4.10, Python, bibliothèque standard), app/index.html,
 app/moteur.js et app/mode.js (version autonome), app/releve.js et
 app/pdf.min.js + app/pdf.worker.min.js (pdf.js 3.11.174, Mozilla, licence
 Apache 2.0 : app/LICENCE-pdfjs.txt ; lecture des relevés), app/sw.js et
